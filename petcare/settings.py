@@ -16,6 +16,9 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
+
+IPROG_API_TOKEN = os.getenv("IPROG_API_TOKEN")
+VETERINARY_PHONE = os.getenv("VETERINARY_PHONE")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -32,7 +35,7 @@ ALLOWED_HOSTS = [
 ]
 SEMAPHORE_API_KEY = os.getenv("SEMAPHORE_API_KEY")
 
-VETERINARY_PHONE = "09490409159"
+VETERINARY_PHONE = "09244176181"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Application definition
 
