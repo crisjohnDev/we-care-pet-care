@@ -74,20 +74,36 @@ def chat_session(request, session_id):
 @require_POST
 def send_message(request, session_id):
 
-    # ============================================================
-    # GET CHAT SESSION
-    # ============================================================
+    # =========================================================
+    # 1. GET CHAT SESSION
+    # =========================================================
 
-    session = get_object_or_404(
-        ChatSession,
-        id=session_id,
-        user=request.user
-    )
+    try:
+        session = ChatSession.objects.get(
+            id=session_id,
+            user=request.user
+        )
+    except ChatSession.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "error": "Chat session not found."
+        }, status=404)
 
-    customer = get_object_or_404(
-        Customer,
-        user=request.user
-    )
+    # =========================================================
+    # 2. GET CUSTOMER PROFILE
+    # =========================================================
+
+    try:
+        customer = Customer.objects.get(user=request.user)
+    except Customer.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "error": "Customer profile not found."
+        }, status=404)
+
+    # =========================================================
+    # 3. GET MESSAGE AND IMAGE
+    # =========================================================
 
     message = request.POST.get("message", "").strip()
     image = request.FILES.get("image")
@@ -95,66 +111,76 @@ def send_message(request, session_id):
     if not message and not image:
         return JsonResponse({
             "success": False,
-            "error": "Please enter a message or upload an image."
+            "error": "Enter a message or upload an image."
         }, status=400)
 
-    # ============================================================
-    # CALCULATE DOG AGE
-    # ============================================================
+    if image:
+        if image.size > 10 * 1024 * 1024:
+            return JsonResponse({
+                "success": False,
+                "error": "Image size must not exceed 10 MB."
+            }, status=400)
+
+        allowed_types = {
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif"
+        }
+
+        if image.content_type not in allowed_types:
+            return JsonResponse({
+                "success": False,
+                "error": "Upload a JPEG, PNG, WEBP, or GIF image."
+            }, status=400)
+
+    # =========================================================
+    # 4. CALCULATE DOG AGE
+    # =========================================================
 
     dog_age = "Unknown"
 
-    if customer.birthdate:
-
+    if getattr(customer, "birthdate", None):
         try:
             today = date.today()
+            birthdate = customer.birthdate
 
-            dog_age_years = (
+            years = (
                 today.year
-                - customer.birthdate.year
+                - birthdate.year
                 - (
                     (today.month, today.day)
-                    <
-                    (
-                        customer.birthdate.month,
-                        customer.birthdate.day
-                    )
+                    < (birthdate.month, birthdate.day)
                 )
             )
 
-            if dog_age_years < 1:
-                dog_age = "Less than 1 year old"
-            else:
-                dog_age = f"{dog_age_years} years old"
+            dog_age = (
+                "Less than 1 year old"
+                if years < 1
+                else f"{years} years old"
+            )
 
-        except Exception as e:
+        except Exception as exc:
+            print("DOG AGE ERROR:", exc)
 
-            print("DOG AGE ERROR:", e)
-
-    # ============================================================
-    # SAVE USER MESSAGE
-    # ============================================================
+    # =========================================================
+    # 5. SAVE USER MESSAGE
+    # =========================================================
 
     if message:
-
         ChatMessage.objects.create(
             session=session,
             role="user",
             message=message
         )
 
-    # ============================================================
-    # UPDATE CHAT TITLE
-    # ============================================================
-
     if session.title == "New Chat" and message:
-
         session.title = message[:50]
         session.save(update_fields=["title"])
 
-    # ============================================================
-    # LOAD CONVERSATION HISTORY
-    # ============================================================
+    # =========================================================
+    # 6. LOAD CONVERSATION HISTORY
+    # =========================================================
 
     previous_messages = list(
         ChatMessage.objects
@@ -167,64 +193,119 @@ def send_message(request, session_id):
     conversation_history = []
 
     for chat_message in previous_messages:
+        if chat_message.role in ("user", "assistant"):
+            conversation_history.append({
+                "role": chat_message.role,
+                "content": chat_message.message
+            })
 
-        if chat_message.role not in ["user", "assistant"]:
-            continue
-
-        conversation_history.append({
-            "role": chat_message.role,
-            "content": chat_message.message
-        })
-
-    # ============================================================
-    # IMAGE ANALYSIS
-    # ============================================================
+    # =========================================================
+    # 7. IMAGE ANALYSIS AND BREED PERCENTAGES
+    # =========================================================
 
     image_analysis = None
 
     if image:
-
         try:
-
             image_bytes = image.read()
-
             image_base64 = base64.b64encode(
                 image_bytes
             ).decode("utf-8")
 
-            content_type = (
-                image.content_type
-                or "image/jpeg"
-            )
+            content_type = image.content_type
 
             image_system_prompt = """
-You are the dog image analysis assistant for We Care Pet Care.
+You are the dog breed identification and image analysis assistant
+for We Care Pet Care.
 
-Analyze the uploaded image carefully.
+Analyze the actual newly uploaded image.
 
-Return ONLY valid JSON:
+Return ONLY valid JSON with this structure:
 
 {
-    "breed": "Most likely breed or mix",
-    "confidence": "low|medium|high",
-    "description": "Brief description of the dog",
-    "possible_health_observations": "Only things visibly observable in the image",
-    "comparison": "Comparison with the registered breed if possible"
+  "breed": "Most likely primary breed or Unknown",
+  "detected_breed": "Most likely breed or mix",
+  "confidence": "low|medium|high",
+  "breed_percentages": [
+    {
+      "breed": "Labrador Retriever",
+      "percentage": 70,
+      "evidence": "Visible characteristics supporting this estimate"
+    },
+    {
+      "breed": "Other or uncertain ancestry",
+      "percentage": 30,
+      "evidence": "Characteristics that cannot be assigned confidently"
+    }
+  ],
+  "description": "Description of the visible dog",
+  "possible_health_observations": "Visible observations only",
+  "comparison": "Comparison with registered breed if available",
+  "dog_visible": true,
+  "visible_blood": "yes|no|uncertain",
+  "bleeding_observation": "What the image actually shows",
+  "wound_visible": "yes|no|uncertain",
+  "limitations": "Limitations of this image assessment"
 }
 
-IMPORTANT:
+BREED IDENTIFICATION:
 
-- Do not invent information.
-- Do not diagnose medical conditions from an image.
-- Only describe things that can reasonably be observed.
-- If there is no dog in the image, say so.
+1. Identify the most likely breed or breed mix from visible
+   characteristics such as coat, color, ears, muzzle, body shape,
+   and other recognizable physical features.
+
+2. Include up to three plausible breed categories when supported
+   by the photograph.
+
+3. breed_percentages must be a list of objects containing:
+   breed, percentage, and evidence.
+
+4. Percentages must be whole numbers from 0 to 100 and must total
+   exactly 100 when a dog is visible.
+
+5. Do not invent additional breeds just to fill the list.
+   Use "Other or uncertain ancestry" for an uncertain remainder.
+
+6. If one breed appears most likely, it can receive 100% as a
+   visual resemblance estimate when appropriate.
+
+7. Be cautious with puppies, blurry images, unusual angles,
+   mixed breeds, and images where the dog's body is obscured.
+
+8. Set confidence to low when the breed cannot be determined
+   reliably from the photograph.
+
+9. These are visual estimates of breed resemblance, NOT DNA
+   ancestry percentages. Do not claim genetic certainty.
+
+10. If multiple dogs appear, explain that the image contains
+    multiple dogs. Do not combine their breed estimates into
+    one dog's percentages.
+
+11. If no dog is visible, set dog_visible=false, breed="Unknown",
+    detected_breed="Unknown", and breed_percentages=[].
+
+HEALTH AND BLEEDING:
+
+1. Describe only what is actually visible.
+2. Red fur, red objects, food, paint, and stains are not
+   automatically blood.
+3. Never assume blood is visible because an earlier message
+   mentioned bleeding.
+4. Use visible_blood="uncertain" when the image is inconclusive.
+5. Visible blood does not prove active or severe bleeding.
+6. A photograph cannot establish whether bleeding is ongoing.
+7. Do not invent wounds, symptoms, or injuries.
+8. Do not diagnose medical conditions from a photograph.
+9. A normal-looking photo does not prove that a dog is healthy.
+10. Do not mistake uncertainty for proof that no injury exists.
+
+Return valid JSON only. Do not include Markdown.
 """
 
             image_response = client.chat.completions.create(
                 model="gpt-4.1-mini",
-                response_format={
-                    "type": "json_object"
-                },
+                response_format={"type": "json_object"},
                 messages=[
                     {
                         "role": "system",
@@ -236,11 +317,20 @@ IMPORTANT:
                             {
                                 "type": "text",
                                 "text": (
-                                    "Registered dog information:\n"
-                                    f"Name: {customer.pet_name}\n"
-                                    f"Breed: {customer.breed or 'Unknown'}\n"
-                                    f"Sex: {customer.sex or 'Unknown'}\n"
-                                    f"Age: {dog_age}"
+                                    "Analyze this newly uploaded image "
+                                    "independently.\n"
+                                    f"Registered dog name: "
+                                    f"{getattr(customer, 'pet_name', '') or 'Unknown'}\n"
+                                    f"Registered breed: "
+                                    f"{getattr(customer, 'breed', '') or 'Unknown'}\n"
+                                    f"Registered sex: "
+                                    f"{getattr(customer, 'sex', '') or 'Unknown'}\n"
+                                    f"Registered age: {dog_age}\n\n"
+                                    "Identify the likely breed or mix, "
+                                    "estimate visual breed percentages, "
+                                    "and describe visible health observations. "
+                                    "Do not treat earlier conversation details "
+                                    "as observations from this photograph."
                                 )
                             },
                             {
@@ -255,359 +345,239 @@ IMPORTANT:
                         ]
                     }
                 ],
-                temperature=0.2
+                temperature=0
             )
 
             image_analysis = json.loads(
                 image_response.choices[0].message.content
             )
 
-        except Exception as e:
+            # Normalize image-analysis fields.
+            image_analysis.setdefault(
+                "breed",
+                "Unknown"
+            )
+            image_analysis.setdefault(
+                "detected_breed",
+                image_analysis.get("breed", "Unknown")
+            )
+            image_analysis.setdefault(
+                "confidence",
+                "low"
+            )
+            image_analysis.setdefault(
+                "breed_percentages",
+                []
+            )
+            image_analysis.setdefault(
+                "description",
+                "No description available."
+            )
+            image_analysis.setdefault(
+                "possible_health_observations",
+                ""
+            )
+            image_analysis.setdefault(
+                "comparison",
+                ""
+            )
+            image_analysis.setdefault(
+                "dog_visible",
+                None
+            )
+            image_analysis.setdefault(
+                "visible_blood",
+                "uncertain"
+            )
+            image_analysis.setdefault(
+                "bleeding_observation",
+                "The image cannot establish whether bleeding is active."
+            )
+            image_analysis.setdefault(
+                "wound_visible",
+                "uncertain"
+            )
+            image_analysis.setdefault(
+                "limitations",
+                "Visual identification is not a DNA test."
+            )
 
-            print("IMAGE ANALYSIS ERROR:", e)
+            # Validate the breed percentage list.
+            breed_percentages = image_analysis.get(
+                "breed_percentages"
+            )
+
+            if not isinstance(breed_percentages, list):
+                breed_percentages = []
+
+            cleaned_breeds = []
+
+            for item in breed_percentages:
+                if not isinstance(item, dict):
+                    continue
+
+                breed_name = str(
+                    item.get("breed", "Unknown")
+                ).strip()
+
+                try:
+                    percentage = int(item.get("percentage", 0))
+                except (TypeError, ValueError):
+                    continue
+
+                if not breed_name:
+                    continue
+
+                if percentage < 0 or percentage > 100:
+                    continue
+
+                cleaned_breeds.append({
+                    "breed": breed_name,
+                    "percentage": percentage,
+                    "evidence": str(
+                        item.get("evidence", "")
+                    )
+                })
+
+            # Only normalize valid model output. Do not silently
+            # invent percentages if the model returned invalid data.
+            total_percentage = sum(
+                item["percentage"]
+                for item in cleaned_breeds
+            )
+
+            if (
+                image_analysis.get("dog_visible") is True
+                and cleaned_breeds
+                and total_percentage == 100
+            ):
+                image_analysis["breed_percentages"] = cleaned_breeds
+            else:
+                image_analysis["breed_percentages"] = []
+
+            if image_analysis.get("dog_visible") is False:
+                image_analysis["breed"] = "Unknown"
+                image_analysis["detected_breed"] = "Unknown"
+                image_analysis["breed_percentages"] = []
+
+            print(
+                "IMAGE ANALYSIS RESULT:",
+                json.dumps(
+                    image_analysis,
+                    ensure_ascii=False
+                )
+            )
+
+        except Exception as exc:
+            print("IMAGE ANALYSIS ERROR:", exc)
 
             image_analysis = {
                 "breed": "Unable to determine",
+                "detected_breed": "Unable to determine",
                 "confidence": "low",
+                "breed_percentages": [],
                 "description": (
-                    "I wasn't able to analyze the uploaded image."
+                    "The uploaded image could not be analyzed."
                 ),
                 "possible_health_observations": "",
-                "comparison": ""
+                "comparison": "",
+                "dog_visible": None,
+                "visible_blood": "uncertain",
+                "bleeding_observation": (
+                    "The image could not be assessed."
+                ),
+                "wound_visible": "uncertain",
+                "limitations": (
+                    "Please try uploading the image again."
+                )
             }
 
-    # ============================================================
-    # VETERINARY TRIAGE SYSTEM
-    # ============================================================
+    # =========================================================
+    # 8. VETERINARY TRIAGE SYSTEM
+    # =========================================================
 
     triage_system_prompt = """
 You are the veterinary safety triage assistant for We Care Pet Care.
 
-Your job is to understand the dog's condition through conversation.
+You are not a replacement for a veterinarian.
 
-You are NOT a replacement for a veterinarian.
+Review the entire conversation and the latest image analysis.
+Differentiate between owner-reported symptoms, earlier symptoms,
+and observations from the newly uploaded image.
 
-You must behave like a helpful veterinary AI assistant rather than a
-keyword-based emergency detector.
+IMAGE RULES:
 
-Your responsibilities are:
+- The image analysis describes the newly uploaded photograph.
+- Do not assume an earlier symptom is visible in the new image.
+- If visible_blood="no", do not claim that blood is visible in the photo.
+- If visible_blood="uncertain", explain that the image is inconclusive.
+- If visible_blood="yes", do not assume bleeding is ongoing or severe.
+- Do not dismiss an emergency just because the photo looks normal.
+- Breed percentages are visual estimates, not DNA results.
+- Breed identification alone does not establish medical risk.
 
-1. Understand the owner's concern.
-2. Review the entire conversation.
-3. Identify what information is missing.
-4. Ask useful follow-up questions.
-5. Provide safe immediate first-aid guidance when appropriate.
-6. Determine the dog's risk level.
-7. Determine whether the situation is a genuine emergency.
-8. Determine whether the veterinarian should be notified immediately.
-
-============================================================
-IMPORTANT: USE THE ENTIRE CONVERSATION
-============================================================
-
-Always consider previous messages.
-
-The latest message alone may not contain enough information.
-
-Example:
-
-Owner:
-"My dog is bleeding."
-
-Assistant:
-"Where is the bleeding coming from?"
-
-Owner:
-"His leg."
-
-Assistant:
-"How severe is it?"
-
-Owner:
-"The blood is spurting and won't stop."
-
-Now the complete conversation indicates a potentially serious emergency.
-
-Reassess the situation whenever new information is provided.
-
-============================================================
-DO NOT USE KEYWORDS AS AUTOMATIC EMERGENCIES
-============================================================
-
-Words such as:
-
-- bleeding
-- blood
-- vomiting
-- diarrhea
-- pain
-- coughing
-- shaking
-- fever
-
-do NOT automatically mean emergency=true.
-
-Understand the context first.
-
-For example:
-
-"My dog has a tiny scratch and there are two drops of blood."
-
-This is different from:
-
-"My dog has blood spurting from his leg and it won't stop."
-
-============================================================
-RISK LEVELS
-============================================================
+RISK LEVELS:
 
 LOW:
-
-The condition appears mild and there are no concerning warning signs.
+The available information suggests a mild concern without warning signs.
 
 MEDIUM:
-
-The condition may require veterinary attention but does not currently
-provide enough evidence of an immediate life-threatening emergency.
+More information or veterinary assessment is needed, but an immediate
+life-threatening emergency has not been established.
 
 HIGH:
+Available information indicates a serious or potentially life-threatening
+condition.
 
-The condition is serious or potentially life-threatening.
+Do not classify a situation as an emergency merely because a message
+contains the words blood, bleeding, vomiting, diarrhea, or pain.
 
-============================================================
-CLEAR EMERGENCIES
-============================================================
+Potential emergencies include:
+- Severe breathing difficulty.
+- Collapse or unconsciousness.
+- Severe seizures.
+- Spurting or uncontrolled bleeding.
+- Serious trauma.
+- Suspected poisoning with concerning symptoms.
+- Significant blood loss or signs of shock.
+- Other clearly life-threatening conditions.
 
-Set:
+A still photograph cannot reliably establish active bleeding or blood loss.
 
-emergency=true
+For uncertain external bleeding, ask whether bleeding is continuing,
+where it is coming from, and whether continuous pressure controls it.
 
-risk_level="high"
+For external bleeding, recommend clean gauze or cloth with continuous
+pressure. Do not repeatedly remove it to inspect the wound. Severe,
+spurting, or uncontrolled bleeding needs immediate veterinary care.
 
-when the available information clearly indicates an immediate or
-potentially life-threatening situation.
+Never recommend human medications or unsafe home remedies.
 
-Examples:
+If a clear emergency exists:
+- emergency=true
+- risk_level="high"
+- needs_more_information=false
+- follow_up_question=""
 
-- inability to breathe
-- severe difficulty breathing
-- choking with breathing difficulty
-- unconsciousness
-- collapse
-- severe seizure
-- severe uncontrolled bleeding
-- blood spurting from a wound
-- heavy bleeding that does not stop with continuous pressure
-- serious trauma
-- being hit by a vehicle with serious injury
-- suspected poisoning with concerning symptoms
-- significant vomiting of blood
-- severe bloody diarrhea with weakness or collapse
-- severe burns
-- severe heat stroke
-- inability to stand because of serious illness or injury
-- blue or gray gums
-- extremely pale or white gums
-- severe allergic reaction with breathing difficulty
-- severe abdominal swelling with distress or repeated unproductive retching
-- severe uncontrolled pain
-- serious foreign-body obstruction
-- any other clearly life-threatening situation
+If more information is needed:
+- ask the most important question
+- do not automatically classify the case as an emergency
 
-The owner does NOT need to use the word "emergency".
-
-============================================================
-WHEN INFORMATION IS INCOMPLETE
-============================================================
-
-If the owner reports a potentially concerning symptom but there is not
-enough information to determine whether it is an emergency:
-
-DO NOT automatically set emergency=true.
-
-Instead:
-
-emergency=false
-
-needs_more_information=true
-
-Ask the most important question.
-
-Provide safe immediate guidance if appropriate.
-
-Example:
-
-Owner:
-"My dog is bleeding."
-
-The correct approach is to ask:
-
-- Where is the bleeding?
-- What caused it?
-- Is it dripping, flowing continuously, or spurting?
-- Has the bleeding stopped?
-- Is the dog alert?
-- Can the dog stand and walk?
-- Are the gums pink, pale, white, blue, or gray?
-
-Do not ask all questions at once.
-
-Ask the most useful question first.
-
-============================================================
-BLEEDING FIRST AID
-============================================================
-
-For a normal external wound, safe general guidance may include:
-
-- place clean gauze or cloth over the wound
-- apply continuous pressure
-- do not repeatedly remove the cloth to inspect the wound
-- if blood soaks through, place additional clean material over it
-- keep the dog calm and still
-- arrange veterinary care if the wound is deep or bleeding persists
-
-If the bleeding is severe, spurting, rapidly flowing, or cannot be controlled,
-treat it as an emergency.
-
-============================================================
-OTHER FIRST AID
-============================================================
-
-Provide only safe general first-aid guidance.
-
-Never recommend:
-
-- human painkillers
-- human medications
-- antibiotics without veterinary direction
-- unsafe home remedies
-- inducing vomiting unless specifically directed by a veterinarian
-- delaying emergency veterinary care
-- inserting objects into wounds
-
-============================================================
-FOLLOW-UP QUESTIONS
-============================================================
-
-Ask focused questions.
-
-Do not overwhelm the owner.
-
-For BLEEDING:
-
-Ask about:
-
-- location
-- cause
-- severity
-- dripping vs flowing vs spurting
-- whether pressure stops the bleeding
-- alertness
-- ability to stand
-- gum color
-
-For VOMITING:
-
-Ask about:
-
-- number of episodes
-- duration
-- appearance
-- blood
-- ability to drink
-- weakness
-- possible toxin or foreign object
-
-For DIARRHEA:
-
-Ask about:
-
-- duration
-- blood
-- frequency
-- drinking
-- weakness
-- vomiting
-
-For BREATHING:
-
-Ask about:
-
-- breathing difficulty
-- breathing effort
-- gum color
-- consciousness
-- possible choking
-
-For INJURY:
-
-Ask about:
-
-- what happened
-- injury location
-- bleeding
-- swelling
-- pain
-- ability to stand or walk
-
-============================================================
-EMERGENCY DECISION
-============================================================
-
-If the available information clearly proves an emergency:
-
-emergency=true
-risk_level="high"
-needs_more_information=false
-follow_up_question=""
-
-If information is incomplete:
-
-emergency=false
-needs_more_information=true
-
-If the situation is concerning but not clearly immediately life-threatening:
-
-emergency=false
-risk_level="medium"
-
-============================================================
-OUTPUT
-============================================================
-
-Return ONLY valid JSON.
-
-Use exactly:
+Return ONLY valid JSON:
 
 {
-    "risk_level": "low|medium|high",
-    "emergency": false,
-    "reason": "Brief explanation.",
-    "needs_more_information": true,
-    "follow_up_question": "Most important next question.",
-    "recommended_action": "Safe immediate action."
+  "risk_level": "low|medium|high",
+  "emergency": false,
+  "reason": "Brief explanation",
+  "needs_more_information": true,
+  "follow_up_question": "Most important next question",
+  "recommended_action": "Safe immediate action"
 }
-
-If no follow-up is needed:
-
-"follow_up_question": ""
-
-Do not return markdown.
-
-Do not return additional fields.
-
-Do not diagnose diseases.
-
-When information is missing, gather information before declaring an emergency.
-
-When the information clearly indicates a life-threatening emergency,
-do not delay emergency advice simply to ask more questions.
 """
 
-    # ============================================================
-    # BUILD TRIAGE MESSAGES
-    # ============================================================
+    # =========================================================
+    # 9. BUILD TRIAGE MESSAGES
+    # =========================================================
 
     triage_messages = [
         {
@@ -616,16 +586,27 @@ do not delay emergency advice simply to ask more questions.
         }
     ]
 
-    for item in conversation_history:
+    triage_messages.extend(conversation_history)
 
+    if image_analysis:
         triage_messages.append({
-            "role": item["role"],
-            "content": item["content"]
+            "role": "user",
+            "content": (
+                "NEWLY UPLOADED IMAGE ANALYSIS:\n"
+                + json.dumps(
+                    image_analysis,
+                    ensure_ascii=False
+                )
+                + "\nAssess this new image alongside the conversation. "
+                "Do not assume that earlier symptoms are visible in "
+                "this photograph. Distinguish visible blood from "
+                "active bleeding. If the status is unknown, ask the owner."
+            )
         })
 
-    # ============================================================
-    # DEFAULT TRIAGE
-    # ============================================================
+    # =========================================================
+    # 10. RUN TRIAGE
+    # =========================================================
 
     triage_result = {
         "risk_level": "medium",
@@ -640,17 +621,10 @@ do not delay emergency advice simply to ask more questions.
         )
     }
 
-    # ============================================================
-    # RUN TRIAGE
-    # ============================================================
-
     try:
-
         triage_response = client.chat.completions.create(
             model="gpt-4.1-mini",
-            response_format={
-                "type": "json_object"
-            },
+            response_format={"type": "json_object"},
             messages=triage_messages,
             temperature=0.1
         )
@@ -659,36 +633,24 @@ do not delay emergency advice simply to ask more questions.
             triage_response.choices[0].message.content
         )
 
-    except Exception as e:
+    except Exception as exc:
+        print("TRIAGE ERROR:", exc)
 
-        print("TRIAGE ERROR:", e)
-
-    # ============================================================
-    # NORMALIZE TRIAGE
-    # ============================================================
+    # =========================================================
+    # 11. NORMALIZE TRIAGE RESULT
+    # =========================================================
 
     risk_level = str(
-        triage_result.get(
-            "risk_level",
-            "medium"
-        )
+        triage_result.get("risk_level", "medium")
     ).lower().strip()
 
-    if risk_level not in ["low", "medium", "high"]:
+    if risk_level not in ("low", "medium", "high"):
         risk_level = "medium"
 
-    emergency = bool(
-        triage_result.get(
-            "emergency",
-            False
-        )
-    )
+    emergency = triage_result.get("emergency") is True
 
-    needs_more_information = bool(
-        triage_result.get(
-            "needs_more_information",
-            True
-        )
+    needs_more_information = (
+        triage_result.get("needs_more_information") is True
     )
 
     reason = str(
@@ -712,49 +674,37 @@ do not delay emergency advice simply to ask more questions.
         )
     ).strip()
 
-    # ============================================================
-    # SAFETY NORMALIZATION
-    # ============================================================
-
     if emergency:
-
         risk_level = "high"
-
         needs_more_information = False
-
         follow_up_question = ""
 
-    elif needs_more_information:
-
-        emergency = False
-
-    # ============================================================
-    # VETERINARIAN SMS
-    # ============================================================
+    # =========================================================
+    # 12. VETERINARIAN SMS
+    # =========================================================
 
     sms_sent = False
     sms_result = None
 
     if emergency:
+        owner_messages = [
+            item["content"]
+            for item in conversation_history
+            if item["role"] == "user"
+        ]
 
-        # Collect recent owner messages so the veterinarian receives
-        # useful conversation context.
-        owner_messages = []
+        symptoms_for_vet = "\n".join(owner_messages[-8:])
 
-        for item in conversation_history:
-
-            if item["role"] == "user":
-
-                owner_messages.append(
-                    item["content"]
+        if image_analysis:
+            symptoms_for_vet += (
+                "\n\nLatest image analysis:\n"
+                + json.dumps(
+                    image_analysis,
+                    ensure_ascii=False
                 )
-
-        symptoms_for_vet = "\n".join(
-            owner_messages[-8:]
-        )
+            )
 
         try:
-
             sms_result = notify_vet(
                 customer=customer,
                 symptoms=symptoms_for_vet,
@@ -762,40 +712,19 @@ do not delay emergency advice simply to ask more questions.
                 risk_level=risk_level
             )
 
-            print("========================================")
-            print("VETERINARIAN SMS RESULT")
-            print(sms_result)
-            print("========================================")
+            print("VETERINARIAN SMS RESULT:", sms_result)
 
             if isinstance(sms_result, dict):
+                sms_sent = sms_result.get("success") is True
 
-                sms_sent = bool(
-                    sms_result.get(
-                        "success",
-                        False
-                    )
-                )
+        except Exception as exc:
+            print("VETERINARIAN SMS ERROR:", exc)
 
-        except Exception as e:
-
-            print(
-                "VETERINARIAN SMS ERROR:",
-                e
-            )
-
-            sms_sent = False
-
-    # ============================================================
-    # KNOWLEDGE BASE
-    # ============================================================
+    # =========================================================
+    # 13. KNOWLEDGE BASE
+    # =========================================================
 
     knowledge_answer = None
-
-    # Never allow knowledge-base answers to override:
-    #
-    # - emergency
-    # - high risk
-    # - follow-up questions
 
     if (
         message
@@ -803,432 +732,120 @@ do not delay emergency advice simply to ask more questions.
         and risk_level == "low"
         and not needs_more_information
     ):
-
         try:
-
             knowledge_answer = (
                 QuestionAnswer.objects
-                .filter(
-                    question__icontains=message
-                )
+                .filter(question__icontains=message)
                 .first()
             )
+        except Exception as exc:
+            print("KNOWLEDGE BASE ERROR:", exc)
 
-        except Exception as e:
+    # =========================================================
+    # 14. CONVERSATIONAL ASSISTANT PROMPT
+    # =========================================================
 
-            print(
-                "KNOWLEDGE BASE ERROR:",
-                e
-            )
-
-    # ============================================================
-    # CONVERSATIONAL AI SYSTEM PROMPT
-    # ============================================================
-
-    assistant_system_prompt = """
+    assistant_system_prompt = f"""
 You are the conversational AI veterinary assistant for We Care Pet Care.
 
-Your job is to talk naturally with the dog owner.
+You are not a replacement for a veterinarian.
 
-You are NOT a replacement for a veterinarian.
+DOG PROFILE:
+Name: {getattr(customer, 'pet_name', '') or 'Unknown'}
+Registered breed: {getattr(customer, 'breed', '') or 'Unknown'}
+Sex: {getattr(customer, 'sex', '') or 'Unknown'}
+Age: {dog_age}
+Owner: {getattr(customer, 'fullname', '') or request.user.get_username()}
 
-The owner should feel like they are having a conversation with a helpful
-assistant, not reading a medical report.
+CURRENT TRIAGE:
+Risk level: {risk_level}
+Emergency: {emergency}
+Reason: {reason}
+Needs more information: {needs_more_information}
+Follow-up question: {follow_up_question}
+Recommended action: {recommended_action}
+Veterinarian SMS confirmed sent: {sms_sent}
 
-============================================================
-DOG INFORMATION
-============================================================
+CONVERSATION RULES:
 
-Dog name:
-{pet_name}
+- Speak naturally, empathetically, and clearly.
+- Do not display internal JSON or technical reasoning.
+- Do not diagnose diseases from a photograph.
+- Give safe, practical guidance.
+- Do not recommend human medications.
+- Ask focused follow-up questions when information is missing.
 
-Breed:
-{breed}
+BREED IDENTIFICATION:
 
-Sex:
-{sex}
+When image-analysis results are provided, explain the likely breed
+or breeds and their estimated visual percentages.
 
-Age:
-{age}
+Explain that percentages are estimates of visual resemblance,
+not confirmed genetic ancestry or DNA test results.
 
-Owner:
-{owner}
+Do not invent breed percentages when the analysis is inconclusive.
+Do not claim that a breed has been genetically confirmed.
 
-============================================================
-CURRENT SAFETY ASSESSMENT
-============================================================
+IMAGE AND BLEEDING:
 
-Risk level:
-{risk_level}
+- Assess the latest uploaded image using its image-analysis results.
+- Do not say blood is visible if visible_blood="no".
+- If visible_blood="uncertain", explain that the image is inconclusive.
+- Visible blood does not establish active or severe bleeding.
+- Do not repeat an earlier symptom as an observation of the new image.
+- A normal-looking photograph cannot rule out illness or injury.
 
-Emergency:
-{emergency}
+EMERGENCY:
 
-Reason:
-{reason}
+If emergency=true, calmly tell the owner to seek immediate veterinary care.
 
-Needs more information:
-{needs_more_information}
+If sms_sent=true, you may say the veterinarian was notified by SMS.
+If sms_sent=false, do not claim that the veterinarian was notified.
+Tell the owner to contact the veterinarian directly.
 
-Follow-up question:
-{follow_up_question}
+Do not delay emergency care while waiting for a reply.
 
-Recommended action:
-{recommended_action}
+STYLE:
 
-Veterinarian SMS sent:
-{sms_sent}
-
-============================================================
-VERY IMPORTANT: CONVERSATIONAL DISPLAY
-============================================================
-
-NEVER display the internal assessment.
-
-Do NOT write:
-
-Risk Level: Medium
-Reason: ...
-Emergency: False
-Recommended Action: ...
-Needs More Information: ...
-
-Do NOT display JSON.
-
-Do NOT display technical system information.
-
-Do NOT make the response look like a veterinary report.
-
-Instead, naturally incorporate the information into the conversation.
-
-============================================================
-NATURAL CONVERSATION
-============================================================
-
-Use:
-
-- short paragraphs
-- natural language
-- the dog's name when appropriate
-- simple explanations
-- one or two useful questions at a time
-- practical immediate guidance
-
-Start by acknowledging what the owner said.
-
-Then ask the most important question if information is missing.
-
-Then provide safe guidance.
-
-============================================================
-EXAMPLE: BLEEDING
-============================================================
-
-Owner:
-
-"My dog is bleeding."
-
-A good response:
-
-"I'm sorry to hear that. Let's first figure out how serious the bleeding is.
-
-Where is Bark bleeding from, and how did it happen? Is the blood dripping
-slowly, flowing continuously, or spurting?
-
-If it's an external wound, you can place a clean cloth or gauze over it and
-apply steady pressure. Try not to repeatedly remove the cloth to check it.
-
-If the bleeding is heavy, spurting, or won't stop with pressure, Bark needs
-immediate veterinary care."
-
-Do NOT simply say:
-
-"This is an emergency."
-
-because the owner has not provided enough information yet.
-
-============================================================
-EXAMPLE: FOLLOW-UP
-============================================================
-
-Owner:
-
-"He cut his leg."
-
-Respond naturally:
-
-"Thanks for telling me. Is the bleeding still going, and would you say it's
-just a few drops or quite a lot?
-
-Also, is Bark alert and able to stand and walk normally?
-
-For now, keep steady pressure on the wound with clean gauze or a clean cloth."
-
-============================================================
-EXAMPLE: CLEAR EMERGENCY
-============================================================
-
-Owner:
-
-"The blood is spurting and won't stop."
-
-Respond:
-
-"That sounds serious, and Bark may be experiencing severe bleeding.
-
-Please keep firm pressure on the wound using clean gauze or a clean cloth and
-seek emergency veterinary care immediately. Don't wait for the bleeding to
-stop on its own.
-
-I've also notified the veterinarian by SMS about Bark's emergency. Please
-follow the veterinarian's instructions while you get Bark the care he needs."
-
-============================================================
-WHEN INFORMATION IS MISSING
-============================================================
-
-If needs_more_information=true:
-
-- acknowledge the owner's concern
-- ask the follow-up question
-- provide safe immediate guidance when appropriate
-- explain important warning signs
-
-Do not ask a long list of questions.
-
-Ask only the most important question or two.
-
-============================================================
-WHEN EMERGENCY=true
-============================================================
-
-Be direct and calm.
-
-Tell the owner why the situation is concerning.
-
-Give immediate safe instructions.
-
-Tell them to seek emergency veterinary care without delay.
-
-If sms_sent=true:
-
-Naturally tell them:
-
-"I've also notified the veterinarian by SMS about Bark's emergency."
-
-Then:
-
-"Please wait for the veterinarian's response and follow their instructions."
-
-If the dog is in immediate danger, tell the owner to seek emergency veterinary
-care without delay.
-
-IMPORTANT:
-
-Say:
-
-"The veterinarian has been notified by SMS."
-
-Do NOT say:
-
-"The AI contacted the veterinarian."
-
-============================================================
-WHEN SMS FAILED
-============================================================
-
-If:
-
-emergency=true
-
-and:
-
-sms_sent=false
-
-NEVER claim the veterinarian was notified.
-
-Say naturally:
-
-"I couldn't confirm that the veterinarian received the emergency SMS, so
-please contact the veterinarian directly and seek immediate veterinary care."
-
-============================================================
-FIRST AID
-============================================================
-
-Provide safe general first-aid guidance when appropriate.
-
-For external bleeding:
-
-- clean gauze or cloth
-- continuous pressure
-- do not repeatedly remove the cloth
-- add additional material over soaked material
-- keep the dog calm
-- seek veterinary care when appropriate
-
-Never recommend human medications.
-
-Never recommend dangerous home remedies.
-
-Never tell the owner to delay emergency care.
-
-============================================================
-STYLE
-============================================================
-
-Be:
-
-- conversational
-- calm
-- empathetic
-- helpful
-- concise
-- clear
-- practical
-
-Do not:
-
-- sound robotic
-- sound like a medical report
-- display risk levels
-- display internal reasoning
-- display JSON
-- use emojis
-- use excessive headings
-- diagnose diseases
-- claim certainty when information is incomplete
-- repeat the same warning unnecessarily
-
-============================================================
-MESSAGE LENGTH
-============================================================
-
-Normal responses:
-
-2-5 short paragraphs.
-
-Simple follow-up:
-
-1-3 short paragraphs.
-
-Emergency:
-
-short and action-oriented.
-
-The owner may be dealing with an injured or sick dog, so do not overwhelm them.
-
-============================================================
-FINAL RULE
-============================================================
-
-The conversation should naturally progress:
-
-Owner describes symptom
-        ↓
-Assistant acknowledges
-        ↓
-Assistant asks important question
-        ↓
-Assistant gives safe immediate guidance
-        ↓
-Owner answers
-        ↓
-Assistant reassesses entire conversation
-        ↓
-Assistant asks another question if needed
-        ↓
-Emergency becomes clear OR remains non-emergency
-        ↓
-Appropriate action is given
-
-Do not turn every concerning symptom into an emergency.
-
-Do not delay emergency care when the information clearly indicates a
-life-threatening situation.
+Use short paragraphs and natural language.
+Do not use emojis.
+Do not display internal risk assessment fields.
 """
 
-    # ============================================================
-    # FORMAT SYSTEM PROMPT
-    # ============================================================
-
-    assistant_system_prompt = assistant_system_prompt.format(
-        pet_name=customer.pet_name,
-        breed=customer.breed or "Unknown",
-        sex=customer.sex or "Unknown",
-        age=dog_age,
-        owner=customer.fullname,
-        risk_level=risk_level,
-        emergency=emergency,
-        reason=reason,
-        needs_more_information=needs_more_information,
-        follow_up_question=follow_up_question,
-        recommended_action=recommended_action,
-        sms_sent=sms_sent
-    )
-
-    # ============================================================
-    # ADD IMAGE ANALYSIS
-    # ============================================================
+    # =========================================================
+    # 15. ADD IMAGE DETAILS TO ASSISTANT PROMPT
+    # =========================================================
 
     if image_analysis:
+        assistant_system_prompt += (
+            "\n\nLATEST UPLOADED IMAGE ANALYSIS:\n"
+            + json.dumps(
+                image_analysis,
+                ensure_ascii=False
+            )
+            + "\nDescribe the actual visible findings. "
+              "Include likely breed percentages when available. "
+              "Do not mistake visual estimates for DNA results. "
+              "Do not infer bleeding from earlier conversation alone."
+        )
 
-        assistant_system_prompt += f"""
-
-============================================================
-IMAGE ANALYSIS
-============================================================
-
-The uploaded image was analyzed.
-
-Likely breed:
-{image_analysis.get("breed", "Unknown")}
-
-Confidence:
-{image_analysis.get("confidence", "low")}
-
-Description:
-{image_analysis.get("description", "")}
-
-Possible visible observations:
-{image_analysis.get("possible_health_observations", "")}
-
-Breed comparison:
-{image_analysis.get("comparison", "")}
-
-IMPORTANT:
-
-The image analysis cannot confirm a medical diagnosis.
-Only discuss visible observations.
-"""
-
-    # ============================================================
-    # ADD KNOWLEDGE BASE
-    # ============================================================
+    # =========================================================
+    # 16. ADD KNOWLEDGE BASE ANSWER
+    # =========================================================
 
     if knowledge_answer:
+        assistant_system_prompt += (
+            "\n\nPOSSIBLE KNOWLEDGE BASE ANSWER:\n"
+            + str(knowledge_answer.answer)
+            + "\nUse this answer only when relevant. "
+              "Do not let it override veterinary safety guidance."
+        )
 
-        assistant_system_prompt += f"""
-
-============================================================
-KNOWLEDGE BASE
-============================================================
-
-A possible matching answer is:
-
-{knowledge_answer.answer}
-
-Use it only when relevant.
-
-Do not allow this information to override the veterinary safety assessment.
-"""
-
-    # ============================================================
-    # GENERATE CONVERSATIONAL RESPONSE
-    # ============================================================
+    # =========================================================
+    # 17. GENERATE CONVERSATIONAL RESPONSE
+    # =========================================================
 
     try:
-
         response_messages = [
             {
                 "role": "system",
@@ -1236,17 +853,22 @@ Do not allow this information to override the veterinary safety assessment.
             }
         ]
 
-        for item in conversation_history:
+        response_messages.extend(conversation_history)
 
-            if item["role"] not in [
-                "user",
-                "assistant"
-            ]:
-                continue
-
+        if image_analysis:
             response_messages.append({
-                "role": item["role"],
-                "content": item["content"]
+                "role": "user",
+                "content": (
+                    "Please analyze my newly uploaded image. "
+                    "The image analysis results are:\n"
+                    + json.dumps(
+                        image_analysis,
+                        ensure_ascii=False
+                    )
+                    + "\nDescribe the likely breed and percentage "
+                    "estimates if available, and describe visible "
+                    "health observations accurately."
+                )
             })
 
         ai_response = client.chat.completions.create(
@@ -1256,87 +878,63 @@ Do not allow this information to override the veterinary safety assessment.
         )
 
         assistant_message = (
-            ai_response
-            .choices[0]
-            .message
-            .content
-            .strip()
-        )
+            ai_response.choices[0].message.content or ""
+        ).strip()
 
-    except Exception as e:
+        if not assistant_message:
+            raise ValueError("The AI returned an empty response.")
 
-        print(
-            "AI RESPONSE ERROR:",
-            e
-        )
+    except Exception as exc:
+        print("AI RESPONSE ERROR:", exc)
 
-        assistant_message = (
-            f"I'm sorry, but I wasn't able to process that right now. "
-            f"Please tell me more about what is happening with "
-            f"{customer.pet_name}."
-        )
+        if image_analysis:
+            assistant_message = (
+                "I received your image, but I couldn't complete "
+                "the analysis. Please try uploading it again. "
+                "If your dog has a serious injury or difficulty "
+                "breathing, seek immediate veterinary care."
+            )
+        else:
+            assistant_message = (
+                "I'm sorry, but I couldn't process your message "
+                "right now. Please try again."
+            )
 
-    # ============================================================
-    # ENSURE FOLLOW-UP QUESTION IS DISPLAYED
-    # ============================================================
+    # =========================================================
+    # 18. ENSURE FOLLOW-UP QUESTION IS DISPLAYED
+    # =========================================================
 
     if (
         not emergency
         and needs_more_information
         and follow_up_question
+        and follow_up_question.lower() not in assistant_message.lower()
     ):
+        assistant_message += "\n\n" + follow_up_question
 
-        if (
-            follow_up_question.lower()
-            not in assistant_message.lower()
-        ):
-
-            assistant_message += (
-                f"\n\n{follow_up_question}"
-            )
-
-    # ============================================================
-    # EMERGENCY SMS STATUS MESSAGE
-    # ============================================================
+    # =========================================================
+    # 19. EMERGENCY SMS NOTICE
+    # =========================================================
 
     if emergency:
-
         if sms_sent:
-
             emergency_notice = (
-                f"\n\nI've also notified the veterinarian by SMS "
-                f"about {customer.pet_name}'s emergency. "
-                f"Please wait for the veterinarian's response and "
-                f"follow their instructions while you get "
-                f"{customer.pet_name} the care they need."
+                "The veterinarian has been notified by SMS. "
+                "Please seek immediate veterinary care."
             )
-
-            already_notified = (
-                "notified the veterinarian by sms"
-                in assistant_message.lower()
-            )
-
         else:
-
             emergency_notice = (
-                f"\n\nI couldn't confirm that the veterinarian "
-                f"received the emergency SMS. Please contact the "
-                f"veterinarian directly and seek immediate "
-                f"veterinary care for {customer.pet_name}."
+                "I couldn't confirm that the veterinarian received "
+                "an SMS. Please contact the veterinarian directly "
+                "and seek immediate veterinary care."
             )
 
-            already_notified = (
-                "couldn't confirm that the veterinarian received"
-                in assistant_message.lower()
-            )
+        if emergency_notice.lower() not in assistant_message.lower():
+            assistant_message += "\n\n" + emergency_notice
 
-        if not already_notified:
-
-            assistant_message += emergency_notice
-
-    # ============================================================
-    # SAVE ASSISTANT MESSAGE
-    # ============================================================
+    # =========================================================
+    # 20. SAVE ASSISTANT MESSAGE
+    # =========================================================
 
     ChatMessage.objects.create(
         session=session,
@@ -1344,9 +942,9 @@ Do not allow this information to override the veterinary safety assessment.
         message=assistant_message
     )
 
-    # ============================================================
-    # LEARN ONLY FROM SAFE CONVERSATIONS
-    # ============================================================
+    # =========================================================
+    # 21. SAVE SAFE KNOWLEDGE BASE ANSWER
+    # =========================================================
 
     if (
         message
@@ -1355,32 +953,21 @@ Do not allow this information to override the veterinary safety assessment.
         and not needs_more_information
         and not knowledge_answer
     ):
-
         try:
-
             QuestionAnswer.objects.create(
                 question=message,
                 answer=assistant_message
             )
+        except Exception as exc:
+            print("QUESTION ANSWER SAVE ERROR:", exc)
 
-        except Exception as e:
-
-            print(
-                "QUESTION ANSWER SAVE ERROR:",
-                e
-            )
-
-    # ============================================================
-    # RETURN JSON
-    # ============================================================
+    # =========================================================
+    # 22. RETURN JSON TO FRONTEND
+    # =========================================================
 
     return JsonResponse({
         "success": True,
-        "type": (
-            "image"
-            if image_analysis
-            else "text"
-        ),
+        "type": "image" if image_analysis else "text",
         "response": assistant_message,
         "emergency": emergency,
         "risk_level": risk_level,
@@ -1388,5 +975,6 @@ Do not allow this information to override the veterinary safety assessment.
         "needs_more_information": needs_more_information,
         "follow_up_question": follow_up_question,
         "recommended_action": recommended_action,
-        "sms_sent": sms_sent
+        "sms_sent": sms_sent,
+        "image_analysis": image_analysis
     })
