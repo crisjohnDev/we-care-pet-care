@@ -12,6 +12,8 @@ from .models import ChatSession, ChatMessage, Customer, QuestionAnswer
 from datetime import date
 from .sms import notify_vet
 
+client = OpenAI()
+
 @login_required
 def customer_dashboard(request):
     session = ChatSession.objects.create(
@@ -51,39 +53,21 @@ def chat_session(request, session_id):
         "recent_chats": recent_chats,
     })
 
-import json
-from datetime import date
 
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_POST
+# import base64
+# import json
+# from datetime import date
 
-from openai import OpenAI
+# from django.contrib.auth.decorators import login_required
+# from django.http import JsonResponse
+# from django.shortcuts import get_object_or_404
+# from django.views.decorators.http import require_POST
 
-from .models import ChatSession, ChatMessage, Customer, QuestionAnswer
-from .sms import notify_vet
+# from openai import OpenAI
 
+# from .models import ChatSession, ChatMessage, Customer, QuestionAnswer
+# from .sms import notify_vet
 
-client = OpenAI()
-
-
-import base64
-import json
-from datetime import date
-
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_POST
-
-from openai import OpenAI
-
-from .models import ChatSession, ChatMessage, Customer, QuestionAnswer
-from .sms import notify_vet
-
-
-client = OpenAI()
 
 
 @login_required
