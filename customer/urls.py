@@ -6,4 +6,9 @@ urlpatterns = [
     path("chat/new/", views.new_chat, name="new_chat"),
     path("chat/<int:session_id>/", views.chat_session, name="chat_session"),
     path("chat/<int:session_id>/send/", views.send_message, name="send_message"),
+        path(
+        "logout/",
+        views.customer_logout,
+        name="customer_logout"
+    ),
 ]

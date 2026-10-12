@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from .models import ChatSession, ChatMessage, Customer, QuestionAnswer
 from datetime import date
 from .sms import notify_vet
-
+from django.contrib.auth import logout
 client = OpenAI()
 
 @login_required
@@ -52,6 +52,16 @@ def chat_session(request, session_id):
         "messages": session.messages.all(),
         "recent_chats": recent_chats,
     })
+
+
+
+@login_required
+def customer_logout(request):
+    if request.method == "POST":
+        logout(request)
+        return redirect("login")
+
+    return redirect("chat_session", session_id=request.session.get("chat_session_id"))
 
 
 # import base64
