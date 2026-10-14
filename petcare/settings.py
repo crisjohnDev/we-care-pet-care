@@ -27,8 +27,8 @@ VETERINARY_PHONE = os.getenv("VETERINARY_PHONE")
 SECRET_KEY = 'django-insecure-8ftlpnvyk+)%t52ec%#ubcnr*qq#2e$a4lo^29y9i*sbk6sxf$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", "False") == "True"
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
+# DEBUG = True
 ALLOWED_HOSTS = [
     ".onrender.com",
     "localhost",
