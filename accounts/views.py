@@ -1,4 +1,4 @@
-from datetime import timezone
+from django.utils import timezone
 
 from django.core.checks import messages
 from django.shortcuts import render, redirect
