@@ -1,10 +1,40 @@
+
 from django.contrib import admin
 from .models import (
     Customer,
     ChatSession,
     ChatMessage,
-    QuestionAnswer
+    QuestionAnswer,
+    Breed,
 )
+
+
+@admin.register(Breed)
+class BreedAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "is_active",
+        "created_at",
+    )
+    search_fields = (
+        "name",
+        "description",
+    )
+    list_filter = (
+        "is_active",
+        "created_at",
+    )
+    ordering = ("name",)
+
+    fieldsets = (
+        ("Breed Information", {
+            "fields": (
+                "name",
+                "description",
+                "is_active",
+            )
+        }),
+    )
 
 
 @admin.register(Customer)
@@ -20,7 +50,7 @@ class CustomerAdmin(admin.ModelAdmin):
     search_fields = (
         "fullname",
         "pet_name",
-        "breed",
+        "breed__name",
         "contact_number",
     )
     list_filter = (
@@ -79,4 +109,3 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
         "is_active",
         "created_at",
     )
-

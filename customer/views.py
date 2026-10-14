@@ -32,9 +32,9 @@ def new_chat(request):
 
     return redirect("chat_session", session_id=session.id)
 
+
 @login_required
 def chat_session(request, session_id):
-
     session = get_object_or_404(
         ChatSession,
         id=session_id,
@@ -44,7 +44,7 @@ def chat_session(request, session_id):
     recent_chats = (
         ChatSession.objects
         .filter(user=request.user)
-        .order_by("-updated_at")
+        .order_by("-is_pinned", "-updated_at")
     )
 
     return render(request, "pages/dashboard.html", {
@@ -53,6 +53,86 @@ def chat_session(request, session_id):
         "recent_chats": recent_chats,
     })
 
+
+@login_required
+@require_POST
+def toggle_pin_chat(request, session_id):
+    chat = get_object_or_404(
+        ChatSession,
+        id=session_id,
+        user=request.user
+    )
+
+    chat.is_pinned = not chat.is_pinned
+    chat.save(update_fields=["is_pinned"])
+
+    return _redirect_to_owned_chat(
+        request,
+        fallback_session_id=session_id
+    )
+
+
+@login_required
+@require_POST
+def delete_chat(request, session_id):
+    chat = get_object_or_404(
+        ChatSession,
+        id=session_id,
+        user=request.user
+    )
+
+    # Delete this session and its related messages.
+    chat.delete()
+
+    return _redirect_to_owned_chat(request)
+
+
+def _redirect_to_owned_chat(
+    request,
+    fallback_session_id=None
+):
+    """
+    Redirect to a valid chat owned by the current user.
+    Never redirect to a chat belonging to another user.
+    """
+    return_to = request.POST.get("return_to", "")
+
+    if return_to.isdigit():
+        target = ChatSession.objects.filter(
+            id=int(return_to),
+            user=request.user
+        ).first()
+
+        if target:
+            return redirect("chat_session", session_id=target.id)
+
+    if fallback_session_id is not None:
+        target = ChatSession.objects.filter(
+            id=fallback_session_id,
+            user=request.user
+        ).first()
+
+        if target:
+            return redirect("chat_session", session_id=target.id)
+
+    # Prefer the most recent pinned or regular chat.
+    target = (
+        ChatSession.objects
+        .filter(user=request.user)
+        .order_by("-is_pinned", "-updated_at")
+        .first()
+    )
+
+    if target:
+        return redirect("chat_session", session_id=target.id)
+
+    # Create a new chat if the user has deleted their last session.
+    target = ChatSession.objects.create(
+        user=request.user,
+        title="New Chat"
+    )
+
+    return redirect("chat_session", session_id=target.id)
 
 
 @login_required
@@ -64,20 +144,16 @@ def customer_logout(request):
     return redirect("chat_session", session_id=request.session.get("chat_session_id"))
 
 
-# import base64
-# import json
-# from datetime import date
+@login_required
+def view_profile(request):
+    try:
+        customer = Customer.objects.get(user=request.user)
+    except Customer.DoesNotExist:
+        customer = None
 
-# from django.contrib.auth.decorators import login_required
-# from django.http import JsonResponse
-# from django.shortcuts import get_object_or_404
-# from django.views.decorators.http import require_POST
-
-# from openai import OpenAI
-
-# from .models import ChatSession, ChatMessage, Customer, QuestionAnswer
-# from .sms import notify_vet
-
+    return render(request, "pages/view_profile.html", {
+        "customer": customer,
+    })
 
 
 @login_required

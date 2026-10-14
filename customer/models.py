@@ -1,6 +1,21 @@
 from django.db import models
 from django.conf import settings
 
+
+class Breed(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Dog Breed"
+        verbose_name_plural = "Dog Breeds"
+
+    def __str__(self):
+        return self.name
+
 class Customer(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -14,7 +29,11 @@ class Customer(models.Model):
 
     # Dog Information
     pet_name = models.CharField(max_length=100)
-    breed = models.CharField(max_length=100)
+    breed = models.ForeignKey(
+        Breed,
+        on_delete=models.PROTECT,
+        related_name="customers"
+    )
 
     sex = models.CharField(
         max_length=10,
@@ -25,8 +44,6 @@ class Customer(models.Model):
     )
 
     birthdate = models.DateField()
-
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -42,6 +59,8 @@ class ChatSession(models.Model):
     )
 
     title = models.CharField(max_length=255)
+
+    is_pinned = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
