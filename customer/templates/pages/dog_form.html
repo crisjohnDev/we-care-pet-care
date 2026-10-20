@@ -1,0 +1,181 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} | We Care Pet Care</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #FAF6F0;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+
+    <header class="bg-white border-b border-gray-100">
+        <div class="max-w-3xl mx-auto px-5 sm:px-8 py-5 flex items-center justify-between gap-4">
+            <a href="{% url 'view-profile' %}" class="flex items-center gap-3">
+                <img src="{% static 'images/logo.png' %}"
+                     alt="We Care Pet Care"
+                     class="w-11 h-11 object-contain"
+                     onerror="this.style.display='none'">
+                <div>
+                    <h1 class="text-lg font-extrabold text-gray-900">We Care Pet Care</h1>
+                    <p class="text-xs text-gray-500">Your pet's health matters</p>
+                </div>
+            </a>
+
+            <a href="{% url 'view-profile' %}"
+               class="px-4 py-2.5 rounded-xl bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold text-sm transition">
+                Cancel
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-5 sm:px-8 py-8 sm:py-12">
+
+        <div class="mb-8">
+            <p class="text-sm font-bold uppercase tracking-wider text-amber-700 mb-2">
+                Pet Records
+            </p>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">
+                {{ page_title }}
+            </h2>
+            <p class="text-gray-500 mt-3">
+                Enter your dog's information below.
+            </p>
+        </div>
+
+        <section class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8">
+
+            {% if error %}
+                <div role="alert"
+                     class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <div>
+                    <label for="pet_name" class="block text-sm font-bold text-gray-700 mb-2">
+                        Dog's Name <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="pet_name"
+                        name="pet_name"
+                        maxlength="100"
+                        required
+                        value="{% if form_data.pet_name != None %}{{ form_data.pet_name }}{% elif dog %}{{ dog.pet_name }}{% endif %}"
+                        placeholder="Enter your dog's name"
+                        class="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+                    >
+                </div>
+
+                <div>
+                    <label for="breed" class="block text-sm font-bold text-gray-700 mb-2">
+                        Breed <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="breed"
+                        name="breed"
+                        required
+                        class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+                    >
+                        <option value="">Select a breed</option>
+
+                        {% for breed in breeds %}
+                            <option value="{{ breed.pk }}"
+                                {% if form_data.breed != None %}
+                                    {% if form_data.breed == breed.pk|stringformat:"s" %}selected{% endif %}
+                                {% elif dog and dog.breed_id == breed.pk %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ breed.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="sex" class="block text-sm font-bold text-gray-700 mb-2">
+                        Sex <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="sex"
+                        name="sex"
+                        required
+                        class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+                    >
+                        <option value="">Select sex</option>
+                        <option value="Male"
+                            {% if form_data.sex != None %}
+                                {% if form_data.sex == "Male" %}selected{% endif %}
+                            {% elif dog and dog.sex == "Male" %}
+                                selected
+                            {% endif %}
+                        >Male</option>
+
+                        <option value="Female"
+                            {% if form_data.sex != None %}
+                                {% if form_data.sex == "Female" %}selected{% endif %}
+                            {% elif dog and dog.sex == "Female" %}
+                                selected
+                            {% endif %}
+                        >Female</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="birthdate" class="block text-sm font-bold text-gray-700 mb-2">
+                        Birthdate <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        id="birthdate"
+                        name="birthdate"
+                        required
+                        max="{{ today|date:'Y-m-d' }}"
+                        value="{% if form_data.birthdate != None %}{{ form_data.birthdate }}{% elif dog %}{{ dog.birthdate|date:'Y-m-d' }}{% endif %}"
+                        class="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+                    >
+                    <p class="text-xs text-gray-400 mt-2">
+                        The birthdate cannot be in the future.
+                    </p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button
+                        type="submit"
+                        class="flex-1 inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold transition"
+                    >
+                        {{ button_text }}
+                    </button>
+
+                    <a
+                        href="{% url 'view-profile' %}"
+                        class="inline-flex items-center justify-center px-6 py-3.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold transition"
+                    >
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <footer class="text-center text-sm text-gray-400 mt-10">
+            <p>We Care Pet Care</p>
+            <p class="mt-1">Caring for your pets, every step of the way.</p>
+        </footer>
+    </main>
+</body>
+</html>

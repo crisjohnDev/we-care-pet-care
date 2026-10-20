@@ -49,4 +49,24 @@ urlpatterns = [
         views.view_profile,
         name="view_profile"
     ),
+    path(
+        "profile/",
+        views.view_profile,
+        name="view-profile",
+    ),
+    path(
+        "profile/dogs/add/",
+        views.add_dog,
+        name="add-dog",
+    ),
+    path(
+        "profile/dogs/<int:dog_id>/edit/",
+        views.edit_dog,
+        name="edit-dog",
+    ),
+    path(
+        "profile/dogs/<int:dog_id>/delete/",
+        views.delete_dog,
+        name="delete-dog",
+    ),
 ]

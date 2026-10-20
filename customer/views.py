@@ -8,10 +8,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import ChatSession, ChatMessage, Customer, QuestionAnswer
+from .models import ChatSession, ChatMessage, Customer, QuestionAnswer,Dog, Breed
 from datetime import date
 from .sms import notify_vet
 from django.contrib.auth import logout
+from django.contrib import messages
 client = OpenAI()
 
 @login_required
@@ -1074,3 +1075,219 @@ Do not display internal risk assessment fields.
         "sms_sent": sms_sent,
         "image_analysis": image_analysis
     })
+
+
+
+@login_required
+def add_dog(request):
+    customer = get_object_or_404(
+        Customer,
+        user=request.user,
+    )
+
+    breeds = Breed.objects.filter(
+        is_active=True,
+    ).order_by("name")
+
+    if request.method == "POST":
+        pet_name = request.POST.get("pet_name", "").strip()
+        breed_id = request.POST.get("breed", "").strip()
+        sex = request.POST.get("sex", "").strip()
+        birthdate = request.POST.get("birthdate", "").strip()
+
+        selected_breed = Breed.objects.filter(
+            pk=breed_id,
+            is_active=True,
+        ).first()
+
+        try:
+            parsed_birthdate = date.fromisoformat(birthdate)
+            valid_birthdate = parsed_birthdate <= date.today()
+        except (ValueError, TypeError):
+            parsed_birthdate = None
+            valid_birthdate = False
+
+        error = None
+
+        if not pet_name:
+            error = "Please enter your dog's name."
+        elif len(pet_name) > 100:
+            error = "The dog's name must not exceed 100 characters."
+        elif not selected_breed:
+            error = "Please select a valid breed."
+        elif sex not in ("Male", "Female"):
+            error = "Please select your dog's sex."
+        elif not valid_birthdate:
+            error = "Please enter a valid birthdate. Future dates are not allowed."
+
+        if error:
+            return render(
+                request,
+                "pages/dog_form.html",
+                {
+                    "customer": customer,
+                    "breeds": breeds,
+                    "dog": None,
+                    "error": error,
+                    "form_data": request.POST,
+                    "page_title": "Add a Dog",
+                    "button_text": "Save Dog",
+                },
+            )
+
+        Dog.objects.create(
+            customer=customer,
+            pet_name=pet_name,
+            breed=selected_breed,
+            sex=sex,
+            birthdate=parsed_birthdate,
+        )
+
+        messages.success(
+            request,
+            f"{pet_name} has been added to your pet records.",
+        )
+        return redirect("view-profile")
+
+    return render(
+        request,
+        "pages/dog_form.html",
+        {
+            "customer": customer,
+            "breeds": breeds,
+            "dog": None,
+            "form_data": {},
+            "page_title": "Add a Dog",
+            "button_text": "Save Dog",
+        },
+    )
+
+
+@login_required
+def edit_dog(request, dog_id):
+    customer = get_object_or_404(
+        Customer,
+        user=request.user,
+    )
+
+    # Only allow editing a dog belonging to the logged-in customer.
+    dog = get_object_or_404(
+        Dog,
+        pk=dog_id,
+        customer=customer,
+    )
+
+    breeds = Breed.objects.filter(
+        is_active=True,
+    ).order_by("name")
+
+    if request.method == "POST":
+        pet_name = request.POST.get("pet_name", "").strip()
+        breed_id = request.POST.get("breed", "").strip()
+        sex = request.POST.get("sex", "").strip()
+        birthdate = request.POST.get("birthdate", "").strip()
+
+        selected_breed = Breed.objects.filter(
+            pk=breed_id,
+        ).first()
+
+        try:
+            parsed_birthdate = date.fromisoformat(birthdate)
+            valid_birthdate = parsed_birthdate <= date.today()
+        except (ValueError, TypeError):
+            parsed_birthdate = None
+            valid_birthdate = False
+
+        error = None
+
+        if not pet_name:
+            error = "Please enter your dog's name."
+        elif len(pet_name) > 100:
+            error = "The dog's name must not exceed 100 characters."
+        elif not selected_breed:
+            error = "Please select a valid breed."
+        elif sex not in ("Male", "Female"):
+            error = "Please select your dog's sex."
+        elif not valid_birthdate:
+            error = "Please enter a valid birthdate. Future dates are not allowed."
+
+        if error:
+            return render(
+                request,
+                "pages/dog_form.html",
+                {
+                    "customer": customer,
+                    "breeds": breeds,
+                    "dog": dog,
+                    "error": error,
+                    "form_data": request.POST,
+                    "page_title": "Edit Dog",
+                    "button_text": "Save Changes",
+                },
+            )
+
+        dog.pet_name = pet_name
+        dog.breed = selected_breed
+        dog.sex = sex
+        dog.birthdate = parsed_birthdate
+        dog.save(
+            update_fields=[
+                "pet_name",
+                "breed",
+                "sex",
+                "birthdate",
+            ]
+        )
+
+        messages.success(
+            request,
+            f"{dog.pet_name}'s information has been updated.",
+        )
+        return redirect("view-profile")
+
+    return render(
+        request,
+        "pages/dog_form.html",
+        {
+            "customer": customer,
+            "breeds": breeds,
+            "dog": dog,
+            "form_data": {},
+            "page_title": "Edit Dog",
+            "button_text": "Save Changes",
+        },
+    )
+
+
+@login_required
+def delete_dog(request, dog_id):
+    customer = get_object_or_404(
+        Customer,
+        user=request.user,
+    )
+
+    # Prevent customers from deleting another customer's dog.
+    dog = get_object_or_404(
+        Dog,
+        pk=dog_id,
+        customer=customer,
+    )
+
+    if request.method == "POST":
+        dog_name = dog.pet_name
+        dog.delete()
+
+        messages.success(
+            request,
+            f"{dog_name} has been removed from your pet records.",
+        )
+        return redirect("view-profile")
+
+    return render(
+        request,
+        "pages/delete_dog.html",
+        {
+            "customer": customer,
+            "dog": dog,
+        },
+    )
