@@ -9,8 +9,13 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
     <style>
         body {
@@ -38,6 +43,40 @@
             outline-offset: 3px;
             border-radius: 6px;
         }
+
+        .loading-spinner {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-overlay {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .loading-spinner {
+                animation-duration: 1.8s;
+            }
+
+            .loading-overlay {
+                animation: none;
+            }
+        }
     </style>
 </head>
 
@@ -49,17 +88,21 @@
 
             <a href="/" class="flex items-center gap-3 group">
                 <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shadow-sm transition-transform group-hover:scale-105">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         viewBox="0 0 24 24"
-                         fill="currentColor"
-                         class="w-5 h-5"
-                         aria-hidden="true">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        class="w-5 h-5"
+                        aria-hidden="true"
+                    >
                         <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
                         <circle cx="6.5" cy="10" r="1.5"/>
                         <circle cx="10" cy="7" r="1.5"/>
                         <circle cx="14" cy="7" r="1.5"/>
                         <circle cx="17.5" cy="10" r="1.5"/>
                     </svg>
+
                 </div>
 
                 <span class="text-xl font-extrabold text-slate-900 tracking-tight group-hover:text-amber-700 transition-colors">
@@ -67,59 +110,82 @@
                 </span>
             </a>
 
-            {% comment %} <a href="tel:09559688069"
-               class="text-sm font-semibold text-slate-600 hover:text-amber-600 transition-colors bg-amber-50/50 hover:bg-amber-50 px-4 py-2 rounded-full border border-amber-100/40">
-                Need help?
-            </a> {% endcomment %}
-
         </div>
     </header>
+
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex items-center justify-center p-4 md:p-8 relative">
 
         <!-- DECORATIVE BONE -->
         <div class="absolute hidden md:block -rotate-12 translate-x-[-190px] translate-y-[-180px] z-0 opacity-80 pointer-events-none">
-            <svg class="w-24 h-24 text-amber-200/80"
-                 fill="currentColor" viewBox="0 0 24 24"
-                 aria-hidden="true">
+
+            <svg
+                class="w-24 h-24 text-amber-200/80"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
                 <path d="M17 3a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 .14.8l-5.28 2.64A2.5 2.5 0 0 0 7 8.5 2.5 2.5 0 1 0 9.5 11c0-.28-.05-.55-.14-.8l5.28-2.64A2.5 2.5 0 1 0 17 3z"/>
                 <path d="M7 13a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 .14.8l5.28 2.64A2.5 2.5 0 0 0 12 18.5a2.5 2.5 0 1 0 2.5-2.5c0-.28-.05-.55-.14-.8l-5.28-2.64A2.5 2.5 0 0 0 7 13z"/>
             </svg>
+
         </div>
+
 
         <!-- DECORATIVE TENNIS BALL -->
         <div class="absolute hidden md:block rotate-45 translate-x-[210px] translate-y-[180px] z-0 opacity-80 pointer-events-none">
-            <svg class="w-20 h-20 text-lime-400/80"
-                 viewBox="0 0 100 100" fill="currentColor"
-                 aria-hidden="true">
+
+            <svg
+                class="w-20 h-20 text-lime-400/80"
+                viewBox="0 0 100 100"
+                fill="currentColor"
+                aria-hidden="true"
+            >
                 <circle cx="50" cy="50" r="40"/>
-                <path d="M21.7 21.7 C35 35, 35 65, 21.7 78.3"
-                      fill="none" stroke="#FAF6F0"
-                      stroke-width="4" stroke-linecap="round"/>
-                <path d="M78.3 21.7 C65 35, 65 65, 78.3 78.3"
-                      fill="none" stroke="#FAF6F0"
-                      stroke-width="4" stroke-linecap="round"/>
+
+                <path
+                    d="M21.7 21.7 C35 35, 35 65, 21.7 78.3"
+                    fill="none"
+                    stroke="#FAF6F0"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                />
+
+                <path
+                    d="M78.3 21.7 C65 35, 65 65, 78.3 78.3"
+                    fill="none"
+                    stroke="#FAF6F0"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                />
             </svg>
+
         </div>
+
 
         <!-- LOGIN CARD -->
         <div class="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-xl border border-amber-100/60 max-w-md w-full z-10 relative">
 
             <!-- CARD HEADER -->
             <div class="text-center mb-8">
+
                 <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 mb-3 border border-amber-100 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         viewBox="0 0 24 24"
-                         fill="currentColor"
-                         class="w-7 h-7"
-                         aria-hidden="true">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        class="w-7 h-7"
+                        aria-hidden="true"
+                    >
                         <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
                         <circle cx="6.5" cy="10" r="1.5"/>
                         <circle cx="10" cy="7" r="1.5"/>
                         <circle cx="14" cy="7" r="1.5"/>
                         <circle cx="17.5" cy="10" r="1.5"/>
                     </svg>
+
                 </div>
 
                 <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
@@ -129,25 +195,37 @@
                 <p class="text-slate-500 text-sm mt-1">
                     Ready to manage your happy pets?
                 </p>
+
             </div>
 
+
             <!-- LOGIN FORM -->
-            <form method="POST" class="space-y-5">
+            <form
+                method="POST"
+                id="loginForm"
+                class="space-y-5"
+            >
+
                 {% csrf_token %}
 
-                    {% if error %}
-                        <div
-                            role="alert"
-                            class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                        >
-                            {{ error }}
-                        </div>
-                    {% endif %}
+                <!-- LOGIN ERROR -->
+                {% if error %}
+                    <div
+                        role="alert"
+                        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    >
+                        {{ error }}
+                    </div>
+                {% endif %}
+
 
                 <!-- USERNAME -->
                 <div>
-                    <label for="username"
-                           class="block text-sm font-semibold text-slate-700 mb-1.5">
+
+                    <label
+                        for="username"
+                        class="block text-sm font-semibold text-slate-700 mb-1.5"
+                    >
                         Username
                     </label>
 
@@ -159,19 +237,28 @@
                         required
                         autofocus
                         class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all text-sm"
-                        placeholder="Enter your username">
+                        placeholder="Enter your username"
+                    >
+
                 </div>
+
 
                 <!-- PASSWORD -->
                 <div>
+
                     <div class="flex justify-between items-center mb-1.5">
-                        <label for="password"
-                               class="block text-sm font-semibold text-slate-700">
+
+                        <label
+                            for="password"
+                            class="block text-sm font-semibold text-slate-700"
+                        >
                             Password
                         </label>
+
                     </div>
 
                     <div class="relative">
+
                         <input
                             type="password"
                             id="password"
@@ -179,8 +266,11 @@
                             autocomplete="current-password"
                             required
                             class="w-full pl-4 pr-12 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all text-sm"
-                            placeholder="Enter your password">
+                            placeholder="Enter your password"
+                        >
 
+
+                        <!-- PASSWORD TOGGLE -->
                         <button
                             type="button"
                             id="togglePassword"
@@ -188,191 +278,457 @@
                             aria-label="Show password"
                             aria-pressed="false"
                             aria-controls="password"
-                            title="Show password">
+                            title="Show password"
+                        >
 
                             <!-- EYE ICON -->
-                            <svg id="eyeIcon"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
-                                 stroke-linecap="round"
-                                 stroke-linejoin="round"
-                                 class="w-5 h-5"
-                                 aria-hidden="true">
+                            <svg
+                                id="eyeIcon"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="w-5 h-5"
+                                aria-hidden="true"
+                            >
                                 <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>
                                 <circle cx="12" cy="12" r="3"/>
                             </svg>
 
+
                             <!-- EYE-OFF ICON -->
-                            <svg id="eyeOffIcon"
-                                 xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 24 24"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="1.8"
-                                 stroke-linecap="round"
-                                 stroke-linejoin="round"
-                                 class="w-5 h-5 hidden"
-                                 aria-hidden="true">
+                            <svg
+                                id="eyeOffIcon"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="w-5 h-5 hidden"
+                                aria-hidden="true"
+                            >
                                 <path d="M3 3l18 18"/>
                                 <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
                                 <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15.5 15.5 0 0 1-4 4.7"/>
                                 <path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.2 0 2.3-.2 3.3-.6"/>
                             </svg>
+
                         </button>
+
                     </div>
+
+
+                    <!-- FORGOT PASSWORD -->
+                    <div class="flex justify-end mt-2">
+
+                        <a
+                            href="{% url 'password_reset' %}"
+                            class="text-sm font-semibold text-amber-700 hover:text-amber-800 hover:underline transition-colors"
+                        >
+                            Forgot password?
+                        </a>
+
+                    </div>
+
                 </div>
 
-                <!-- SIGN IN -->
+
+                <!-- SIGN IN BUTTON -->
                 <button
                     type="submit"
-                    class="w-full bg-amber-600 text-white font-semibold text-sm py-3 px-4 rounded-xl hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all shadow-md shadow-amber-200/50">
-                    Sign In
+                    id="signInButton"
+                    class="w-full flex items-center justify-center gap-2 bg-amber-600 text-white font-semibold text-sm py-3 px-4 rounded-xl hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all shadow-md shadow-amber-200/50 disabled:opacity-75 disabled:cursor-not-allowed"
+                >
+
+                    <!-- LOADING SPINNER -->
+                    <svg
+                        id="signInSpinner"
+                        class="hidden loading-spinner w-5 h-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                        ></circle>
+
+                        <path
+                            class="opacity-90"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        ></path>
+
+                    </svg>
+
+                    <span id="signInButtonText">
+                        Sign In
+                    </span>
+
                 </button>
+
+
+                <!-- LOADING MESSAGE -->
+                <p
+                    id="signInLoadingMessage"
+                    class="hidden text-center text-xs text-slate-500 mt-3"
+                    role="status"
+                    aria-live="polite"
+                >
+                    Please wait while we verify your account...
+                </p>
+
             </form>
+
 
             <!-- SIGNUP LINK -->
             <div class="text-center mt-6 pt-5 border-t border-slate-100">
+
                 <p class="text-sm text-slate-600">
                     Don't have an account?
-                    <a href="{% url 'signup' %}"
-                       class="font-semibold text-amber-600 hover:text-amber-700 transition-colors">
+
+                    <a
+                        href="{% url 'signup' %}"
+                        class="font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+                    >
                         Create one
                     </a>
                 </p>
+
             </div>
+
         </div>
+
     </main>
 
-<footer class="w-full bg-white/90 backdrop-blur-md border-t border-amber-100 mt-auto">
+
+    <!-- FOOTER -->
+    <footer class="w-full bg-white/90 backdrop-blur-md border-t border-amber-100 mt-auto">
+
         <div class="max-w-7xl mx-auto px-6 md:px-12 py-8">
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
 
-                <!-- Brand -->
+
+                <!-- BRAND -->
                 <div class="text-center md:text-left">
+
                     <h2 class="text-lg font-extrabold text-slate-900">
                         We Care <span class="text-amber-600">Pet Care</span>
                     </h2>
+
                     <p class="text-sm text-slate-500 mt-1">
                         Caring for your pets, every step of the way.
                     </p>
+
                 </div>
 
-                <!-- Phone -->
+
+                <!-- PHONE -->
                 <div class="flex items-center justify-center gap-3">
+
                     <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-5 h-5"
-                             viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="1.8"
-                             stroke-linecap="round"
-                             stroke-linejoin="round"
-                             aria-hidden="true">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2
-                                     19.79 19.79 0 0 1-8.63-3.07
-                                     19.5 19.5 0 0 1-6-6
-                                     19.79 19.79 0 0 1-3.07-8.67
-                                     A2 2 0 0 1 4.11 2h3
-                                     a2 2 0 0 1 2 1.72
-                                     c.12.96.36 1.9.7 2.8
-                                     a2 2 0 0 1-.45 2.11L8.09 9.91
-                                     a16 16 0 0 0 6 6l1.27-1.27
-                                     a2 2 0 0 1 2.11-.45
-                                     c.9.34 1.84.58 2.8.7
-                                     A2 2 0 0 1 22 16.92z"/>
+
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.84.58 2.8.7A2 2 0 0 1 22 16.92z"/>
                         </svg>
+
                     </div>
 
                     <div>
+
                         <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
                             Contact Number
                         </p>
-                        <a href="tel:09559688069"
-                           class="text-sm font-bold text-slate-800 hover:text-amber-600 transition-colors">
+
+                        <a
+                            href="tel:09559688069"
+                            class="text-sm font-bold text-slate-800 hover:text-amber-600 transition-colors"
+                        >
                             09559688069
                         </a>
+
                     </div>
+
                 </div>
 
-                <!-- Address -->
+
+                <!-- ADDRESS -->
                 <div class="flex items-center justify-center gap-3">
+
                     <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             class="w-5 h-5"
-                             viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="1.8"
-                             stroke-linecap="round"
-                             stroke-linejoin="round"
-                             aria-hidden="true">
+
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
                             <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"/>
                             <circle cx="12" cy="10" r="2.5"/>
                         </svg>
+
                     </div>
 
                     <div>
+
                         <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
                             Our Address
                         </p>
+
                         <p class="text-sm font-bold text-slate-800">
                             Purok 2, Caratagan,
                             <span class="block">Pio Duran, Albay</span>
                         </p>
+
                     </div>
+
                 </div>
 
             </div>
 
-            <!-- Copyright -->
+
+            <!-- COPYRIGHT -->
             <div class="border-t border-slate-100 mt-6 pt-5 text-center">
+
                 <p class="text-xs text-slate-500">
                     &copy; {% now "Y" %} We Care Pet Care.
                     All rights reserved.
                 </p>
+
             </div>
 
         </div>
+
     </footer>
 
-    <!-- SHOW/HIDE PASSWORD SCRIPT -->
+
+    <!-- FULL-PAGE LOGIN LOADING OVERLAY -->
+    <div
+        id="loginLoadingOverlay"
+        class="hidden fixed inset-0 z-50 bg-[#FAF6F0]/80 backdrop-blur-sm items-center justify-center p-6 loading-overlay"
+        aria-hidden="true"
+    >
+
+        <div class="bg-white rounded-3xl border border-amber-100 shadow-xl shadow-amber-900/10 p-8 text-center max-w-xs w-full">
+
+            <!-- OVERLAY SPINNER -->
+            <div class="flex justify-center mb-5">
+
+                <svg
+                    class="loading-spinner w-12 h-12 text-amber-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <circle
+                        class="opacity-20"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                    ></circle>
+
+                    <path
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
+
+                </svg>
+
+            </div>
+
+            <h2 class="text-lg font-extrabold text-slate-900">
+                Welcome to We Care
+            </h2>
+
+            <p class="text-sm text-slate-500 mt-2">
+                Signing you in securely...
+            </p>
+
+            <div class="mt-5 h-1.5 w-full rounded-full bg-amber-100 overflow-hidden">
+                <div class="h-full w-2/3 rounded-full bg-amber-600 animate-pulse"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PASSWORD TOGGLE AND LOGIN LOADING SCRIPT -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const passwordInput = document.getElementById("password");
-            const togglePassword = document.getElementById("togglePassword");
-            const eyeIcon = document.getElementById("eyeIcon");
-            const eyeOffIcon = document.getElementById("eyeOffIcon");
 
-            if (!passwordInput || !togglePassword) {
-                return;
+            // ==========================================
+            // SHOW / HIDE PASSWORD
+            // ==========================================
+
+            const passwordInput =
+                document.getElementById("password");
+
+            const togglePassword =
+                document.getElementById("togglePassword");
+
+            const eyeIcon =
+                document.getElementById("eyeIcon");
+
+            const eyeOffIcon =
+                document.getElementById("eyeOffIcon");
+
+            if (
+                passwordInput &&
+                togglePassword &&
+                eyeIcon &&
+                eyeOffIcon
+            ) {
+
+                togglePassword.addEventListener("click", function () {
+
+                    const isPasswordHidden =
+                        passwordInput.type === "password";
+
+                    passwordInput.type = isPasswordHidden
+                        ? "text"
+                        : "password";
+
+                    eyeIcon.classList.toggle(
+                        "hidden",
+                        !isPasswordHidden
+                    );
+
+                    eyeOffIcon.classList.toggle(
+                        "hidden",
+                        isPasswordHidden
+                    );
+
+                    const label = isPasswordHidden
+                        ? "Hide password"
+                        : "Show password";
+
+                    togglePassword.setAttribute(
+                        "aria-label",
+                        label
+                    );
+
+                    togglePassword.setAttribute(
+                        "title",
+                        label
+                    );
+
+                    togglePassword.setAttribute(
+                        "aria-pressed",
+                        String(isPasswordHidden)
+                    );
+
+                    passwordInput.focus();
+
+                });
+
             }
 
-            togglePassword.addEventListener("click", function () {
-                const isPasswordHidden = passwordInput.type === "password";
 
-                passwordInput.type = isPasswordHidden ? "text" : "password";
+            // ==========================================
+            // LOGIN LOADING EFFECT
+            // ==========================================
 
-                eyeIcon.classList.toggle("hidden", !isPasswordHidden);
-                eyeOffIcon.classList.toggle("hidden", isPasswordHidden);
+            const loginForm =
+                document.getElementById("loginForm");
 
-                const label = isPasswordHidden
-                    ? "Hide password"
-                    : "Show password";
+            const signInButton =
+                document.getElementById("signInButton");
 
-                togglePassword.setAttribute("aria-label", label);
-                togglePassword.setAttribute("title", label);
-                togglePassword.setAttribute(
-                    "aria-pressed",
-                    String(isPasswordHidden)
-                );
+            const signInSpinner =
+                document.getElementById("signInSpinner");
 
-                passwordInput.focus();
-            });
+            const signInButtonText =
+                document.getElementById("signInButtonText");
+
+            const loadingMessage =
+                document.getElementById("signInLoadingMessage");
+
+            const loadingOverlay =
+                document.getElementById("loginLoadingOverlay");
+
+
+            if (
+                loginForm &&
+                signInButton &&
+                signInSpinner &&
+                signInButtonText
+            ) {
+
+                loginForm.addEventListener("submit", function (event) {
+
+                    // Keep the browser's native required-field validation.
+                    if (!loginForm.checkValidity()) {
+                        return;
+                    }
+
+                    // Prevent duplicate submissions.
+                    if (signInButton.disabled) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    // Disable the button and show its spinner.
+                    signInButton.disabled = true;
+
+                    signInSpinner.classList.remove("hidden");
+
+                    signInButtonText.textContent = "Signing in...";
+
+                    signInButton.setAttribute(
+                        "aria-busy",
+                        "true"
+                    );
+
+                    if (loadingMessage) {
+                        loadingMessage.classList.remove("hidden");
+                    }
+
+                    // Display the full-page overlay.
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.remove("hidden");
+                        loadingOverlay.classList.add("flex");
+                        loadingOverlay.setAttribute(
+                            "aria-hidden",
+                            "false"
+                        );
+                    }
+
+                    // Allow the browser to submit the form normally.
+                    // Django will authenticate and redirect the user.
+                });
+
+            }
+
         });
     </script>
 
