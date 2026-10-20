@@ -144,16 +144,26 @@ def customer_logout(request):
     return redirect("chat_session", session_id=request.session.get("chat_session_id"))
 
 
+
 @login_required
 def view_profile(request):
     try:
-        customer = Customer.objects.get(user=request.user)
+        customer = (
+            Customer.objects
+            .prefetch_related("dogs__breed")
+            .get(user=request.user)
+        )
     except Customer.DoesNotExist:
         customer = None
 
-    return render(request, "pages/view_profile.html", {
-        "customer": customer,
-    })
+    return render(
+        request,
+        "pages/view_profile.html",
+        {
+            "customer": customer,
+        },
+    )
+
 
 
 @login_required

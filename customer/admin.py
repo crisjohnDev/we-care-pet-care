@@ -1,7 +1,9 @@
 
 from django.contrib import admin
+
 from .models import (
     Customer,
+    Dog,
     ChatSession,
     ChatMessage,
     QuestionAnswer,
@@ -16,14 +18,17 @@ class BreedAdmin(admin.ModelAdmin):
         "is_active",
         "created_at",
     )
+
     search_fields = (
         "name",
         "description",
     )
+
     list_filter = (
         "is_active",
         "created_at",
     )
+
     ordering = ("name",)
 
     fieldsets = (
@@ -37,27 +42,58 @@ class BreedAdmin(admin.ModelAdmin):
     )
 
 
+class DogInline(admin.TabularInline):
+    model = Dog
+    extra = 1
+
+
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = (
         "fullname",
-        "pet_name",
-        "breed",
-        "sex",
         "contact_number",
+        "address",
         "created_at",
     )
+
     search_fields = (
         "fullname",
-        "pet_name",
-        "breed__name",
         "contact_number",
+        "address",
+        "user__username",
     )
+
+    list_filter = (
+        "created_at",
+    )
+
+    inlines = (DogInline,)
+
+
+@admin.register(Dog)
+class DogAdmin(admin.ModelAdmin):
+    list_display = (
+        "pet_name",
+        "customer",
+        "breed",
+        "sex",
+        "birthdate",
+        "created_at",
+    )
+
+    search_fields = (
+        "pet_name",
+        "customer__fullname",
+        "breed__name",
+    )
+
     list_filter = (
         "sex",
         "breed",
         "created_at",
     )
+
+    ordering = ("pet_name",)
 
 
 @admin.register(ChatSession)
@@ -68,10 +104,12 @@ class ChatSessionAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
     search_fields = (
         "title",
         "user__username",
     )
+
     list_filter = (
         "created_at",
     )
@@ -84,10 +122,12 @@ class ChatMessageAdmin(admin.ModelAdmin):
         "role",
         "created_at",
     )
+
     search_fields = (
         "message",
         "session__title",
     )
+
     list_filter = (
         "role",
         "created_at",
@@ -101,10 +141,12 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
         "is_active",
         "created_at",
     )
+
     search_fields = (
         "question",
         "answer",
     )
+
     list_filter = (
         "is_active",
         "created_at",
