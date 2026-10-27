@@ -659,7 +659,10 @@ Potential emergencies include:
 - Inability to urinate, especially with straining or distress.
 - Severe pain or signs of shock.
 - Vomiting accompanied by marked weakness, collapse, or severe pain.
-- Significant bloody vomit or diarrhea, especially with weakness.
+- Vomiting blood, blood in vomit, bloody vomit, or owner-reported blood in vomit must be classified as HIGH urgency.
+- For vomiting blood, set risk_level="high", emergency=true, needs_more_information=false, and follow_up_question="".
+- Do not downgrade reported blood in vomit because an image is unclear or the dog appears normal.
+- Significant bloody diarrhea, especially with weakness, also requires urgent assessment.
 - Heatstroke signs such as collapse, confusion, or severe distress.
 - Any other symptoms that reasonably suggest an immediate threat to life.
 
@@ -859,6 +862,67 @@ Return valid JSON only. Do not include Markdown.
             ""
         )
     ).strip()
+
+    # =========================================================
+    # HIGH-URGENCY SYMPTOM OVERRIDE
+    # =========================================================
+    # The backend must not rely only on the AI-generated triage result.
+    # Owner-reported blood in vomit is treated as HIGH urgency even if
+    # the model incorrectly returns LOW or MEDIUM.
+    normalized_message = " ".join(
+        message.lower().strip().replace("vomitting", "vomiting").split()
+    )
+
+    blood_in_vomit_phrases = [
+        "vomiting blood",
+        "vomited blood",
+        "vomit blood",
+        "vomits blood",
+        "throwing up blood",
+        "threw up blood",
+        "blood in vomit",
+        "blood in the vomit",
+        "blood in his vomit",
+        "blood in her vomit",
+        "blood in my dog's vomit",
+        "blood in my dogs vomit",
+        "bloody vomit",
+        "hematemesis",
+    ]
+
+    blood_in_vomit_reported = any(
+        phrase in normalized_message
+        for phrase in blood_in_vomit_phrases
+    )
+
+    # Avoid treating explicit denials as positive symptom reports.
+    explicit_blood_denial = any(
+        phrase in normalized_message
+        for phrase in [
+            "not vomiting blood",
+            "isn't vomiting blood",
+            "isnt vomiting blood",
+            "is not vomiting blood",
+            "no blood in vomit",
+            "no blood in the vomit",
+            "without blood in vomit",
+            "without blood in the vomit",
+        ]
+    )
+
+    if blood_in_vomit_reported and not explicit_blood_denial:
+        risk_level = "high"
+        emergency = True
+        needs_more_information = False
+        follow_up_question = ""
+        reason = (
+            "Vomiting blood can indicate a serious or life-threatening "
+            "condition and requires immediate veterinary assessment."
+        )
+        recommended_action = (
+            "Seek emergency veterinary care immediately. "
+            "Do not wait for an SMS response."
+        )
 
     if emergency:
         risk_level = "high"
@@ -1220,6 +1284,29 @@ Do not display internal risk assessment fields.
 
         if emergency_notice.lower() not in assistant_message.lower():
             assistant_message += "\n\n" + emergency_notice
+
+    # =========================================================
+    # 19A. DISPLAY URGENCY IN THE CHAT RESPONSE
+    # =========================================================
+    # The frontend may currently display only the "response" text field.
+    # Include urgency directly in that text as well as in the JSON
+    # "risk_level" field, so the owner can see LOW, MEDIUM, or HIGH.
+    urgency_label = {
+        "low": "LOW",
+        "medium": "MEDIUM",
+        "high": "HIGH",
+    }.get(risk_level, "MEDIUM")
+
+    urgency_notice = (
+        f"Urgency: {urgency_label}\n"
+        f"Reason: {reason}\n"
+        f"Recommended action: {recommended_action}"
+    )
+
+    if not assistant_message.lstrip().startswith("Urgency:"):
+        assistant_message = (
+            urgency_notice + "\n\n" + assistant_message
+        )
 
     # =========================================================
     # 20. SAVE ASSISTANT MESSAGE
