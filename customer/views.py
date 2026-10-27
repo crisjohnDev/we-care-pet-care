@@ -166,6 +166,17 @@ def view_profile(request):
     )
 
 
+# =========================================================
+# VETERINARY CLINIC CONTACT DETAILS
+# =========================================================
+
+VETERINARY_CLINIC_NAME = "Pioduran PetCare and Veterinary Clinic"
+VETERINARY_CONTACT_NUMBER = "09559688069"
+VETERINARY_DISPLAY_NUMBER = "0955 968 8069"
+VETERINARY_CLINIC_ADDRESS = (
+    "Purok 2, Caratagan, Pio Duran, Albay, Philippines"
+)
+
 
 @login_required
 @require_POST
@@ -863,6 +874,24 @@ Follow-up question: {follow_up_question}
 Recommended action: {recommended_action}
 Veterinarian SMS confirmed sent: {sms_sent}
 
+VETERINARY CLINIC CONTACT INFORMATION:
+
+Clinic name: {VETERINARY_CLINIC_NAME}
+Phone number: {VETERINARY_DISPLAY_NUMBER}
+Clinic address: {VETERINARY_CLINIC_ADDRESS}
+
+VETERINARY CONTACT RULES:
+
+- If the owner asks for the vet's number, veterinarian's contact,
+  clinic phone, clinic address, or how to contact the clinic,
+  provide the contact information above.
+- Do not invent or change the clinic's phone number or address.
+- Do not claim that you called the clinic.
+- Do not claim an SMS was sent unless sms_sent is true.
+- If the dog may be experiencing an emergency, tell the owner
+  to contact the clinic directly and seek immediate veterinary care.
+- Do not tell the owner to wait for an SMS reply before seeking care.
+
 CONVERSATION RULES:
 
 - Speak naturally, empathetically, and clearly.
@@ -1010,6 +1039,63 @@ Do not display internal risk assessment fields.
         assistant_message += "\n\n" + follow_up_question
 
     # =========================================================
+    # 18A. DETECT VETERINARY CONTACT REQUESTS
+    # =========================================================
+
+    contact_keywords = (
+        "vet number",
+        "veterinarian number",
+        "veterinary number",
+        "vet contact",
+        "veterinarian contact",
+        "veterinary contact",
+        "clinic number",
+        "clinic contact",
+        "clinic phone",
+        "clinic telephone",
+        "phone number",
+        "telephone number",
+        "contact number",
+        "contact details",
+        "contact information",
+        "how to contact",
+        "how can i contact",
+        "how do i contact",
+        "call the vet",
+        "call the veterinarian",
+        "call the clinic",
+        "vet's number",
+        "veterinarian's number",
+        "clinic address",
+        "where is the clinic",
+        "clinic location",
+        "vet phone",
+        "veterinary phone",
+        "number of the vet",
+        "number for the vet",
+        "contact the vet",
+        "contact the veterinarian",
+    )
+
+    normalized_message = message.lower().strip()
+
+    contact_requested = any(
+        keyword in normalized_message
+        for keyword in contact_keywords
+    )
+
+    if contact_requested:
+        contact_notice = (
+            f"Veterinary Clinic Contact\n"
+            f"{VETERINARY_CLINIC_NAME}\n"
+            f"Phone: {VETERINARY_DISPLAY_NUMBER}\n"
+            f"Address: {VETERINARY_CLINIC_ADDRESS}"
+        )
+
+        if VETERINARY_DISPLAY_NUMBER not in assistant_message:
+            assistant_message += "\n\n" + contact_notice
+
+    # =========================================================
     # 19. EMERGENCY SMS NOTICE
     # =========================================================
 
@@ -1073,8 +1159,17 @@ Do not display internal risk assessment fields.
         "follow_up_question": follow_up_question,
         "recommended_action": recommended_action,
         "sms_sent": sms_sent,
-        "image_analysis": image_analysis
+        "image_analysis": image_analysis,
+
+        # Veterinary clinic contact information
+        "veterinarian_contact": {
+            "clinic_name": VETERINARY_CLINIC_NAME,
+            "phone": VETERINARY_CONTACT_NUMBER,
+            "display_phone": VETERINARY_DISPLAY_NUMBER,
+            "address": VETERINARY_CLINIC_ADDRESS,
+        }
     })
+
 
 
 
