@@ -178,6 +178,7 @@ VETERINARY_CLINIC_ADDRESS = (
 )
 
 
+
 @login_required
 @require_POST
 def send_message(request, session_id):
@@ -461,22 +462,13 @@ Return valid JSON only. Do not include Markdown.
             )
 
             # Normalize image-analysis fields.
-            image_analysis.setdefault(
-                "breed",
-                "Unknown"
-            )
+            image_analysis.setdefault("breed", "Unknown")
             image_analysis.setdefault(
                 "detected_breed",
                 image_analysis.get("breed", "Unknown")
             )
-            image_analysis.setdefault(
-                "confidence",
-                "low"
-            )
-            image_analysis.setdefault(
-                "breed_percentages",
-                []
-            )
+            image_analysis.setdefault("confidence", "low")
+            image_analysis.setdefault("breed_percentages", [])
             image_analysis.setdefault(
                 "description",
                 "No description available."
@@ -485,26 +477,14 @@ Return valid JSON only. Do not include Markdown.
                 "possible_health_observations",
                 ""
             )
-            image_analysis.setdefault(
-                "comparison",
-                ""
-            )
-            image_analysis.setdefault(
-                "dog_visible",
-                None
-            )
-            image_analysis.setdefault(
-                "visible_blood",
-                "uncertain"
-            )
+            image_analysis.setdefault("comparison", "")
+            image_analysis.setdefault("dog_visible", None)
+            image_analysis.setdefault("visible_blood", "uncertain")
             image_analysis.setdefault(
                 "bleeding_observation",
                 "The image cannot establish whether bleeding is active."
             )
-            image_analysis.setdefault(
-                "wound_visible",
-                "uncertain"
-            )
+            image_analysis.setdefault("wound_visible", "uncertain")
             image_analysis.setdefault(
                 "limitations",
                 "Visual identification is not a DNA test."
@@ -547,8 +527,6 @@ Return valid JSON only. Do not include Markdown.
                     )
                 })
 
-            # Only normalize valid model output. Do not silently
-            # invent percentages if the model returned invalid data.
             total_percentage = sum(
                 item["percentage"]
                 for item in cleaned_breeds
@@ -624,63 +602,156 @@ IMAGE RULES:
 - Breed percentages are visual estimates, not DNA results.
 - Breed identification alone does not establish medical risk.
 
-RISK LEVELS:
+=========================================================
+LOW URGENCY
+=========================================================
 
-LOW:
-The available information suggests a mild concern without warning signs.
+Use "low" only for mild symptoms without warning signs, when the dog
+otherwise appears comfortable and behaves normally.
 
-MEDIUM:
-More information or veterinary assessment is needed, but an immediate
-life-threatening emergency has not been established.
+Examples that may be low urgency:
+- Occasional sneezing with normal behavior.
+- Mild itching without wounds or swelling.
+- One episode of soft stool in an otherwise active dog.
+- A mild symptom that has resolved and has no concerning associated signs.
 
-HIGH:
-Available information indicates a serious or potentially life-threatening
-condition.
+Recommend safe monitoring and explain which changes require veterinary care.
+Do not classify persistent or worsening symptoms as low automatically.
 
-Do not classify a situation as an emergency merely because a message
-contains the words blood, bleeding, vomiting, diarrhea, or pain.
+=========================================================
+MEDIUM URGENCY
+=========================================================
+
+Use "medium" when veterinary advice or assessment is warranted but an
+immediate life-threatening emergency has not been established.
+
+Examples may include:
+- Repeated vomiting without collapse or severe weakness.
+- Persistent diarrhea without signs of shock.
+- Reduced appetite combined with unusual behavior.
+- Persistent lethargy.
+- Limping or pain affecting normal activity.
+- A wound that needs assessment without severe uncontrolled bleeding.
+- Persistent coughing without obvious severe breathing difficulty.
+- Eye redness or discharge.
+- Symptoms that recur, persist, or progressively worsen.
+- Unclear symptoms that require more information.
+
+Recommend prompt veterinary advice or assessment. Same-day care may
+be appropriate depending on the symptoms and their duration.
+
+=========================================================
+HIGH URGENCY
+=========================================================
+
+Use "high" for symptoms that could indicate a life-threatening
+condition, serious injury, rapid deterioration, or severe suffering.
 
 Potential emergencies include:
-- Severe breathing difficulty.
-- Collapse or unconsciousness.
-- Severe seizures.
-- Spurting or uncontrolled bleeding.
-- Serious trauma.
-- Suspected poisoning with concerning symptoms.
-- Significant blood loss or signs of shock.
-- Other clearly life-threatening conditions.
+- Difficulty breathing, choking, or gasping.
+- Collapse, unconsciousness, or inability to stand.
+- Severe or repeated seizures.
+- Severe, spurting, or uncontrolled bleeding.
+- Major trauma or serious wounds.
+- Suspected poisoning or overdose.
+- Pale, white, gray, or blue gums with weakness or distress.
+- A swollen abdomen with repeated unproductive retching.
+- Inability to urinate, especially with straining or distress.
+- Severe pain or signs of shock.
+- Vomiting accompanied by marked weakness, collapse, or severe pain.
+- Significant bloody vomit or diarrhea, especially with weakness.
+- Heatstroke signs such as collapse, confusion, or severe distress.
+- Any other symptoms that reasonably suggest an immediate threat to life.
 
-A still photograph cannot reliably establish active bleeding or blood loss.
+Tell the owner to seek emergency veterinary care immediately.
+Do not delay care while collecting more information or waiting for SMS.
 
-For uncertain external bleeding, ask whether bleeding is continuing,
-where it is coming from, and whether continuous pressure controls it.
+=========================================================
+SYMPTOM CLASSIFICATION RULES
+=========================================================
 
-For external bleeding, recommend clean gauze or cloth with continuous
-pressure. Do not repeatedly remove it to inspect the wound. Severe,
-spurting, or uncontrolled bleeding needs immediate veterinary care.
+1. Consider severity, duration, frequency, progression, combinations
+   of symptoms, and the dog's overall condition.
 
-Never recommend human medications or unsafe home remedies.
+2. Do not classify symptoms based on a keyword alone. Vomiting,
+   diarrhea, blood, pain, or coughing does not automatically mean high.
 
-If a clear emergency exists:
-- emergency=true
-- risk_level="high"
-- needs_more_information=false
-- follow_up_question=""
+3. Repeated or worsening symptoms may require greater urgency.
 
-If more information is needed:
-- ask the most important question
-- do not automatically classify the case as an emergency
+4. Multiple symptoms together may indicate greater risk.
+
+5. If information is missing and no emergency is apparent, use medium
+   and ask a focused follow-up question instead of assuming the dog is safe.
+
+6. Do not downgrade an apparent emergency because a photograph looks
+   normal or because the owner has not supplied every detail.
+
+7. Suspected poisoning, severe breathing difficulty, collapse,
+   serious trauma, and uncontrolled bleeding require immediate action.
+
+8. Puppies, elderly dogs, and dogs with known health conditions may
+   be more vulnerable. Recommend assessment sooner when appropriate.
+
+9. Do not diagnose a specific disease solely from symptoms or images.
+
+10. Do not recommend human medication or unsafe home remedies.
+
+=========================================================
+IMAGE AND BLEEDING RULES
+=========================================================
+
+- Do not assume earlier symptoms are visible in a new image.
+- If visible_blood="no", do not claim blood is visible in the photograph.
+- If visible_blood="uncertain", explain that the image is inconclusive.
+- If visible_blood="yes", do not assume bleeding is active or severe.
+- A photograph cannot establish whether bleeding is ongoing.
+- Owner-reported severe bleeding must be considered even if the image
+  is unclear or does not visibly show blood.
+- A normal-looking image cannot rule out illness or injury.
+
+For external bleeding, recommend clean gauze or cloth with firm,
+continuous pressure while arranging veterinary care. Do not repeatedly
+remove it to inspect the wound. Severe or uncontrolled bleeding
+requires immediate emergency care.
+
+=========================================================
+FOLLOW-UP QUESTIONS
+=========================================================
+
+When urgency is uncertain and no emergency is apparent, ask the most
+important question needed to assess risk.
+
+Examples:
+- When did the symptoms begin?
+- How often has vomiting or diarrhea occurred?
+- Is the dog alert and responding normally?
+- Is the dog breathing normally?
+- Can the dog urinate?
+- Is bleeding continuing?
+- Could the dog have eaten medication, chemicals, or another toxin?
+
+Do not delay emergency recommendations to ask additional questions.
 
 Return ONLY valid JSON:
 
 {
   "risk_level": "low|medium|high",
   "emergency": false,
-  "reason": "Brief explanation",
+  "reason": "Brief explanation of the urgency classification",
   "needs_more_information": true,
-  "follow_up_question": "Most important next question",
-  "recommended_action": "Safe immediate action"
+  "follow_up_question": "Most important next question or empty string",
+  "recommended_action": "Clear and safe next step"
 }
+
+Consistency requirements:
+- A clear potential emergency must use risk_level="high",
+  emergency=true, needs_more_information=false, and an empty
+  follow_up_question.
+- For non-emergencies, use emergency=false and choose low or medium.
+- If important information is missing and no emergency is apparent,
+  use medium and ask a focused question.
+
+Return valid JSON only. Do not include Markdown.
 """
 
     # =========================================================
@@ -755,7 +826,14 @@ Return ONLY valid JSON:
     if risk_level not in ("low", "medium", "high"):
         risk_level = "medium"
 
-    emergency = triage_result.get("emergency") is True
+    # High urgency always triggers the existing emergency path.
+    emergency = (
+        risk_level == "high"
+        or triage_result.get("emergency") is True
+    )
+
+    if emergency:
+        risk_level = "high"
 
     needs_more_information = (
         triage_result.get("needs_more_information") is True
@@ -764,7 +842,7 @@ Return ONLY valid JSON:
     reason = str(
         triage_result.get(
             "reason",
-            "More information is needed."
+            "More information is needed to assess the symptoms."
         )
     ).strip()
 
@@ -786,6 +864,25 @@ Return ONLY valid JSON:
         risk_level = "high"
         needs_more_information = False
         follow_up_question = ""
+
+        if not recommended_action:
+            recommended_action = (
+                "Seek emergency veterinary care immediately."
+            )
+
+    elif risk_level == "medium":
+        if not recommended_action:
+            recommended_action = (
+                "Contact a veterinarian promptly for advice "
+                "and arrange an assessment as appropriate."
+            )
+
+    elif risk_level == "low":
+        if not recommended_action:
+            recommended_action = (
+                "Monitor your dog's symptoms and seek veterinary "
+                "advice if they persist or worsen."
+            )
 
     # =========================================================
     # 12. VETERINARIAN SMS
@@ -875,13 +972,11 @@ Recommended action: {recommended_action}
 Veterinarian SMS confirmed sent: {sms_sent}
 
 VETERINARY CLINIC CONTACT INFORMATION:
-
 Clinic name: {VETERINARY_CLINIC_NAME}
 Phone number: {VETERINARY_DISPLAY_NUMBER}
 Clinic address: {VETERINARY_CLINIC_ADDRESS}
 
 VETERINARY CONTACT RULES:
-
 - If the owner asks for the vet's number, veterinarian's contact,
   clinic phone, clinic address, or how to contact the clinic,
   provide the contact information above.
@@ -892,8 +987,23 @@ VETERINARY CONTACT RULES:
   to contact the clinic directly and seek immediate veterinary care.
 - Do not tell the owner to wait for an SMS reply before seeking care.
 
-CONVERSATION RULES:
+SYMPTOM URGENCY GUIDANCE:
 
+LOW:
+Explain safe monitoring and warning signs that require escalation.
+
+MEDIUM:
+Explain why veterinary advice or assessment is needed and recommend
+a prompt assessment appropriate to the symptoms.
+
+HIGH:
+Clearly tell the owner to seek emergency veterinary care immediately.
+Do not suggest waiting for an SMS response.
+
+Never diagnose a disease based only on symptoms or a photograph.
+Do not give false reassurance when important information is missing.
+
+CONVERSATION RULES:
 - Speak naturally, empathetically, and clearly.
 - Do not display internal JSON or technical reasoning.
 - Do not diagnose diseases from a photograph.
@@ -902,7 +1012,6 @@ CONVERSATION RULES:
 - Ask focused follow-up questions when information is missing.
 
 BREED IDENTIFICATION:
-
 When image-analysis results are provided, explain the likely breed
 or breeds and their estimated visual percentages.
 
@@ -913,7 +1022,6 @@ Do not invent breed percentages when the analysis is inconclusive.
 Do not claim that a breed has been genetically confirmed.
 
 IMAGE AND BLEEDING:
-
 - Assess the latest uploaded image using its image-analysis results.
 - Do not say blood is visible if visible_blood="no".
 - If visible_blood="uncertain", explain that the image is inconclusive.
@@ -922,7 +1030,6 @@ IMAGE AND BLEEDING:
 - A normal-looking photograph cannot rule out illness or injury.
 
 EMERGENCY:
-
 If emergency=true, calmly tell the owner to seek immediate veterinary care.
 
 If sms_sent=true, you may say the veterinarian was notified by SMS.
@@ -932,7 +1039,6 @@ Tell the owner to contact the veterinarian directly.
 Do not delay emergency care while waiting for a reply.
 
 STYLE:
-
 Use short paragraphs and natural language.
 Do not use emojis.
 Do not display internal risk assessment fields.
@@ -1161,7 +1267,6 @@ Do not display internal risk assessment fields.
         "sms_sent": sms_sent,
         "image_analysis": image_analysis,
 
-        # Veterinary clinic contact information
         "veterinarian_contact": {
             "clinic_name": VETERINARY_CLINIC_NAME,
             "phone": VETERINARY_CONTACT_NUMBER,
