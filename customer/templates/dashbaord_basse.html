@@ -5,7 +5,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>Dashboard | We Care Pet Care</title>
 
@@ -17,9 +17,61 @@
     >
 
     <style>
+        :root {
+            --pet-cream: #FAF6F0;
+            --pet-amber: #d97706;
+            --pet-border: #f3e8d7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            -webkit-text-size-adjust: 100%;
+        }
+
         body {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            margin: 0;
+            overflow: hidden;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #FAF6F0;
+            background-color: var(--pet-cream);
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+        }
+
+        img,
+        video,
+        canvas,
+        svg {
+            max-width: 100%;
+        }
+
+        main,
+        aside,
+        section,
+        article {
+            min-width: 0;
+        }
+
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #e6dcce transparent;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
@@ -42,48 +94,200 @@
 
         #chat-messages {
             scroll-behavior: smooth;
+            overflow-wrap: anywhere;
+            overscroll-behavior: contain;
         }
 
         .message-text {
             white-space: pre-wrap;
             overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
-#camera-video {
-    display: block;
-    width: 100%;
-    max-height: 65vh;
-    object-fit: contain;
-    background: #000;
+        /* Keep the mobile sidebar inside the viewport. */
+        #sidebar {
+            height: 100%;
+            height: 100dvh;
+            overscroll-behavior: contain;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
 
-    /* Keep touch gestures inside the camera preview */
-    touch-action: none;
-    transform-origin: center center;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-user-drag: none;
-}
+        #sidebar-overlay {
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .camera-modal {
-        backdrop-filter: blur(5px);
+        /* Camera preview: only the video disables touch gestures.
+           The modal itself must remain scrollable on small screens. */
+        #camera-video {
+            display: block;
+            width: 100%;
+            max-height: 60dvh;
+            object-fit: contain;
+            background: #000;
+            touch-action: none;
+            transform-origin: center center;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+        }
 
-        /* Prevent browser zoom gestures in the camera modal */
-        touch-action: none;
-        overscroll-behavior: contain;
-    }
+        .camera-modal {
+            backdrop-filter: blur(5px);
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
 
-    #camera-modal .relative.bg-black {
-        overflow: hidden;
-        touch-action: none;
-    }
+        #camera-modal {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
 
-        button:disabled {
-            cursor: not-allowed;
+        #camera-modal-card {
+            width: 100%;
+            max-width: 42rem;
+            max-height: 94dvh;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #camera-modal .camera-preview {
+            flex-shrink: 1;
+            min-height: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #camera-modal .camera-controls {
+            flex-shrink: 0;
+        }
+
+        /* Contact modal: fixed header/footer and scrollable content. */
+        #contact-modal {
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #contact-modal-card {
+            width: 100%;
+            max-width: 28rem;
+            max-height: 92dvh;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #contact-modal-content {
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Don't allow long labels or controls to widen the page. */
+        input,
+        textarea,
+        select {
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        /* Tablets and smaller screens. */
+        @media (max-width: 1023px) {
+            #sidebar {
+                position: fixed;
+                inset: 0 auto 0 0;
+                z-index: 50;
+                width: min(18rem, 85vw);
+            }
+
+            #sidebar-overlay {
+                z-index: 40;
+            }
+        }
+
+        /* Phones. */
+        @media (max-width: 640px) {
+            #camera-modal {
+                padding: 8px;
+                align-items: flex-start;
+            }
+
+            #camera-modal-card {
+                max-height: 96dvh;
+                border-radius: 16px;
+            }
+
+            #camera-video {
+                max-height: 42dvh;
+            }
+
+            #contact-modal {
+                padding: 8px;
+                align-items: flex-start;
+            }
+
+            #contact-modal-card {
+                max-height: 94dvh;
+                border-radius: 16px;
+            }
+
+            #contact-modal-content {
+                padding: 16px;
+            }
+
+            #contact-modal-title {
+                font-size: 1.05rem;
+            }
+
+            #camera-modal-title {
+                font-size: 1rem;
+            }
+
+            #camera-modal .camera-controls button {
+                min-height: 42px;
+            }
+
+            #contact-modal button {
+                min-height: 42px;
+            }
+
+            /* Avoid iOS Safari zooming when a form control is focused. */
+            input,
+            textarea,
+            select {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            #camera-modal-card,
+            #contact-modal-card {
+                max-height: 96dvh;
+            }
+
+            #camera-video {
+                max-height: 38dvh;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 
-<body class="h-screen w-screen flex overflow-hidden">
+<body class="h-[100dvh] w-full min-w-0 flex overflow-hidden bg-[#FAF6F0]">
 
     <!-- =====================================================
          SIDEBAR
@@ -91,45 +295,41 @@
 
     <aside
         id="sidebar"
-        class="fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-amber-100/60 flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0 lg:static lg:flex-shrink-0"
+        class="fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-72 max-w-[85vw]
+               flex-col border-r border-amber-100/60 bg-white
+               -translate-x-full transition-transform duration-300 ease-in-out
+               lg:relative lg:inset-auto lg:z-30 lg:h-full lg:max-w-none
+               lg:translate-x-0 lg:flex-shrink-0"
     >
 
         <!-- Brand -->
-        <div class="h-16 border-b border-amber-50 px-6 flex items-center justify-between shrink-0">
+        <div class="flex h-16 shrink-0 items-center justify-between border-b border-amber-50 px-4 sm:px-6">
 
-            <a href="{% url 'new_chat' %}" class="flex items-center gap-2.5">
+            <a href="{% url 'new_chat' %}" class="flex min-w-0 items-center gap-2.5">
 
-                <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        class="w-5 h-5"
-                    >
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
                         <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
                         <circle cx="6.5" cy="10" r="1.5"/>
                         <circle cx="10" cy="7" r="1.5"/>
                         <circle cx="14" cy="7" r="1.5"/>
                         <circle cx="17.5" cy="10" r="1.5"/>
                     </svg>
-
                 </div>
 
-                <span class="text-sm font-bold text-slate-900 tracking-tight">
-                    We Care
-                    <span class="text-amber-600">Pet Care</span>
+                <span class="truncate text-sm font-bold tracking-tight text-slate-900">
+                    We Care <span class="text-amber-600">Pet Care</span>
                 </span>
 
             </a>
 
             <button
                 type="button"
-                onclick="toggleSidebar()"
-                class="lg:hidden p-2 rounded-lg text-slate-400 hover:bg-slate-100"
+                onclick="toggleSidebar(false)"
+                class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 lg:hidden"
                 aria-label="Close sidebar"
             >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
@@ -137,28 +337,25 @@
         </div>
 
         <!-- New Session -->
-        <div class="p-4 shrink-0">
-
+        <div class="shrink-0 p-4">
             <a
                 href="{% url 'new_chat' %}"
-                class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-100 rounded-xl text-sm font-semibold text-amber-800 transition"
+                class="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition hover:bg-amber-100"
             >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                 </svg>
                 New Session
             </a>
-
         </div>
 
         <!-- Recent Chats -->
-        <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar">
+        <div class="custom-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2">
 
-            <div class="flex items-center justify-between px-3 mb-3">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <div class="mb-3 flex items-center justify-between px-3">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Recent Chats
                 </p>
-
                 <span class="text-xs text-slate-400">
                     {{ recent_chats|length }}
                 </span>
@@ -168,23 +365,22 @@
 
                 <div class="group rounded-xl transition-all
                     {% if chat.id == session.id %}
-                        bg-amber-50 border border-amber-200
+                        border border-amber-200 bg-amber-50
                     {% else %}
-                        hover:bg-slate-50 border border-transparent
+                        border border-transparent hover:bg-slate-50
                     {% endif %}
                 ">
 
                     <div class="flex items-center gap-1 px-2 py-2">
 
-                        <!-- Chat link -->
                         <a
                             href="{% url 'chat_session' chat.id %}"
-                            class="flex-1 min-w-0 flex items-center gap-2 py-1"
+                            class="flex min-w-0 flex-1 items-center gap-2 py-1"
                             title="{{ chat.title }}"
                         >
 
                             <svg
-                                class="w-4 h-4 shrink-0 {% if chat.is_pinned %}text-amber-600{% else %}text-slate-400{% endif %}"
+                                class="h-4 w-4 shrink-0 {% if chat.is_pinned %}text-amber-600{% else %}text-slate-400{% endif %}"
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="1.8"
@@ -197,45 +393,37 @@
                                 {% endif %}
                             </svg>
 
-                            <div class="flex-1 min-w-0">
-
+                            <div class="min-w-0 flex-1">
                                 <p class="truncate text-sm font-medium {% if chat.id == session.id %}text-amber-800{% else %}text-slate-700{% endif %}">
                                     {{ chat.title|default:"New Chat" }}
                                 </p>
 
-                                <p class="text-[11px] text-slate-400 mt-0.5">
+                                <p class="mt-0.5 text-[11px] text-slate-400">
                                     {% if chat.is_pinned %}
                                         Pinned
                                     {% else %}
                                         {{ chat.updated_at|date:"M d, Y" }}
                                     {% endif %}
                                 </p>
-
                             </div>
 
                         </a>
 
                         <!-- Pin / Unpin -->
-                        <form
-                            method="POST"
-                            action="{% url 'toggle_pin_chat' chat.id %}"
-                            class="shrink-0"
-                        >
+                        <form method="POST" action="{% url 'toggle_pin_chat' chat.id %}" class="shrink-0">
                             {% csrf_token %}
-
                             <input type="hidden" name="return_to" value="{{ session.id }}">
 
                             <button
                                 type="submit"
                                 aria-label="{% if chat.is_pinned %}Unpin chat{% else %}Pin chat{% endif %}"
                                 title="{% if chat.is_pinned %}Unpin chat{% else %}Pin chat{% endif %}"
-                                class="p-2 rounded-lg transition {% if chat.is_pinned %}text-amber-600 bg-amber-100 hover:bg-amber-200{% else %}text-slate-400 hover:text-amber-600 hover:bg-amber-100{% endif %}"
+                                class="rounded-lg p-2 transition {% if chat.is_pinned %}bg-amber-100 text-amber-600 hover:bg-amber-200{% else %}text-slate-400 hover:bg-amber-100 hover:text-amber-600{% endif %}"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 3l5 5-4 1-4 4-1 4-3-3-4-4 4-1 4-4 3-2zM12 12l-8 8"/>
                                 </svg>
                             </button>
-
                         </form>
 
                         <!-- Delete Chat -->
@@ -246,44 +434,36 @@
                             onsubmit="return confirm('Are you sure you want to permanently delete this conversation and all its messages? This action cannot be undone.');"
                         >
                             {% csrf_token %}
-
                             <input type="hidden" name="return_to" value="{{ session.id }}">
 
                             <button
                                 type="submit"
                                 aria-label="Delete chat"
                                 title="Delete chat"
-                                class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+                                class="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14M10 10v6m4-6v6"/>
                                 </svg>
                             </button>
-
                         </form>
 
                     </div>
-
                 </div>
 
             {% empty %}
 
                 <div class="px-3 py-8 text-center">
-
-                    <div class="w-10 h-10 mx-auto mb-3 rounded-xl bg-slate-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <div class="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
                     </div>
 
-                    <p class="text-sm font-medium text-slate-500">
-                        No conversations yet
-                    </p>
-
-                    <p class="text-xs text-slate-400 mt-1">
+                    <p class="text-sm font-medium text-slate-500">No conversations yet</p>
+                    <p class="mt-1 text-xs text-slate-400">
                         Start a new session to chat with your AI assistant.
                     </p>
-
                 </div>
 
             {% endfor %}
@@ -291,11 +471,11 @@
         </div>
 
         <!-- Sidebar Footer -->
-        <div class="p-3 border-t border-slate-100 bg-slate-50/50 shrink-0 space-y-2">
+        <div class="shrink-0 space-y-2 border-t border-slate-100 bg-slate-50/50 p-3">
 
             <a
                 href="{% url 'view_profile' %}"
-                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-amber-700"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="8" r="4"/>
@@ -304,34 +484,22 @@
                 <span>View Profile</span>
             </a>
 
-            <!-- Contact Us -->
             <button
                 type="button"
                 onclick="openContactModal()"
-                class="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
+                class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-amber-700"
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.84.58 2.8.7a2 2 0 0 1 1.73 2.03z"/>
                 </svg>
-
                 <span>Contact Us</span>
             </button>
 
             <a
                 href="{% url 'logout' %}"
-                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 transition"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600"
             >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                 </svg>
                 Log out
@@ -343,216 +511,196 @@
     <!-- Mobile Sidebar Overlay -->
     <div
         id="sidebar-overlay"
-        onclick="toggleSidebar()"
-        class="fixed inset-0 z-30 bg-black/30 hidden lg:hidden"
+        onclick="toggleSidebar(false)"
+        class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"
+        aria-hidden="true"
     ></div>
 
     <!-- =====================================================
          MAIN WORKSPACE
     ====================================================== -->
 
-    <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-[#FAF6F0] min-w-0">
+    <main class="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#FAF6F0]">
 
-<!-- CONTACT US MODAL -->
-<div
-    id="contact-modal"
-    class="fixed inset-0 z-[110] hidden items-center justify-center bg-slate-900/50 p-4"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="contact-modal-title"
-    onclick="if (event.target === this) closeContactModal()"
->
-    <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between border-b border-amber-100 px-5 py-4">
-            <div>
-                <h2
-                    id="contact-modal-title"
-                    class="text-lg font-bold text-slate-800"
-                >
-                    Contact Us
-                </h2>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    We're here to help!
-                </p>
-            </div>
+        <!-- Mobile Header -->
+        <div class="flex h-14 shrink-0 items-center gap-3 border-b border-amber-100 bg-white/95 px-3 sm:px-5 lg:hidden">
 
             <button
                 type="button"
-                onclick="closeContactModal()"
-                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Close contact dialog"
+                onclick="toggleSidebar(true)"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-700 transition hover:bg-amber-100"
+                aria-label="Open navigation"
+                aria-controls="sidebar"
             >
-                <svg
-                    class="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M6 18L18 6M6 6l12 12"
-                    />
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
             </button>
+
+            <a href="{% url 'new_chat' %}" class="flex min-w-0 items-center gap-2">
+                <span class="truncate text-sm font-bold text-slate-900">
+                    We Care <span class="text-amber-600">Pet Care</span>
+                </span>
+            </a>
+
+            <span class="ml-auto truncate text-xs text-slate-400">
+                Pet Care Assistant
+            </span>
+
         </div>
 
-        <!-- Modal Content -->
-        <div class="space-y-5 p-5">
+        <!-- =====================================================
+             CONTACT US MODAL
+        ====================================================== -->
 
-            <!-- Introduction -->
-            <div class="text-center">
-                <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 text-amber-600">
-                    <svg
-                        class="h-8 w-8"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                        viewBox="0 0 24 24"
+        <div
+            id="contact-modal"
+            class="fixed inset-0 z-[110] hidden items-center justify-center bg-slate-900/50 p-3 sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="contact-modal-title"
+            onclick="if (event.target === this) closeContactModal()"
+        >
+
+            <div id="contact-modal-card" class="rounded-2xl bg-white shadow-2xl">
+
+                <!-- Modal Header -->
+                <div class="flex shrink-0 items-center justify-between border-b border-amber-100 px-4 py-4 sm:px-5">
+
+                    <div class="min-w-0">
+                        <h2 id="contact-modal-title" class="text-lg font-bold text-slate-800">
+                            Contact Us
+                        </h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            We're here to help!
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onclick="closeContactModal()"
+                        class="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                        aria-label="Close contact dialog"
                     >
-                        <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
-                        <circle cx="6.5" cy="10" r="1.5"/>
-                        <circle cx="10" cy="7" r="1.5"/>
-                        <circle cx="14" cy="7" r="1.5"/>
-                        <circle cx="17.5" cy="10" r="1.5"/>
-                    </svg>
-                </div>
-
-                <h3 class="text-xl font-bold text-slate-800">
-                    Pioduran PetCare and Veterinary Clinic
-                </h3>
-
-                <p class="mt-2 text-sm leading-6 text-slate-500">
-                    We're here to help! Reach out to our veterinary clinic
-                    for any questions, concerns, or assistance. We're happy
-                    to help you provide the best care for your beloved pets.
-                </p>
-            </div>
-
-            <!-- Phone Number -->
-            <div class="flex items-start gap-4 rounded-xl border border-amber-100 bg-amber-50/70 p-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
-                    <svg
-                        class="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.84.58 2.8.7a2 2 0 0 1 1.73 2.03z"
-                        />
-                    </svg>
-                </div>
-
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        Phone Number
-                    </p>
-
-                    <a
-                        href="tel:09559688069"
-                        class="mt-1 inline-block text-base font-bold text-slate-800 transition hover:text-amber-700"
-                    >
-                        0955 968 8069
-                    </a>
-
-                    <p class="mt-1 text-xs text-slate-500">
-                        Tap the number to call the clinic.
-                    </p>
-                </div>
-
-                <a
-                    href="tel:09559688069"
-                    class="rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-700"
-                >
-                    Call
-                </a>
-            </div>
-
-            <!-- Clinic Address -->
-            <div class="flex items-start gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm">
-                    <svg
-                        class="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 1 1 18 0Z"
-                        />
-                        <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                </div>
-
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        Clinic Address
-                    </p>
-
-                    <p class="mt-1 text-sm font-semibold leading-6 text-slate-800">
-                        Purok 2, Caratagan, Pio Duran, Albay, Philippines
-                    </p>
-
-                    <a
-                        href="https://www.google.com/maps/search/?api=1&query=Purok+2+Caratagan+Pio+Duran+Albay+Philippines"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 transition hover:text-amber-800"
-                    >
-                        Get Directions
-
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M7 17L17 7M7 7h10v10"
-                            />
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
-                    </a>
+                    </button>
+
                 </div>
+
+                <!-- Modal Content -->
+                <div id="contact-modal-content" class="space-y-5 p-4 sm:p-5">
+
+                    <!-- Introduction -->
+                    <div class="text-center">
+                        <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 text-amber-600">
+                            <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+                                <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
+                                <circle cx="6.5" cy="10" r="1.5"/>
+                                <circle cx="10" cy="7" r="1.5"/>
+                                <circle cx="14" cy="7" r="1.5"/>
+                                <circle cx="17.5" cy="10" r="1.5"/>
+                            </svg>
+                        </div>
+
+                        <h3 class="text-lg font-bold leading-snug text-slate-800 sm:text-xl">
+                            Pioduran PetCare and Veterinary Clinic
+                        </h3>
+
+                        <p class="mt-2 text-sm leading-6 text-slate-500">
+                            We're here to help! Reach out to our veterinary clinic
+                            for any questions, concerns, or assistance. We're happy
+                            to help you provide the best care for your beloved pets.
+                        </p>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="flex items-start gap-3 rounded-xl border border-amber-100 bg-amber-50/70 p-3 sm:gap-4 sm:p-4">
+
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm sm:h-11 sm:w-11">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.84.58 2.8.7a2 2 0 0 1 1.73 2.03z"/>
+                            </svg>
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Phone Number
+                            </p>
+
+                            <a href="tel:09559688069" class="mt-1 inline-block break-words text-base font-bold text-slate-800 transition hover:text-amber-700">
+                                0955 968 8069
+                            </a>
+
+                            <p class="mt-1 text-xs leading-5 text-slate-500">
+                                Tap the number to call the clinic.
+                            </p>
+                        </div>
+
+                        <a href="tel:09559688069" class="shrink-0 self-center rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-700">
+                            Call
+                        </a>
+
+                    </div>
+
+                    <!-- Clinic Address -->
+                    <div class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 sm:gap-4 sm:p-4">
+
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm sm:h-11 sm:w-11">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 1 1 18 0Z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Clinic Address
+                            </p>
+
+                            <p class="mt-1 break-words text-sm font-semibold leading-6 text-slate-800">
+                                Purok 2, Caratagan, Pio Duran, Albay, Philippines
+                            </p>
+
+                            <a
+                                href="https://www.google.com/maps/search/?api=1&query=Purok+2+Caratagan+Pio+Duran+Albay+Philippines"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 transition hover:text-amber-800"
+                            >
+                                Get Directions
+                                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M7 7h10v10"/>
+                                </svg>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <!-- Pet Care Notice -->
+                    <div class="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                        <p class="text-xs leading-5 text-slate-600">
+                            <span class="font-bold text-amber-800">Pet care reminder:</span>
+                            For urgent medical concerns, please contact a qualified veterinarian directly.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="shrink-0 border-t border-slate-100 p-4 sm:p-5">
+                    <button
+                        type="button"
+                        onclick="closeContactModal(); document.getElementById('chat-input')?.focus();"
+                        class="w-full rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-700"
+                    >
+                        Return to Chat
+                    </button>
+                </div>
+
             </div>
-
-            <!-- Pet Care Notice -->
-            <div class="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                <p class="text-xs leading-5 text-slate-600">
-                    <span class="font-bold text-amber-800">Pet care reminder:</span>
-                    For urgent medical concerns, please contact a qualified
-                    veterinarian directly.
-                </p>
-            </div>
-
         </div>
-
-        <!-- Modal Footer -->
-        <div class="border-t border-slate-100 p-5">
-            <button
-                type="button"
-                onclick="closeContactModal(); document.getElementById('chat-input')?.focus();"
-                class="w-full rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-700"
-            >
-                Return to Chat
-            </button>
-        </div>
-
-    </div>
-</div>
 
         {% block content %}{% endblock %}
 
@@ -564,23 +712,24 @@
 
     <div
         id="camera-modal"
-        class="camera-modal fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 p-3 sm:p-5"
+        class="camera-modal fixed inset-0 z-[100] hidden items-center justify-center bg-black/70 p-2 sm:p-5"
         role="dialog"
         aria-modal="true"
         aria-labelledby="camera-modal-title"
+        onclick="if (event.target === this) closeCamera()"
     >
 
-        <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div id="camera-modal-card" class="overflow-hidden rounded-2xl bg-white shadow-2xl">
 
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-100 px-4 py-4 sm:px-5">
+            <div class="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4">
 
-                <div>
-                    <h2 id="camera-modal-title" class="text-base sm:text-lg font-bold text-slate-800">
+                <div class="min-w-0">
+                    <h2 id="camera-modal-title" class="text-base font-bold text-slate-800 sm:text-lg">
                         Capture Pet Photo
                     </h2>
 
-                    <p class="mt-1 text-xs text-slate-500">
+                    <p class="mt-1 text-xs leading-5 text-slate-500">
                         Position your pet inside the camera frame.
                     </p>
                 </div>
@@ -588,10 +737,10 @@
                 <button
                     type="button"
                     onclick="closeCamera()"
-                    class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                    class="shrink-0 rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                     aria-label="Close camera"
                 >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
@@ -599,51 +748,43 @@
             </div>
 
             <!-- Camera Preview -->
-            <div class="relative bg-black">
-
-                <video
-                    id="camera-video"
-                    autoplay
-                    playsinline
-                    muted
-                ></video>
-
+            <div class="camera-preview relative bg-black">
+                <video id="camera-video" autoplay playsinline muted></video>
                 <canvas id="camera-canvas" class="hidden"></canvas>
 
                 <div
                     id="camera-starting"
-                    class="absolute inset-0 flex items-center justify-center bg-black/70 text-sm text-white"
+                    class="absolute inset-0 flex items-center justify-center bg-black/70 px-4 text-center text-sm text-white"
                 >
                     Starting camera...
                 </div>
-
             </div>
 
             <!-- Camera Error -->
             <div
                 id="camera-error"
-                class="hidden mx-4 mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 sm:mx-5"
+                class="mx-4 mt-4 hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-5 text-red-700 sm:mx-5"
                 role="alert"
             ></div>
 
             <!-- Camera Controls -->
-            <div class="flex flex-col-reverse gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div class="camera-controls flex shrink-0 flex-col-reverse gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-5">
 
                 <button
                     type="button"
                     onclick="closeCamera()"
-                    class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                    class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:w-auto"
                 >
                     Cancel
                 </button>
 
-                <div class="flex gap-2">
+                <div class="flex flex-col gap-2 sm:flex-row">
 
                     <button
                         type="button"
                         id="switch-camera-button"
                         onclick="switchCamera()"
-                        class="hidden rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                        class="hidden w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:w-auto"
                     >
                         Switch Camera
                     </button>
@@ -653,17 +794,15 @@
                         id="capture-camera-button"
                         onclick="captureCameraPhoto()"
                         disabled
-                        class="flex-1 sm:flex-none rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white hover:bg-amber-700 transition disabled:opacity-50"
+                        class="w-full rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
                         Capture Photo
                     </button>
 
                 </div>
-
             </div>
 
         </div>
-
     </div>
 
     <!-- =====================================================
@@ -673,63 +812,103 @@
     <script>
         "use strict";
 
-// =====================================================
-// PREVENT WEBPAGE ZOOM WHILE USING THE CAMERA
-// =====================================================
+        // =====================================================
+        // PREVENT WEBPAGE ZOOM WHILE USING THE CAMERA
+        // =====================================================
 
-(function preventPageZoomDuringCamera() {
-    const cameraModal = document.getElementById("camera-modal");
+        (function preventPageZoomDuringCamera() {
+            const cameraModal = document.getElementById("camera-modal");
 
-    if (!cameraModal) return;
+            if (!cameraModal) return;
 
-    // Prevent pinch gestures from zooming the webpage
-    cameraModal.addEventListener("touchmove", function(event) {
-        if (event.touches.length > 1) {
-            event.preventDefault();
-        }
-    }, { passive: false });
+            cameraModal.addEventListener("touchmove", function(event) {
+                if (event.touches.length > 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
 
-    // Prevent Safari gesture-based page zoom
-    ["gesturestart", "gesturechange", "gestureend"].forEach(function(type) {
-        cameraModal.addEventListener(type, function(event) {
-            event.preventDefault();
-        }, { passive: false });
-    });
+            ["gesturestart", "gesturechange", "gestureend"].forEach(function(type) {
+                cameraModal.addEventListener(type, function(event) {
+                    event.preventDefault();
+                }, { passive: false });
+            });
 
-    // Prevent Ctrl + mouse-wheel browser zoom inside the camera
-    cameraModal.addEventListener("wheel", function(event) {
-        if (event.ctrlKey || event.metaKey) {
-            event.preventDefault();
-        }
-    }, { passive: false });
-})();
+            cameraModal.addEventListener("wheel", function(event) {
+                if (event.ctrlKey || event.metaKey) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+        })();
 
         const SESSION_ID = "{{ session.id|escapejs }}";
 
         let cameraStream = null;
         let currentFacingMode = "environment";
         let cameraOpening = false;
-
-        // Prevent duplicate sends.
         let isSending = false;
 
-        // -----------------------------------------------------
+        // =====================================================
         // SIDEBAR
-        // -----------------------------------------------------
+        // =====================================================
 
-        function toggleSidebar() {
+        function toggleSidebar(forceOpen) {
             const sidebar = document.getElementById("sidebar");
             const overlay = document.getElementById("sidebar-overlay");
 
-            sidebar.classList.toggle("-translate-x-full");
-            overlay.classList.toggle("hidden");
+            if (!sidebar || !overlay) return;
+
+            const shouldOpen =
+                typeof forceOpen === "boolean"
+                    ? forceOpen
+                    : sidebar.classList.contains("-translate-x-full");
+
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove("-translate-x-full");
+                overlay.classList.add("hidden");
+                return;
+            }
+
+            sidebar.classList.toggle("-translate-x-full", !shouldOpen);
+            overlay.classList.toggle("hidden", !shouldOpen);
+
+            document.body.classList.toggle("sidebar-open", shouldOpen);
         }
 
-        // -----------------------------------------------------
+        function closeMobileSidebar() {
+            if (window.innerWidth < 1024) {
+                toggleSidebar(false);
+            }
+        }
+
+        window.addEventListener("resize", function() {
+            const sidebar = document.getElementById("sidebar");
+            const overlay = document.getElementById("sidebar-overlay");
+
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove("-translate-x-full");
+                overlay.classList.add("hidden");
+                document.body.classList.remove("sidebar-open");
+            } else {
+                sidebar.classList.add("-translate-x-full");
+                overlay.classList.add("hidden");
+                document.body.classList.remove("sidebar-open");
+            }
+        });
+
+        // Close the mobile sidebar after navigating to a chat.
+        document.querySelectorAll("#sidebar a").forEach(function(link) {
+            link.addEventListener("click", function() {
+                closeMobileSidebar();
+            });
+        });
+
+        // =====================================================
         // TEXTAREA
-        // -----------------------------------------------------
+        // =====================================================
 
         function adjustHeight(element) {
+            if (!element) return;
+
             element.style.height = "auto";
             element.style.height = Math.min(element.scrollHeight, 144) + "px";
         }
@@ -737,21 +916,27 @@
         function fillPrompt(text) {
             const input = document.getElementById("chat-input");
 
+            if (!input) return;
+
             input.value = text;
             input.focus();
 
             adjustHeight(input);
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // IMAGE PREVIEW
-        // -----------------------------------------------------
+        // =====================================================
 
         function previewFile() {
             const fileInput = document.getElementById("image-file-input");
             const previewContainer = document.getElementById("image-preview-container");
             const previewImage = document.getElementById("image-preview");
             const fileNameText = document.getElementById("file-name-text");
+
+            if (!fileInput || !previewContainer || !previewImage || !fileNameText) {
+                return;
+            }
 
             const file = fileInput.files && fileInput.files[0];
 
@@ -766,7 +951,6 @@
                 return;
             }
 
-            // Optional client-side size limit: 10 MB.
             if (file.size > 10 * 1024 * 1024) {
                 clearImage();
                 alert("Please select an image smaller than 10 MB.");
@@ -792,27 +976,34 @@
             const previewImage = document.getElementById("image-preview");
             const fileNameText = document.getElementById("file-name-text");
 
-            fileInput.value = "";
-
-            if (previewImage.dataset.objectUrl) {
-                URL.revokeObjectURL(previewImage.dataset.objectUrl);
-                delete previewImage.dataset.objectUrl;
+            if (fileInput) {
+                fileInput.value = "";
             }
 
-            previewImage.removeAttribute("src");
-            fileNameText.textContent = "Selected photo";
+            if (previewImage) {
+                if (previewImage.dataset.objectUrl) {
+                    URL.revokeObjectURL(previewImage.dataset.objectUrl);
+                    delete previewImage.dataset.objectUrl;
+                }
 
-            previewContainer.classList.add("hidden");
+                previewImage.removeAttribute("src");
+            }
+
+            if (fileNameText) {
+                fileNameText.textContent = "Selected photo";
+            }
+
+            if (previewContainer) {
+                previewContainer.classList.add("hidden");
+            }
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // LIVE CAMERA
-        // -----------------------------------------------------
+        // =====================================================
 
         async function openCamera() {
-            if (cameraOpening) {
-                return;
-            }
+            if (cameraOpening) return;
 
             const modal = document.getElementById("camera-modal");
             const video = document.getElementById("camera-video");
@@ -821,9 +1012,14 @@
             const captureButton = document.getElementById("capture-camera-button");
             const switchButton = document.getElementById("switch-camera-button");
 
-            if (!navigator.mediaDevices ||
-                typeof navigator.mediaDevices.getUserMedia !== "function") {
+            if (!modal || !video || !errorBox || !starting || !captureButton || !switchButton) {
+                return;
+            }
 
+            if (
+                !navigator.mediaDevices ||
+                typeof navigator.mediaDevices.getUserMedia !== "function"
+            ) {
                 modal.classList.remove("hidden");
                 modal.classList.add("flex");
 
@@ -864,9 +1060,7 @@
                     }
                 };
 
-                cameraStream = await navigator.mediaDevices.getUserMedia(
-                    constraints
-                );
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
 
                 video.srcObject = cameraStream;
 
@@ -875,11 +1069,10 @@
                 starting.classList.add("hidden");
                 captureButton.disabled = false;
 
-                // Display camera switching when the device has multiple cameras.
                 const devices = await navigator.mediaDevices.enumerateDevices();
-                const cameras = devices.filter(
-                    device => device.kind === "videoinput"
-                );
+                const cameras = devices.filter(function(device) {
+                    return device.kind === "videoinput";
+                });
 
                 if (cameras.length > 1) {
                     switchButton.classList.remove("hidden");
@@ -891,33 +1084,29 @@
                 starting.classList.add("hidden");
                 captureButton.disabled = true;
 
-                if (error.name === "NotAllowedError" ||
-                    error.name === "PermissionDeniedError") {
-
+                if (
+                    error.name === "NotAllowedError" ||
+                    error.name === "PermissionDeniedError"
+                ) {
                     showCameraError(
                         "Camera permission was denied. Allow camera access in your browser settings, then try again."
                     );
-
-                } else if (error.name === "NotFoundError" ||
-                           error.name === "DevicesNotFoundError") {
-
-                    showCameraError(
-                        "No camera was found on this device."
-                    );
-
-                } else if (error.name === "NotReadableError" ||
-                           error.name === "TrackStartError") {
-
+                } else if (
+                    error.name === "NotFoundError" ||
+                    error.name === "DevicesNotFoundError"
+                ) {
+                    showCameraError("No camera was found on this device.");
+                } else if (
+                    error.name === "NotReadableError" ||
+                    error.name === "TrackStartError"
+                ) {
                     showCameraError(
                         "The camera may already be in use by another application. Close that application and try again."
                     );
-
                 } else {
-
                     showCameraError(
                         "Unable to start the camera. Check your browser permissions and try again."
                     );
-
                 }
 
                 await stopCameraStream();
@@ -930,13 +1119,18 @@
         function showCameraError(message) {
             const errorBox = document.getElementById("camera-error");
 
+            if (!errorBox) return;
+
             errorBox.textContent = message;
             errorBox.classList.remove("hidden");
         }
 
         async function stopCameraStream() {
             if (cameraStream) {
-                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+
                 cameraStream = null;
             }
 
@@ -948,9 +1142,7 @@
         }
 
         async function switchCamera() {
-            if (cameraOpening) {
-                return;
-            }
+            if (cameraOpening) return;
 
             currentFacingMode =
                 currentFacingMode === "environment"
@@ -965,14 +1157,8 @@
             const canvas = document.getElementById("camera-canvas");
             const captureButton = document.getElementById("capture-camera-button");
 
-            if (!cameraStream ||
-                !video.videoWidth ||
-                !video.videoHeight) {
-
-                showCameraError(
-                    "Please wait until the camera is ready."
-                );
-
+            if (!cameraStream || !video.videoWidth || !video.videoHeight) {
+                showCameraError("Please wait until the camera is ready.");
                 return;
             }
 
@@ -985,64 +1171,51 @@
 
             if (!context) {
                 captureButton.disabled = false;
-
-                showCameraError(
-                    "Unable to capture the image. Please try again."
-                );
-
+                showCameraError("Unable to capture the image. Please try again.");
                 return;
             }
 
-            context.drawImage(
-                video,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            canvas.toBlob(
-                function(blob) {
-                    captureButton.disabled = false;
+            canvas.toBlob(function(blob) {
+                captureButton.disabled = false;
 
-                    if (!blob) {
-                        showCameraError(
-                            "The image could not be captured. Please try again."
-                        );
-                        return;
+                if (!blob) {
+                    showCameraError("The image could not be captured. Please try again.");
+                    return;
+                }
+
+                if (blob.size > 10 * 1024 * 1024) {
+                    showCameraError("The captured image is too large. Please try again.");
+                    return;
+                }
+
+                const file = new File(
+                    [blob],
+                    "pet-photo-" + Date.now() + ".jpg",
+                    {
+                        type: "image/jpeg",
+                        lastModified: Date.now()
                     }
+                );
 
-                    if (blob.size > 10 * 1024 * 1024) {
-                        showCameraError(
-                            "The captured image is too large. Please try again."
-                        );
-                        return;
-                    }
+                const fileInput = document.getElementById("image-file-input");
 
-                    const file = new File(
-                        [blob],
-                        "pet-photo-" + Date.now() + ".jpg",
-                        {
-                            type: "image/jpeg",
-                            lastModified: Date.now()
-                        }
-                    );
+                if (!fileInput) {
+                    showCameraError("The image upload field could not be found.");
+                    return;
+                }
 
-                    const fileInput = document.getElementById("image-file-input");
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                fileInput.files = transfer.files;
 
-                    const transfer = new DataTransfer();
-                    transfer.items.add(file);
+                previewFile();
+                closeCamera();
 
-                    fileInput.files = transfer.files;
+                document.getElementById("chat-input")?.focus();
 
-                    previewFile();
-                    closeCamera();
-
-                    document.getElementById("chat-input").focus();
-                },
-                "image/jpeg",
-                0.90
-            );
+            }, "image/jpeg", 0.90);
         }
 
         async function closeCamera() {
@@ -1053,26 +1226,26 @@
 
             await stopCameraStream();
 
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
+            if (modal) {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            }
 
-            starting.classList.remove("hidden");
-            captureButton.disabled = true;
-            switchButton.classList.add("hidden");
+            if (starting) starting.classList.remove("hidden");
+            if (captureButton) captureButton.disabled = true;
+            if (switchButton) switchButton.classList.add("hidden");
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // CHAT HELPERS
-        // -----------------------------------------------------
+        // =====================================================
 
         function scrollChatToBottom() {
             const chatMessages = document.getElementById("chat-messages");
 
-            if (!chatMessages) {
-                return;
-            }
+            if (!chatMessages) return;
 
-            requestAnimationFrame(() => {
+            requestAnimationFrame(function() {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         }
@@ -1088,20 +1261,20 @@
         function addUserMessage(message, imageFile = null) {
             const chatMessages = document.getElementById("chat-messages");
 
+            if (!chatMessages) return;
+
             const wrapper = document.createElement("div");
-            wrapper.className = "flex justify-end";
+            wrapper.className = "flex min-w-0 justify-end";
 
             const bubble = document.createElement("div");
             bubble.className =
-                "bg-amber-600 text-white px-4 py-3 rounded-2xl max-w-xl shadow-sm";
+                "max-w-[92%] rounded-2xl bg-amber-600 px-4 py-3 text-white shadow-sm sm:max-w-xl";
 
             if (imageFile) {
                 const image = document.createElement("img");
-
                 image.src = URL.createObjectURL(imageFile);
                 image.className =
-                    "rounded-xl mb-3 max-w-full max-h-80 object-contain border border-amber-100";
-
+                    "mb-3 max-h-80 max-w-full rounded-xl border border-amber-100 object-contain";
                 image.alt = "Uploaded pet photo";
 
                 bubble.appendChild(image);
@@ -1109,7 +1282,6 @@
 
             if (message) {
                 const text = document.createElement("div");
-
                 text.className = "message-text text-sm";
                 text.textContent = message;
 
@@ -1125,20 +1297,18 @@
         function addAssistantMessage(message) {
             const chatMessages = document.getElementById("chat-messages");
 
+            if (!chatMessages) return;
+
             const wrapper = document.createElement("div");
-            wrapper.className = "flex items-start gap-3";
+            wrapper.className = "flex min-w-0 items-start gap-3";
 
             const icon = document.createElement("div");
             icon.className =
-                "w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0";
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
 
             icon.innerHTML = `
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    class="w-4 h-4 text-amber-600"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                    fill="currentColor" class="h-4 w-4 text-amber-600">
                     <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
                     <circle cx="6.5" cy="10" r="1.5"/>
                     <circle cx="10" cy="7" r="1.5"/>
@@ -1149,16 +1319,14 @@
 
             const bubble = document.createElement("div");
             bubble.className =
-                "bg-white border border-amber-100 rounded-2xl px-4 py-3 max-w-xl shadow-sm";
+                "min-w-0 max-w-[92%] rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm sm:max-w-xl";
 
             const text = document.createElement("div");
             text.className = "message-text text-sm text-slate-700";
             text.textContent = message || "";
 
             bubble.appendChild(text);
-            wrapper.appendChild(icon);
-            wrapper.appendChild(bubble);
-
+            wrapper.append(icon, bubble);
             chatMessages.appendChild(wrapper);
 
             scrollChatToBottom();
@@ -1166,22 +1334,16 @@
 
         function createThinkingBubble(isImage) {
             const loadingBubble = document.createElement("div");
-
             loadingBubble.id = "thinking-bubble";
-            loadingBubble.className = "flex gap-3 items-start";
+            loadingBubble.className = "flex min-w-0 items-start gap-3";
 
             const icon = document.createElement("div");
-
             icon.className =
-                "w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0";
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
 
             icon.innerHTML = `
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    class="w-4 h-4 text-amber-600"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                    fill="currentColor" class="h-4 w-4 text-amber-600">
                     <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
                     <circle cx="6.5" cy="10" r="1.5"/>
                     <circle cx="10" cy="7" r="1.5"/>
@@ -1191,15 +1353,14 @@
             `;
 
             const bubble = document.createElement("div");
-
             bubble.className =
-                "bg-white border border-amber-100 rounded-2xl px-4 py-3 shadow-sm";
+                "min-w-0 rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm";
 
             const row = document.createElement("div");
-            row.className = "flex items-center gap-3";
+            row.className = "flex flex-wrap items-center gap-3";
 
             const label = document.createElement("span");
-            label.className = "text-slate-500 text-sm";
+            label.className = "text-sm text-slate-500";
             label.textContent = isImage ? "Analyzing image..." : "Thinking...";
 
             const dots = document.createElement("div");
@@ -1207,26 +1368,21 @@
 
             for (let index = 0; index < 3; index++) {
                 const dot = document.createElement("span");
-
-                dot.className =
-                    "w-2 h-2 rounded-full bg-amber-500 animate-bounce";
-
+                dot.className = "h-2 w-2 rounded-full bg-amber-500 animate-bounce";
                 dot.style.animationDelay = (index * 0.2) + "s";
-
                 dots.appendChild(dot);
             }
 
             row.append(label, dots);
             bubble.appendChild(row);
-
             loadingBubble.append(icon, bubble);
 
             return loadingBubble;
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // BREED PERCENTAGE CHART
-        // -----------------------------------------------------
+        // =====================================================
 
         function addBreedPercentageChart(imageAnalysis) {
             if (
@@ -1237,7 +1393,7 @@
                 return;
             }
 
-            const breeds = imageAnalysis.breed_percentages.filter(item => {
+            const breeds = imageAnalysis.breed_percentages.filter(function(item) {
                 if (!item || typeof item.breed !== "string") {
                     return false;
                 }
@@ -1252,21 +1408,20 @@
                 );
             });
 
-            if (breeds.length === 0) {
-                return;
-            }
+            if (breeds.length === 0) return;
 
             const chatMessages = document.getElementById("chat-messages");
+            if (!chatMessages) return;
 
             const wrapper = document.createElement("div");
-            wrapper.className = "flex items-start gap-3";
+            wrapper.className = "flex min-w-0 items-start gap-3";
 
             const spacer = document.createElement("div");
             spacer.className = "w-8 shrink-0";
 
             const card = document.createElement("div");
             card.className =
-                "w-full max-w-xl rounded-2xl border border-amber-100 bg-white p-4 sm:p-5 shadow-sm";
+                "w-full min-w-0 max-w-xl rounded-2xl border border-amber-100 bg-white p-4 shadow-sm sm:p-5";
 
             const heading = document.createElement("h3");
             heading.className = "text-base font-bold text-slate-800";
@@ -1280,32 +1435,28 @@
             const chart = document.createElement("div");
             chart.className = "mt-5 space-y-5";
 
-            breeds.forEach(item => {
+            breeds.forEach(function(item) {
                 const percentage = Number(item.percentage);
 
                 const row = document.createElement("div");
                 row.className = "space-y-2";
 
                 const labelRow = document.createElement("div");
-                labelRow.className =
-                    "flex items-start justify-between gap-3";
+                labelRow.className = "flex items-start justify-between gap-3";
 
                 const name = document.createElement("p");
-                name.className =
-                    "text-sm font-semibold text-slate-700 break-words";
+                name.className = "break-words text-sm font-semibold text-slate-700";
                 name.textContent = item.breed;
 
                 const value = document.createElement("span");
                 value.className =
-                    "shrink-0 text-sm font-bold text-amber-700 tabular-nums";
+                    "shrink-0 text-sm font-bold tabular-nums text-amber-700";
                 value.textContent = percentage + "%";
 
                 labelRow.append(name, value);
 
                 const track = document.createElement("div");
-                track.className =
-                    "h-3 w-full overflow-hidden rounded-full bg-slate-100";
-
+                track.className = "h-3 w-full overflow-hidden rounded-full bg-slate-100";
                 track.setAttribute("role", "progressbar");
                 track.setAttribute("aria-label", item.breed);
                 track.setAttribute("aria-valuemin", "0");
@@ -1320,15 +1471,10 @@
                 track.appendChild(bar);
                 row.append(labelRow, track);
 
-                if (
-                    typeof item.evidence === "string" &&
-                    item.evidence.trim()
-                ) {
+                if (typeof item.evidence === "string" && item.evidence.trim()) {
                     const evidence = document.createElement("p");
-                    evidence.className =
-                        "text-xs leading-relaxed text-slate-500";
+                    evidence.className = "text-xs leading-relaxed text-slate-500";
                     evidence.textContent = item.evidence;
-
                     row.appendChild(evidence);
                 }
 
@@ -1340,43 +1486,45 @@
                 "mt-5 rounded-xl border border-amber-100 bg-amber-50 p-3";
 
             const disclaimerTitle = document.createElement("p");
-            disclaimerTitle.className =
-                "text-xs font-semibold text-amber-900";
+            disclaimerTitle.className = "text-xs font-semibold text-amber-900";
             disclaimerTitle.textContent = "About these percentages";
 
             const disclaimerText = document.createElement("p");
-            disclaimerText.className =
-                "mt-1 text-xs leading-relaxed text-amber-800";
+            disclaimerText.className = "mt-1 text-xs leading-relaxed text-amber-800";
             disclaimerText.textContent =
                 "These percentages estimate visual breed resemblance. They are not confirmed genetic ancestry or DNA test results.";
 
             disclaimer.append(disclaimerTitle, disclaimerText);
             card.append(heading, subtitle, chart, disclaimer);
-
             wrapper.append(spacer, card);
             chatMessages.appendChild(wrapper);
 
             scrollChatToBottom();
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // SEND MESSAGE TO DJANGO
-        // -----------------------------------------------------
+        // =====================================================
 
         async function handleSend(event) {
             event.preventDefault();
 
-            if (isSending) {
-                return;
-            }
+            if (isSending) return;
 
             const input = document.getElementById("chat-input");
             const imageInput = document.getElementById("image-file-input");
             const chatMessages = document.getElementById("chat-messages");
             const submitButton = document.getElementById("send-button");
 
+            if (!input || !chatMessages || !submitButton) {
+                console.error("Required chat elements were not found.");
+                return;
+            }
+
             const messageText = input.value.trim();
-            const imageFile = imageInput.files && imageInput.files[0];
+            const imageFile = imageInput && imageInput.files
+                ? imageInput.files[0]
+                : null;
 
             if (!messageText && !imageFile) {
                 input.focus();
@@ -1398,25 +1546,16 @@
 
             isSending = true;
             submitButton.disabled = true;
-
-            submitButton.classList.add(
-                "opacity-50",
-                "cursor-not-allowed"
-            );
+            submitButton.classList.add("opacity-50", "cursor-not-allowed");
 
             removeWelcomeMessage();
-
             addUserMessage(messageText, imageFile);
 
-            const loadingBubble = createThinkingBubble(
-                Boolean(imageFile)
-            );
-
+            const loadingBubble = createThinkingBubble(Boolean(imageFile));
             chatMessages.appendChild(loadingBubble);
             scrollChatToBottom();
 
             const formData = new FormData();
-
             formData.append("message", messageText);
 
             if (imageFile) {
@@ -1453,7 +1592,6 @@
                         data.error ||
                         "I couldn't process your request. Please try again."
                     );
-
                     return;
                 }
 
@@ -1465,10 +1603,7 @@
                     );
                 }
 
-                if (
-                    data.type === "image" &&
-                    data.image_analysis
-                ) {
+                if (data.type === "image" && data.image_analysis) {
                     addBreedPercentageChart(data.image_analysis);
                 }
 
@@ -1478,14 +1613,8 @@
                     console.log("SMS sent:", data.sms_sent);
                 }
 
-                if (
-                    data.needs_more_information &&
-                    data.follow_up_question
-                ) {
-                    console.log(
-                        "Follow-up question:",
-                        data.follow_up_question
-                    );
+                if (data.needs_more_information && data.follow_up_question) {
+                    console.log("Follow-up question:", data.follow_up_question);
                 }
 
             } catch (error) {
@@ -1515,103 +1644,109 @@
                 );
 
                 input.focus();
-
                 scrollChatToBottom();
             }
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // ENTER TO SEND; SHIFT+ENTER FOR NEW LINE
-        // -----------------------------------------------------
-
-        document.getElementById("chat-input").addEventListener(
-            "keydown",
-            function(event) {
-                if (
-                    event.key === "Enter" &&
-                    !event.shiftKey &&
-                    !event.isComposing
-                ) {
-                    event.preventDefault();
-
-                    document.getElementById("chat-form").requestSubmit();
-                }
-            }
-        );
-
-        // -----------------------------------------------------
-        // CAMERA MODAL KEYBOARD HANDLING
-        // -----------------------------------------------------
-
-        document.addEventListener("keydown", function(event) {
-            const modal = document.getElementById("camera-modal");
-
-            if (
-                event.key === "Escape" &&
-                !modal.classList.contains("hidden")
-            ) {
-                closeCamera();
-            }
-        });
-
-        // -----------------------------------------------------
-        // PAGE LOAD
-        // -----------------------------------------------------
+        // =====================================================
 
         document.addEventListener("DOMContentLoaded", function() {
+            const input = document.getElementById("chat-input");
+            const chatForm = document.getElementById("chat-form");
+
+            if (input && chatForm) {
+                input.addEventListener("keydown", function(event) {
+                    if (
+                        event.key === "Enter" &&
+                        !event.shiftKey &&
+                        !event.isComposing
+                    ) {
+                        event.preventDefault();
+                        chatForm.requestSubmit();
+                    }
+                });
+            }
+
             scrollChatToBottom();
         });
 
-        // Stop the camera if the user leaves or backgrounds the page.
+        // =====================================================
+        // KEYBOARD HANDLING
+        // =====================================================
+
+        document.addEventListener("keydown", function(event) {
+            const cameraModal = document.getElementById("camera-modal");
+            const contactModal = document.getElementById("contact-modal");
+
+            if (
+                event.key === "Escape" &&
+                cameraModal &&
+                !cameraModal.classList.contains("hidden")
+            ) {
+                closeCamera();
+                return;
+            }
+
+            if (
+                event.key === "Escape" &&
+                contactModal &&
+                !contactModal.classList.contains("hidden")
+            ) {
+                closeContactModal();
+                return;
+            }
+
+            if (
+                event.key === "Escape" &&
+                window.innerWidth < 1024
+            ) {
+                closeMobileSidebar();
+            }
+        });
+
+        // =====================================================
+        // PAGE LIFECYCLE
+        // =====================================================
+
         window.addEventListener("pagehide", function() {
             if (cameraStream) {
-                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+
                 cameraStream = null;
             }
         });
 
-        // -----------------------------------------------------
-// CONTACT US MODAL
-// -----------------------------------------------------
+        // =====================================================
+        // CONTACT US MODAL
+        // =====================================================
 
-function openContactModal() {
-    const modal = document.getElementById("contact-modal");
+        function openContactModal() {
+            const modal = document.getElementById("contact-modal");
 
-    if (!modal) {
-        return;
-    }
+            if (!modal) return;
 
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
+            closeMobileSidebar();
 
-    document.body.style.overflow = "hidden";
-}
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
 
-function closeContactModal() {
-    const modal = document.getElementById("contact-modal");
+            document.body.style.overflow = "hidden";
+        }
 
-    if (!modal) {
-        return;
-    }
+        function closeContactModal() {
+            const modal = document.getElementById("contact-modal");
 
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
+            if (!modal) return;
 
-    document.body.style.overflow = "";
-}
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
 
-// Close the Contact Us modal using Escape.
-document.addEventListener("keydown", function(event) {
-    const modal = document.getElementById("contact-modal");
-
-    if (
-        event.key === "Escape" &&
-        modal &&
-        !modal.classList.contains("hidden")
-    ) {
-        closeContactModal();
-    }
-});
+            document.body.style.overflow = "";
+        }
     </script>
 
 </body>
