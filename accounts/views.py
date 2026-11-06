@@ -11,6 +11,9 @@ from django.http import JsonResponse
 from django.db import transaction
 
 
+def under_maintenance(request):
+    return render(request, "maintenance.html", )
+
 User = get_user_model()
 
 def keep_alive(request):
