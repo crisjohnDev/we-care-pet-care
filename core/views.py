@@ -179,6 +179,7 @@ def chat_session_list(request):
 
 @login_required
 def chat_session_detail(request, pk):
+
     session = get_object_or_404(
         ChatSession.objects.select_related(
             'user',
@@ -186,6 +187,33 @@ def chat_session_detail(request, pk):
         ),
         pk=pk
     )
+
+    # UPDATE ASSISTANT MESSAGE
+    if request.method == 'POST':
+
+        message_id = request.POST.get('message_id')
+        updated_message = request.POST.get('message', '').strip()
+
+        chat = get_object_or_404(
+            ChatMessage,
+            pk=message_id,
+            session=session,
+            role='assistant'
+        )
+
+        if not updated_message:
+            messages.error(request, "Assistant message cannot be empty.")
+            return redirect('chat_session_detail', pk=session.pk)
+
+        chat.message = updated_message
+        chat.save(update_fields=['message'])
+
+        messages.success(
+            request,
+            "We Care Assistant message updated successfully."
+        )
+
+        return redirect('chat_session_detail', pk=session.pk)
 
     chat_messages = session.messages.all()
 

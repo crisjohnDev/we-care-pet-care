@@ -1,19 +1,21 @@
 
 {% extends 'admin_base.html' %}
 
-{% block title %}Conversation Details{% endblock %}
-{% block page_title %}Conversation Details{% endblock %}
+{% block title %}Conversation Details | We Care Pet Care{% endblock %}
+{% block header_title %}Conversation Details{% endblock %}
 
 {% block content %}
 
 <div class="max-w-5xl mx-auto space-y-6">
 
+    <!-- BACK BUTTON -->
     <div>
         <a href="{% url 'chat_session_list' %}"
            class="text-sm text-amber-700 hover:text-amber-800 font-semibold">
             ← Back to Chat Sessions
         </a>
     </div>
+
 
     <!-- SESSION INFORMATION -->
     <div class="bg-white border border-[#f3e8d7] rounded-2xl p-5 shadow-sm">
@@ -27,6 +29,7 @@
 
                 <p class="text-sm text-slate-500 mt-2">
                     Customer:
+
                     {% if session.user.customer_profile %}
                         <a href="{% url 'customer_detail' session.user.customer_profile.pk %}"
                            class="text-amber-700 font-semibold hover:underline">
@@ -56,101 +59,246 @@
 
     </div>
 
+
     <!-- CONVERSATION -->
     <div class="bg-[#FAF6F0] border border-[#f3e8d7] rounded-2xl shadow-sm overflow-hidden">
 
+        <!-- HEADER -->
         <div class="p-5 bg-white border-b border-[#f3e8d7]">
+
             <div class="flex items-center justify-between">
+
                 <div>
                     <h3 class="font-bold text-slate-800">
                         Conversation History
                     </h3>
+
                     <p class="text-xs text-slate-400 mt-1">
                         {{ chat_messages|length }} messages
                     </p>
                 </div>
 
-                <span class="text-xs text-emerald-600 font-semibold">
-                    Read Only
+                <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
+                    Editable Assistant Messages
                 </span>
+
             </div>
+
         </div>
 
-        <div class="p-4 sm:p-6 space-y-6 min-h-[300px] max-h-[700px] overflow-y-auto">
+
+        <!-- MESSAGE LIST -->
+        <div id="conversation-container"
+             class="p-4 sm:p-6 space-y-6 min-h-[300px] max-h-[700px] overflow-y-auto">
 
             {% for chat in chat_messages %}
 
                 {% if chat.role == "user" %}
 
-                <!-- CUSTOMER MESSAGE -->
-                <div class="flex justify-end">
-                    <div class="max-w-[85%] sm:max-w-[75%]">
+                    <!-- CUSTOMER MESSAGE -->
+                    <div class="flex justify-end">
 
-                        <p class="text-xs text-slate-400 text-right mb-2">
-                            Customer · {{ chat.created_at|date:"M d, Y - h:i A" }}
-                        </p>
+                        <div class="max-w-[85%] sm:max-w-[75%]">
 
-                        <div class="bg-amber-600 text-white rounded-2xl rounded-tr-sm px-5 py-4 shadow-sm">
-                            <p class="text-sm whitespace-pre-wrap break-words">{{ chat.message }}</p>
+                            <p class="text-xs text-slate-400 text-right mb-2">
+                                Customer · {{ chat.created_at|date:"M d, Y - h:i A" }}
+                            </p>
+
+                            <div class="bg-amber-600 text-white rounded-2xl rounded-tr-sm px-5 py-4 shadow-sm">
+
+                                <p class="text-sm whitespace-pre-wrap break-words">{{ chat.message }}</p>
+
+                            </div>
+
+                            <p class="text-[10px] text-slate-400 text-right mt-2">
+                                Customer messages cannot be edited.
+                            </p>
+
                         </div>
 
                     </div>
-                </div>
 
                 {% else %}
 
-                <!-- ASSISTANT MESSAGE -->
-                <div class="flex justify-start">
-                    <div class="max-w-[85%] sm:max-w-[75%]">
+                    <!-- WE CARE ASSISTANT MESSAGE -->
+                    <div class="flex justify-start">
 
-                        <p class="text-xs text-slate-400 mb-2">
-                            We Care Assistant · {{ chat.created_at|date:"M d, Y - h:i A" }}
-                        </p>
+                        <div class="w-full max-w-[85%] sm:max-w-[75%]">
 
-                        <div class="bg-white border border-[#f3e8d7] text-slate-700 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
-                            <p class="text-sm whitespace-pre-wrap break-words">{{ chat.message }}</p>
+                            <div class="flex items-center justify-between gap-3 mb-2">
+
+                                <p class="text-xs text-slate-400">
+                                    We Care Assistant · {{ chat.created_at|date:"M d, Y - h:i A" }}
+                                </p>
+
+                                <button
+                                    type="button"
+                                    onclick="editMessage('{{ chat.id }}')"
+                                    id="edit-button-{{ chat.id }}"
+                                    class="text-xs font-bold text-amber-700 hover:text-amber-900">
+                                    ✏️ Edit
+                                </button>
+
+                            </div>
+
+
+                            <!-- DISPLAY MODE -->
+                            <div id="display-{{ chat.id }}"
+                                 class="bg-white border border-[#f3e8d7] text-slate-700 rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm">
+
+                                <p class="text-sm whitespace-pre-wrap break-words">{{ chat.message }}</p>
+
+                            </div>
+
+
+                            <!-- EDIT MODE -->
+                            <form method="POST"
+                                  id="form-{{ chat.id }}"
+                                  class="hidden mt-2 bg-white border border-amber-200 rounded-2xl p-4 shadow-sm">
+
+                                {% csrf_token %}
+
+                                <input type="hidden"
+                                       name="message_id"
+                                       value="{{ chat.id }}">
+
+                                <label class="block text-xs font-bold text-slate-600 mb-2">
+                                    Edit We Care Assistant Response
+                                </label>
+
+                                <textarea
+                                    name="message"
+                                    rows="6"
+                                    required
+                                    class="w-full rounded-xl border border-amber-200 p-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-y"
+                                >{{ chat.message }}</textarea>
+
+
+                                <div class="flex flex-wrap justify-end gap-2 mt-3">
+
+                                    <button
+                                        type="button"
+                                        onclick="cancelEdit('{{ chat.id }}')"
+                                        class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50">
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        class="px-4 py-2 rounded-lg bg-amber-600 text-white text-xs font-bold hover:bg-amber-700">
+                                        Save Changes
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                            <p class="text-[10px] text-slate-400 mt-2">
+                                Assistant response · Editable by administrator
+                            </p>
+
                         </div>
 
                     </div>
-                </div>
 
                 {% endif %}
 
             {% empty %}
 
-            <div class="text-center py-16">
-                <div class="text-4xl mb-3">💬</div>
-                <h3 class="font-semibold text-slate-700">
-                    No messages available
-                </h3>
-                <p class="text-sm text-slate-400 mt-1">
-                    This conversation does not contain any messages.
-                </p>
-            </div>
+                <div class="text-center py-16">
+
+                    <div class="text-4xl mb-3">💬</div>
+
+                    <h3 class="font-semibold text-slate-700">
+                        No messages available
+                    </h3>
+
+                    <p class="text-sm text-slate-400 mt-1">
+                        This conversation does not contain any messages.
+                    </p>
+
+                </div>
 
             {% endfor %}
 
         </div>
 
-        <div class="p-4 bg-white border-t border-[#f3e8d7] text-center">
-            <p class="text-xs text-slate-400">
-                This is a read-only view of the customer's conversation.
-            </p>
+
+        <!-- FOOTER -->
+        <div class="p-4 bg-white border-t border-[#f3e8d7]">
+
+            <div class="flex items-center gap-2 justify-center">
+
+                <span class="text-emerald-600">●</span>
+
+                <p class="text-xs text-slate-400">
+                    You can edit We Care Assistant responses. Customer messages remain unchanged.
+                </p>
+
+            </div>
+
         </div>
 
     </div>
 
 </div>
 
-<script>
-    // Automatically scroll to the latest conversation message.
-    const conversation = document.querySelector(
-        '.max-h-\\[700px\\]'
-    );
 
-    if (conversation) {
-        conversation.scrollTop = conversation.scrollHeight;
+<script>
+
+    // OPEN EDIT MODE
+    function editMessage(id) {
+
+        const display = document.getElementById('display-' + id);
+        const form = document.getElementById('form-' + id);
+        const button = document.getElementById('edit-button-' + id);
+
+        if (!display || !form || !button) return;
+
+        display.classList.add('hidden');
+        form.classList.remove('hidden');
+        button.classList.add('hidden');
+
+        const textarea = form.querySelector('textarea');
+
+        if (textarea) {
+            textarea.focus();
+            textarea.setSelectionRange(
+                textarea.value.length,
+                textarea.value.length
+            );
+        }
     }
+
+
+    // CANCEL EDIT
+    function cancelEdit(id) {
+
+        const display = document.getElementById('display-' + id);
+        const form = document.getElementById('form-' + id);
+        const button = document.getElementById('edit-button-' + id);
+
+        if (!display || !form || !button) return;
+
+        display.classList.remove('hidden');
+        form.classList.add('hidden');
+        button.classList.remove('hidden');
+    }
+
+
+    // SCROLL TO LATEST MESSAGE
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const conversation = document.getElementById(
+            'conversation-container'
+        );
+
+        if (conversation) {
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+    });
+
 </script>
 
 {% endblock %}
