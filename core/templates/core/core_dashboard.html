@@ -1,0 +1,497 @@
+
+{% extends 'admin_base.html' %}
+
+{% block title %}Dashboard | We Care Pet Care{% endblock %}
+
+{% block header_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+
+<!-- PAGE TITLE -->
+<div class="mb-7 flex flex-wrap items-center justify-between gap-4">
+
+    <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-800">
+            Dashboard Overview
+        </h1>
+
+        <p class="mt-1 text-sm text-slate-500">
+            Monitor your pet care system and AI assistant activities.
+        </p>
+    </div>
+
+    <div class="flex items-center gap-2 rounded-xl border border-amber-100 bg-white px-4 py-2.5">
+
+        <span class="h-2 w-2 rounded-full bg-green-500"></span>
+
+        <span class="text-xs font-semibold text-slate-600">
+            System Overview
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- STATISTICS -->
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+
+
+    <!-- BREEDS -->
+    <div class="stat-card">
+
+        <div class="flex items-start justify-between">
+
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Total Breeds
+                </p>
+
+                <h2 class="mt-3 text-3xl font-extrabold text-slate-800">
+                    {{ breeds|default:0 }}
+                </h2>
+
+                <p class="mt-1 text-xs text-slate-400">
+                    Registered dog breeds
+                </p>
+            </div>
+
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5L12 3z"/>
+                </svg>
+
+            </div>
+
+        </div>
+
+        <a href="#" class="mt-5 inline-flex items-center gap-2 text-xs font-bold text-amber-700 hover:text-amber-800">
+            Manage Breeds →
+        </a>
+
+    </div>
+
+
+    <!-- CUSTOMERS -->
+    <div class="stat-card">
+
+        <div class="flex items-start justify-between">
+
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Total Customers
+                </p>
+
+                <h2 class="mt-3 text-3xl font-extrabold text-slate-800">
+                    {{ customers|default:0 }}
+                </h2>
+
+                <p class="mt-1 text-xs text-slate-400">
+                    Registered pet owners
+                </p>
+            </div>
+
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8zm7-5a4 4 0 010 8m3 7v-2a4 4 0 00-3-3.87"/>
+                </svg>
+
+            </div>
+
+        </div>
+
+        <a href="#" class="mt-5 inline-flex items-center gap-2 text-xs font-bold text-amber-700 hover:text-amber-800">
+            Manage Customers →
+        </a>
+
+    </div>
+
+
+    <!-- DOGS -->
+    <div class="stat-card">
+
+        <div class="flex items-start justify-between">
+
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Registered Dogs
+                </p>
+
+                <h2 class="mt-3 text-3xl font-extrabold text-slate-800">
+                    {{ dogs|default:0 }}
+                </h2>
+
+                <p class="mt-1 text-xs text-slate-400">
+                    Total registered pets
+                </p>
+            </div>
+
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 20s-8-4.5-8-10a4.5 4.5 0 018-2.9A4.5 4.5 0 0120 10c0 5.5-8 10-8 10z"/>
+                </svg>
+
+            </div>
+
+        </div>
+
+        <a href="#" class="mt-5 inline-flex items-center gap-2 text-xs font-bold text-amber-700 hover:text-amber-800">
+            Manage Dogs →
+        </a>
+
+    </div>
+
+
+    <!-- CHAT SESSIONS -->
+    <div class="stat-card">
+
+        <div class="flex items-start justify-between">
+
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Chat Sessions
+                </p>
+
+                <h2 class="mt-3 text-3xl font-extrabold text-slate-800">
+                    {{ chat_sessions|default:0 }}
+                </h2>
+
+                <p class="mt-1 text-xs text-slate-400">
+                    Total chatbot conversations
+                </p>
+            </div>
+
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.5 8.5 0 01-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1121 11.5z"/>
+                </svg>
+
+            </div>
+
+        </div>
+
+        <a href="#" class="mt-5 inline-flex items-center gap-2 text-xs font-bold text-amber-700 hover:text-amber-800">
+            View Sessions →
+        </a>
+
+    </div>
+
+
+    <!-- CHAT MESSAGES -->
+    <div class="stat-card">
+
+        <div class="flex items-start justify-between">
+
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Chat Messages
+                </p>
+
+                <h2 class="mt-3 text-3xl font-extrabold text-slate-800">
+                    {{ chat_messages|default:0 }}
+                </h2>
+
+                <p class="mt-1 text-xs text-slate-400">
+                    Total messages exchanged
+                </p>
+            </div>
+
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v12H8l-4 3V5z"/>
+                    <path stroke-linecap="round" d="M8 9h8M8 13h5"/>
+                </svg>
+
+            </div>
+
+        </div>
+
+        <a href="#" class="mt-5 inline-flex items-center gap-2 text-xs font-bold text-amber-700 hover:text-amber-800">
+            View Messages →
+        </a>
+
+    </div>
+
+
+    <!-- KNOWLEDGE BASE -->
+    <div class="stat-card">
+
+        <div class="flex items-start justify-between">
+
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Knowledge Base
+                </p>
+
+                <h2 class="mt-3 text-3xl font-extrabold text-slate-800">
+                    {{ question_answer|default:0 }}
+                </h2>
+
+                <p class="mt-1 text-xs text-slate-400">
+                    Questions and answers
+                </p>
+            </div>
+
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
+
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9a2.5 2.5 0 115 0c0 2-2.5 2-2.5 4m0 3h.01"/>
+                </svg>
+
+            </div>
+
+        </div>
+
+        <a href="#" class="mt-5 inline-flex items-center gap-2 text-xs font-bold text-amber-700 hover:text-amber-800">
+            Manage Knowledge Base →
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- LOWER CONTENT -->
+<div class="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+
+
+    <!-- SYSTEM SUMMARY -->
+    <section class="content-card">
+
+        <div class="mb-6">
+            <h3 class="text-base font-extrabold text-slate-800">
+                System Summary
+            </h3>
+
+            <p class="mt-1 text-xs text-slate-400">
+                Overview of your registered data.
+            </p>
+        </div>
+
+
+        <div class="space-y-6">
+
+            <div>
+                <div class="mb-2 flex justify-between">
+                    <span class="text-sm font-semibold text-slate-600">
+                        Dog Breeds
+                    </span>
+
+                    <span class="text-xs font-bold text-amber-700">
+                        {{ breeds }}
+                    </span>
+                </div>
+
+                <div class="h-2 overflow-hidden rounded-full bg-amber-50">
+                    <div class="h-full rounded-full bg-amber-500"
+                         style="width: {% if breeds %}100{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div>
+                <div class="mb-2 flex justify-between">
+                    <span class="text-sm font-semibold text-slate-600">
+                        Customers
+                    </span>
+
+                    <span class="text-xs font-bold text-amber-700">
+                        {{ customers }}
+                    </span>
+                </div>
+
+                <div class="h-2 overflow-hidden rounded-full bg-amber-50">
+                    <div class="h-full rounded-full bg-amber-500"
+                         style="width: {% if customers %}100{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div>
+                <div class="mb-2 flex justify-between">
+                    <span class="text-sm font-semibold text-slate-600">
+                        Registered Dogs
+                    </span>
+
+                    <span class="text-xs font-bold text-amber-700">
+                        {{ dogs }}
+                    </span>
+                </div>
+
+                <div class="h-2 overflow-hidden rounded-full bg-amber-50">
+                    <div class="h-full rounded-full bg-amber-500"
+                         style="width: {% if dogs %}100{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div>
+                <div class="mb-2 flex justify-between">
+                    <span class="text-sm font-semibold text-slate-600">
+                        AI Chat Sessions
+                    </span>
+
+                    <span class="text-xs font-bold text-amber-700">
+                        {{ chat_sessions }}
+                    </span>
+                </div>
+
+                <div class="h-2 overflow-hidden rounded-full bg-amber-50">
+                    <div class="h-full rounded-full bg-amber-500"
+                         style="width: {% if chat_sessions %}100{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div>
+                <div class="mb-2 flex justify-between">
+                    <span class="text-sm font-semibold text-slate-600">
+                        Knowledge Base
+                    </span>
+
+                    <span class="text-xs font-bold text-amber-700">
+                        {{ question_answer }}
+                    </span>
+                </div>
+
+                <div class="h-2 overflow-hidden rounded-full bg-amber-50">
+                    <div class="h-full rounded-full bg-amber-500"
+                         style="width: {% if question_answer %}100{% else %}0{% endif %}%">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- QUICK ACTIONS -->
+    <section class="content-card">
+
+        <div class="mb-6">
+            <h3 class="text-base font-extrabold text-slate-800">
+                Quick Actions
+            </h3>
+
+            <p class="mt-1 text-xs text-slate-400">
+                Quickly access important management sections.
+            </p>
+        </div>
+
+
+        <div class="space-y-3">
+
+            <a href="#"
+               class="group flex items-center gap-3 rounded-xl border border-amber-100 p-4 transition hover:bg-amber-50">
+
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-white">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 20s-8-4.5-8-10a4.5 4.5 0 018-2.9A4.5 4.5 0 0120 10c0 5.5-8 10-8 10z"/>
+                    </svg>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-bold text-slate-700">
+                        Manage Dogs
+                    </p>
+
+                    <p class="mt-1 text-xs text-slate-400">
+                        View and manage registered pets.
+                    </p>
+                </div>
+
+                <span class="text-amber-600 transition group-hover:translate-x-1">→</span>
+
+            </a>
+
+
+            <a href="#"
+               class="group flex items-center gap-3 rounded-xl border border-amber-100 p-4 transition hover:bg-amber-50">
+
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-white">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <circle cx="9" cy="8" r="4"/>
+                        <path d="M3 21v-2a6 6 0 0112 0v2m3-13a4 4 0 010 8m3 7v-2a6 6 0 00-4-5.65"/>
+                    </svg>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-bold text-slate-700">
+                        Manage Customers
+                    </p>
+
+                    <p class="mt-1 text-xs text-slate-400">
+                        View registered pet owners.
+                    </p>
+                </div>
+
+                <span class="text-amber-600 transition group-hover:translate-x-1">→</span>
+
+            </a>
+
+
+            <a href="#"
+               class="group flex items-center gap-3 rounded-xl border border-amber-100 p-4 transition hover:bg-amber-50">
+
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-white">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5L12 3z"/>
+                    </svg>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-bold text-slate-700">
+                        Manage Breeds
+                    </p>
+
+                    <p class="mt-1 text-xs text-slate-400">
+                        Manage dog breed records.
+                    </p>
+                </div>
+
+                <span class="text-amber-600 transition group-hover:translate-x-1">→</span>
+
+            </a>
+
+
+            <a href="#"
+               class="group flex items-center gap-3 rounded-xl border border-amber-100 p-4 transition hover:bg-amber-50">
+
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:bg-white">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7m-7 4h7"/>
+                    </svg>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-bold text-slate-700">
+                        Manage Knowledge Base
+                    </p>
+
+                    <p class="mt-1 text-xs text-slate-400">
+                        Maintain AI questions and answers.
+                    </p>
+                </div>
+
+                <span class="text-amber-600 transition group-hover:translate-x-1">→</span>
+
+            </a>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ page_title }} | We Care Pet Care{% endblock %}
+{% block header_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-6">
+
+    <!-- HEADER -->
+    <div>
+        <a href="{% url 'question_answer_list' %}"
+           class="text-sm font-bold text-amber-700 hover:text-amber-900">
+            ← Back to Knowledge Base
+        </a>
+
+        <h1 class="mt-4 text-2xl font-extrabold text-slate-800">
+            {{ page_title }}
+        </h1>
+
+        <p class="mt-1 text-sm text-slate-500">
+            Create clear questions and answers for your AI assistant.
+        </p>
+    </div>
+
+    <!-- FORM -->
+    <div class="content-card">
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+
+            <div>
+                <label class="mb-2 block text-sm font-bold text-slate-700">
+                    Question
+                </label>
+
+                <textarea
+                    name="question"
+                    rows="3"
+                    required
+                    placeholder="Example: What services do you offer?"
+                    class="w-full rounded-xl border border-amber-100 px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                >{{ question|default:"" }}</textarea>
+
+                <p class="mt-2 text-xs text-slate-400">
+                    Enter a question that customers may ask your AI assistant.
+                </p>
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-bold text-slate-700">
+                    Answer
+                </label>
+
+                <textarea
+                    name="answer"
+                    rows="8"
+                    required
+                    placeholder="Write the complete answer here..."
+                    class="w-full rounded-xl border border-amber-100 px-4 py-3 text-sm leading-7 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                >{{ answer|default:"" }}</textarea>
+
+                <p class="mt-2 text-xs text-slate-400">
+                    Provide accurate and helpful information for your customers.
+                </p>
+            </div>
+
+            <!-- STATUS -->
+            <div class="rounded-xl border border-amber-100 bg-[#FAF6F0] p-4">
+                <label class="flex cursor-pointer items-center gap-3">
+                    <input
+                        type="checkbox"
+                        name="is_active"
+                        class="h-5 w-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                        {% if is_active %}checked{% endif %}
+                    >
+
+                    <span>
+                        <span class="block text-sm font-bold text-slate-700">
+                            Active Question & Answer
+                        </span>
+                        <span class="mt-1 block text-xs text-slate-500">
+                            Active entries can be used by your AI assistant.
+                        </span>
+                    </span>
+                </label>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="flex flex-col-reverse justify-end gap-3 border-t border-amber-50 pt-5 sm:flex-row">
+
+                <a href="{% url 'question_answer_list' %}"
+                   class="rounded-xl border border-slate-200 px-5 py-3 text-center text-sm font-bold text-slate-500 hover:bg-slate-50">
+                    Cancel
+                </a>
+
+                <button type="submit" class="primary-button">
+                    {% if item %}
+                        Save Changes
+                    {% else %}
+                        Create Question
+                    {% endif %}
+                </button>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

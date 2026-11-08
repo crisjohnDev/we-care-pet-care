@@ -7,8 +7,9 @@ admin.site.site_title = "We Care Pet Care Admin"
 admin.site.index_title = "Welcome to We Care Pet Care Management"
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('', include('accounts.urls')),
     path('customer/', include('customer.urls')),
     path('v1/', include('api.urls')),
+    path('admin/', include('core.urls')),
 ]

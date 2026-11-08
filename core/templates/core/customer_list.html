@@ -1,0 +1,154 @@
+
+{% extends 'admin_base.html' %}
+
+{% block title %}Customer Management{% endblock %}
+{% block page_title %}Customer Management{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800">Customers</h2>
+        <p class="text-sm text-slate-500 mt-1">
+            View customer profiles, registered pets, and chat activity.
+        </p>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white border border-[#f3e8d7] rounded-2xl p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Total Customers</p>
+            <h3 class="text-3xl font-bold text-slate-800 mt-2">
+                {{ customers|length }}
+            </h3>
+        </div>
+
+        <div class="bg-white border border-[#f3e8d7] rounded-2xl p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Customer Directory</p>
+            <p class="text-sm font-semibold text-amber-700 mt-3">
+                Registered Customer Records
+            </p>
+        </div>
+    </div>
+
+    <!-- CUSTOMER TABLE -->
+    <div class="bg-white border border-[#f3e8d7] rounded-2xl shadow-sm overflow-hidden">
+
+        <div class="p-5 border-b border-[#f3e8d7]">
+            <form method="GET" class="flex flex-col sm:flex-row gap-3">
+                <input
+                    type="search"
+                    name="search"
+                    value="{{ search }}"
+                    placeholder="Search name, contact, address, or username..."
+                    class="flex-1 bg-[#FAF6F0] border border-[#f3e8d7] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                >
+
+                <button type="submit"
+                    class="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-semibold">
+                    Search
+                </button>
+
+                {% if search %}
+                <a href="{% url 'customer_list' %}"
+                   class="px-5 py-3 text-center border border-[#f3e8d7] rounded-xl text-sm text-slate-600 hover:bg-[#FAF6F0]">
+                    Clear
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+
+                <thead class="bg-[#FAF6F0] text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-6 py-4">Customer</th>
+                        <th class="px-6 py-4">Contact Number</th>
+                        <th class="px-6 py-4">Registered Dogs</th>
+                        <th class="px-6 py-4">Chat Sessions</th>
+                        <th class="px-6 py-4">Date Registered</th>
+                        <th class="px-6 py-4 text-right">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-[#f3e8d7]">
+
+                    {% for customer in customers %}
+                    <tr class="hover:bg-amber-50/50 transition">
+
+                        <td class="px-6 py-4">
+                            <a href="{% url 'customer_detail' customer.pk %}"
+                               class="flex items-center gap-3 group">
+
+                                <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg">
+                                    {{ customer.fullname|first|upper }}
+                                </div>
+
+                                <div>
+                                    <p class="font-semibold text-slate-800 group-hover:text-amber-700">
+                                        {{ customer.fullname }}
+                                    </p>
+                                    <p class="text-xs text-slate-400">
+                                        @{{ customer.user.username }}
+                                    </p>
+                                </div>
+                            </a>
+                        </td>
+
+                        <td class="px-6 py-4 text-sm text-slate-600">
+                            {{ customer.contact_number }}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
+                                {{ customer.dog_count }} Dogs
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-4 text-sm text-slate-600">
+                            {{ customer.chat_count }}
+                        </td>
+
+                        <td class="px-6 py-4 text-sm text-slate-500">
+                            {{ customer.created_at|date:"M d, Y" }}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex justify-end">
+                                <a href="{% url 'customer_detail' customer.pk %}"
+                                   class="px-4 py-2 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-semibold">
+                                    View Details →
+                                </a>
+                            </div>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-16 text-center">
+                            <div class="text-4xl mb-3">👤</div>
+                            <h3 class="font-semibold text-slate-700">
+                                No customers found
+                            </h3>
+                            <p class="text-sm text-slate-400 mt-1">
+                                Customer registrations will appear here.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-6 py-4 bg-[#FAF6F0] border-t border-[#f3e8d7] text-xs text-slate-500">
+            {{ customers|length }} customer record{{ customers|length|pluralize }}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

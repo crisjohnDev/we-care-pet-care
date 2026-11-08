@@ -1,0 +1,225 @@
+
+{% extends 'admin_base.html' %}
+
+{% block title %}Dog Breed Management{% endblock %}
+{% block page_title %}Dog Breed Management{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">
+                Dog Breeds
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+                Manage all registered dog breeds.
+            </p>
+        </div>
+
+        <a href="#"
+           class="inline-flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-sm transition">
+            <span class="text-lg">+</span>
+            Add New Breed
+        </a>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <div class="bg-white border border-[#f3e8d7] rounded-2xl p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Total Breeds</p>
+            <h3 class="text-3xl font-bold text-slate-800 mt-2">
+                {{ breeds|length }}
+            </h3>
+        </div>
+
+        <div class="bg-white border border-[#f3e8d7] rounded-2xl p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Active Breeds</p>
+            <h3 class="text-3xl font-bold text-emerald-600 mt-2"
+                id="activeCount">
+                0
+            </h3>
+        </div>
+
+        <div class="bg-white border border-[#f3e8d7] rounded-2xl p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Inactive Breeds</p>
+            <h3 class="text-3xl font-bold text-slate-500 mt-2"
+                id="inactiveCount">
+                0
+            </h3>
+        </div>
+
+    </div>
+
+    <!-- BREED TABLE -->
+    <div class="bg-white border border-[#f3e8d7] rounded-2xl shadow-sm overflow-hidden">
+
+        <!-- SEARCH -->
+        <div class="p-5 border-b border-[#f3e8d7]">
+            <div class="relative max-w-md">
+                <input
+                    type="text"
+                    id="breedSearch"
+                    placeholder="Search breed name or description..."
+                    class="w-full bg-[#FAF6F0] border border-[#f3e8d7] rounded-xl px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-amber-500"
+                >
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+
+                <thead class="bg-[#FAF6F0] text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-6 py-4">Breed</th>
+                        <th class="px-6 py-4">Description</th>
+                        <th class="px-6 py-4">Date Created</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="breedTable" class="divide-y divide-[#f3e8d7]">
+
+                    {% for breed in breeds %}
+                    <tr class="breed-row hover:bg-amber-50/50 transition"
+                        data-search="{{ breed.name|lower }} {{ breed.description|lower }}"
+                        data-active="{{ breed.is_active|yesno:'true,false' }}">
+
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                                    {{ breed.name|first|upper }}
+                                </div>
+
+                                <div>
+                                    <p class="font-semibold text-slate-800">
+                                        {{ breed.name }}
+                                    </p>
+                                    <p class="text-xs text-slate-400">
+                                        ID: {{ breed.id }}
+                                    </p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 text-sm text-slate-600 max-w-xs">
+                            {{ breed.description|default:"No description"|truncatechars:70 }}
+                        </td>
+
+                        <td class="px-6 py-4 text-sm text-slate-500">
+                            {{ breed.created_at|date:"M d, Y" }}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            {% if breed.is_active %}
+                                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
+                                    Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-end gap-2">
+
+                                <a href="{% url 'dog_breed_edit' breed.pk %}"
+                                   class="px-3 py-2 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-semibold transition">
+                                    Edit
+                                </a>
+
+                                <form method="POST"
+                                      action="{% url 'dog_breed_delete' breed.pk %}"
+                                      onsubmit="return confirm('Are you sure you want to delete {{ breed.name|escapejs }}?');">
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold transition">
+                                        Delete
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-16 text-center">
+                            <div class="text-4xl mb-3">🐶</div>
+                            <h3 class="font-semibold text-slate-700">
+                                No breeds found
+                            </h3>
+                            <p class="text-sm text-slate-400 mt-1">
+                                Add your first dog breed to get started.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- NO SEARCH RESULTS -->
+        <div id="noResults" class="hidden text-center py-10 text-sm text-slate-500">
+            No matching breeds found.
+        </div>
+
+        <div class="px-6 py-4 bg-[#FAF6F0] border-t border-[#f3e8d7] text-xs text-slate-500">
+            Showing <span id="visibleCount">{{ breeds|length }}</span>
+            of {{ breeds|length }} breeds
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const searchInput = document.getElementById('breedSearch');
+    const rows = document.querySelectorAll('.breed-row');
+
+    let active = 0;
+    let inactive = 0;
+
+    rows.forEach(row => {
+        if (row.dataset.active === 'true') {
+            active++;
+        } else {
+            inactive++;
+        }
+    });
+
+    document.getElementById('activeCount').textContent = active;
+    document.getElementById('inactiveCount').textContent = inactive;
+
+    searchInput.addEventListener('input', function () {
+        const keyword = this.value.toLowerCase().trim();
+        let visible = 0;
+
+        rows.forEach(row => {
+            const matches = row.dataset.search.includes(keyword);
+
+            row.style.display = matches ? '' : 'none';
+
+            if (matches) visible++;
+        });
+
+        document.getElementById('visibleCount').textContent = visible;
+
+        document.getElementById('noResults').classList.toggle(
+            'hidden',
+            visible !== 0
+        );
+    });
+</script>
+
+{% endblock %}
