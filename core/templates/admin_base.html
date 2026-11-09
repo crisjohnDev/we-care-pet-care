@@ -331,7 +331,8 @@
 
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-xs font-bold text-slate-800">
-                        {{ request.user.username }}
+                        {% comment %} {{ request.user.username }} {% endcomment %}
+                        Vet
                     </p>
                     <p class="text-[11px] text-slate-400">
                         Administrator
