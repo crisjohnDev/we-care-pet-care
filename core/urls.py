@@ -8,7 +8,11 @@ urlpatterns = [
         views.dog_breed_list,
         name='dog_breed_list'
     ),
-
+    path(
+        'breeds/add/',
+        views.dog_breed_create,
+        name='dog_breed_create'
+    ),
     path(
         'breeds/<int:pk>/edit/',
         views.dog_breed_edit,

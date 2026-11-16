@@ -47,6 +47,29 @@ def dog_breed_list(request):
 
 
 @login_required
+def dog_breed_create(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+
+        if not name:
+            messages.error(request, 'Breed name is required.')
+        elif Breed.objects.filter(name__iexact=name).exists():
+            messages.error(request, 'This breed already exists.')
+        else:
+            Breed.objects.create(
+                name=name,
+                description=description,
+                is_active=is_active
+            )
+
+            messages.success(request, 'Breed created successfully.')
+            return redirect('dog_breed_list')
+
+    return render(request, 'core/dog_breed_create.html')
+
+@login_required
 def dog_breed_edit(request, pk):
     breed = get_object_or_404(Breed, pk=pk)
 
