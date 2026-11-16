@@ -5,10 +5,6 @@
 {% block content %}
 
 <style>
-    /* =========================================================
-       CHAT PAGE LAYOUT
-    ========================================================= */
-
     .chat-page {
         width: 100%;
         max-width: 100%;
@@ -79,10 +75,9 @@
         justify-content: center;
         flex-shrink: 0;
         border-radius: 12px;
-        transition:
-            background-color 0.2s ease,
-            border-color 0.2s ease,
-            color 0.2s ease;
+        transition: background-color 0.2s ease,
+                    border-color 0.2s ease,
+                    color 0.2s ease;
         -webkit-tap-highlight-color: transparent;
     }
 
@@ -117,10 +112,7 @@
         -webkit-tap-highlight-color: transparent;
     }
 
-    .chat-header {
-        min-width: 0;
-    }
-
+    .chat-header,
     .chat-form {
         min-width: 0;
     }
@@ -128,10 +120,6 @@
     .chat-preview-image {
         object-fit: cover;
     }
-
-    /* =========================================================
-       TABLET
-    ========================================================= */
 
     @media (max-width: 768px) {
         .chat-workspace {
@@ -150,10 +138,6 @@
             margin-bottom: 12px;
         }
     }
-
-    /* =========================================================
-       MOBILE
-    ========================================================= */
 
     @media (max-width: 640px) {
         .chat-page {
@@ -270,10 +254,6 @@
         }
     }
 
-    /* =========================================================
-       EXTRA SMALL PHONES
-    ========================================================= */
-
     @media (max-width: 360px) {
         .chat-workspace {
             padding-inline: 8px;
@@ -309,10 +289,7 @@
 
 <div class="chat-page">
 
-    <!-- HEADER: NO REDUNDANT COLLAPSE BUTTON -->
-
     <header class="chat-header h-16 bg-white/80 backdrop-blur-md border-b border-amber-100/60 px-4 md:px-8 flex items-center justify-between shrink-0 z-20">
-
         <div class="flex items-center min-w-0">
             <h2 class="chat-header-title text-sm font-semibold text-slate-800 truncate">
                 AI Care Assistant
@@ -324,14 +301,9 @@
                 Pet health and care assistance
             </span>
         </div>
-
     </header>
 
-    <!-- CHAT WORKSPACE -->
-
     <div class="chat-workspace">
-
-        <!-- CHAT MESSAGES -->
 
         <div
             id="chat-messages"
@@ -385,8 +357,6 @@
 
             {% else %}
 
-                <!-- WELCOME SCREEN -->
-
                 <div
                     id="welcome-message"
                     class="welcome-section py-8 md:py-12 text-center max-w-2xl mx-auto"
@@ -421,11 +391,7 @@
                         Your AI-powered veterinary assistant is here to help with dog breed identification, pet health guidance, symptom checking, nutrition advice, and general pet care recommendations.
                     </p>
 
-                    <!-- FEATURE CARDS -->
-
                     <div class="chat-feature-grid grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-6 sm:mt-8 md:mt-10">
-
-                        <!-- HEALTH ADVICE -->
 
                         <button
                             type="button"
@@ -442,8 +408,6 @@
                                 Ask about symptoms and receive AI guidance.
                             </p>
                         </button>
-
-                        <!-- LIVE CAMERA -->
 
                         <button
                             type="button"
@@ -462,8 +426,6 @@
                             </p>
                         </button>
 
-                        <!-- NUTRITION TIPS -->
-
                         <button
                             type="button"
                             onclick="fillPrompt('What food is best for my puppy?')"
@@ -476,25 +438,24 @@
                             </div>
                             <h3 class="font-semibold text-sm sm:text-base text-slate-800">Nutrition Tips</h3>
                             <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                                Get healthy feeding recommendations.
+                                Get guidance about your pet's nutrition.
                             </p>
                         </button>
 
-                        <!-- PREVENTIVE CARE -->
-
                         <button
                             type="button"
-                            onclick="fillPrompt('What vaccines does my dog need?')"
+                            onclick="fillPrompt('How can I identify my dog breed?')"
                             class="feature-card bg-white rounded-2xl border border-amber-100 p-4 sm:p-5 hover:border-amber-300 hover:shadow-md transition"
                         >
                             <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-100 flex items-center justify-center mb-3">
                                 <svg class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/>
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2"/>
                                 </svg>
                             </div>
-                            <h3 class="font-semibold text-sm sm:text-base text-slate-800">Preventive Care</h3>
+                            <h3 class="font-semibold text-sm sm:text-base text-slate-800">Pet Information</h3>
                             <p class="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
-                                Learn about vaccinations and wellness care.
+                                Learn more about your pet.
                             </p>
                         </button>
 
@@ -505,59 +466,50 @@
 
         </div>
 
-        <!-- CHAT INPUT PANEL -->
+        <!-- IMAGE PREVIEW -->
 
-        <div class="chat-input-panel p-3 sm:p-4 bg-white border border-amber-100/70 rounded-2xl shadow-md relative">
-
-            <!-- IMAGE PREVIEW -->
-
-            <div
-                id="image-preview-container"
-                class="hidden pb-3 mb-3 border-b border-slate-100 items-center justify-between gap-3"
+        <div
+            id="image-preview-container"
+            class="hidden items-center gap-3 p-3 mb-3 bg-white border border-amber-200 rounded-xl shadow-sm"
+        >
+            <img
+                id="image-preview"
+                class="chat-preview-image w-14 h-14 rounded-lg border border-slate-200"
+                alt="Selected pet photo"
             >
-                <div class="flex items-center gap-3 min-w-0">
 
-                    <div class="chat-preview-image relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                        <img
-                            id="image-preview"
-                            class="w-full h-full object-cover"
-                            src=""
-                            alt="Selected pet photo"
-                        >
-                    </div>
-
-                    <div class="min-w-0">
-                        <p class="text-xs font-semibold text-slate-800 truncate" id="file-name-text">
-                            Selected photo
-                        </p>
-                        <p class="chat-preview-description text-[10px] text-slate-400">
-                            Ready to send for analysis
-                        </p>
-                    </div>
-
-                </div>
-
-                <button
-                    type="button"
-                    onclick="clearImage()"
-                    class="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-50 transition shrink-0"
-                    aria-label="Remove selected image"
-                    title="Remove image"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                </button>
+            <div class="min-w-0">
+                <p class="text-xs font-semibold text-slate-800 truncate" id="file-name-text">
+                    Selected photo
+                </p>
+                <p class="chat-preview-description text-[10px] text-slate-400">
+                    Ready to send for analysis
+                </p>
             </div>
 
-            <!-- CHAT FORM -->
+            <button
+                type="button"
+                onclick="clearImage()"
+                class="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-50 transition shrink-0"
+                aria-label="Remove selected image"
+                title="Remove image"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- CHAT FORM -->
+
+        <div class="chat-input-panel bg-white border border-amber-100 rounded-2xl p-3 shadow-sm">
 
             <form
                 id="chat-form"
+                class="chat-form flex items-end gap-2"
+                data-send-url="{% url 'send_message' session_id=session.id %}"
                 onsubmit="handleSend(event)"
                 enctype="multipart/form-data"
-                class="chat-form flex items-end gap-2 sm:gap-3"
-                novalidate
             >
 
                 {% csrf_token %}
@@ -571,35 +523,17 @@
                     onchange="previewFile()"
                 >
 
-                <!-- UPLOAD IMAGE: IMAGE PLUS ICON -->
-
                 <button
                     type="button"
                     onclick="document.getElementById('image-file-input').click()"
-                    class="chat-action-button bg-slate-50 border border-slate-200 text-slate-500 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200"
-                    title="Upload pet photo"
-                    aria-label="Upload pet photo"
+                    class="chat-action-button bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200"
+                    title="Attach photo"
+                    aria-label="Attach photo"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <rect x="3" y="3" width="18" height="18" rx="3"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <path d="m21 15-5-5L5 21"/>
-                        <path d="M16 3v6"/>
-                        <path d="M13 6h6"/>
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.82-2.83l8.49-8.48"/>
                     </svg>
                 </button>
-
-                <!-- LIVE CAMERA -->
 
                 <button
                     type="button"
@@ -614,8 +548,6 @@
                     </svg>
                 </button>
 
-                <!-- TEXT INPUT -->
-
                 <div class="flex-1 min-w-0">
                     <textarea
                         id="chat-input"
@@ -628,8 +560,6 @@
                     ></textarea>
                 </div>
 
-                <!-- SEND BUTTON -->
-
                 <button
                     type="submit"
                     id="send-button"
@@ -638,190 +568,1049 @@
                     title="Send message"
                 >
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7"/>
                     </svg>
                 </button>
 
             </form>
-
-            <p class="chat-disclaimer mt-2 px-1 text-[10px] text-slate-400">
-                AI guidance is not a substitute for a professional veterinarian.
-            </p>
-
         </div>
 
-    </div>
+        <p class="chat-disclaimer text-center text-[10px] sm:text-xs text-slate-400 pb-3 px-2">
+            AI guidance is for informational purposes and does not replace a consultation with a licensed veterinarian.
+        </p>
 
+    </div>
+</div>
+
+<!-- CAMERA MODAL -->
+<div id="camera-modal" class="hidden fixed inset-0 z-50 bg-black/80 items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+        <div class="flex items-center justify-between p-4 border-b border-slate-100">
+            <h3 class="font-semibold text-slate-800">Take a photo of your pet</h3>
+            <button type="button" onclick="closeCamera()" class="text-slate-500 hover:text-red-500" aria-label="Close camera">
+                ✕
+            </button>
+        </div>
+
+        <div class="bg-black aspect-video flex items-center justify-center">
+            <video id="camera-video" autoplay playsinline class="w-full h-full object-contain"></video>
+            <canvas id="camera-canvas" class="hidden"></canvas>
+        </div>
+
+        <div class="p-4 flex justify-center gap-3">
+            <button type="button" onclick="capturePhoto()" class="px-5 py-3 rounded-xl bg-amber-600 text-white font-semibold hover:bg-amber-700">
+                Capture Photo
+            </button>
+            <button type="button" onclick="closeCamera()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200">
+                Cancel
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
-    /*
-     * Automatically resize the textarea as the user types.
-     */
-    function adjustHeight(textarea) {
-        if (!textarea) return;
+let chatIsSending = false;
+let cameraStream = null;
 
-        textarea.style.height = "auto";
+/*
+|--------------------------------------------------------------------------
+| LOCAL CHAT STORAGE
+|--------------------------------------------------------------------------
+| Messages and compressed images are stored in this browser only.
+| The key is separated by chat session.
+*/
 
-        const styles = window.getComputedStyle(textarea);
-        const maxHeight = parseFloat(styles.maxHeight) || 144;
+function getChatStorageKey() {
+    const form = document.getElementById("chat-form");
+    const sessionUrl = form?.dataset.sendUrl || "default";
 
-        textarea.style.height =
-            Math.min(textarea.scrollHeight, maxHeight) + "px";
+    return "wecare_pet_chat_" + sessionUrl.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
 
-        textarea.style.overflowY =
-            textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+function getLocalMessages() {
+    try {
+        const saved = localStorage.getItem(getChatStorageKey());
+        return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+        console.error("Unable to load local chat:", error);
+        return [];
+    }
+}
+
+function saveLocalMessages(messages) {
+    try {
+        localStorage.setItem(
+            getChatStorageKey(),
+            JSON.stringify(messages)
+        );
+        return true;
+    } catch (error) {
+        console.error("Unable to save local chat:", error);
+
+        alert(
+            "Your browser storage is full. Try using a smaller photo or removing some old chat messages."
+        );
+
+        return false;
+    }
+}
+
+function saveLocalMessage(messageData) {
+    const messages = getLocalMessages();
+
+    messages.push({
+        id: Date.now() + "_" + Math.random().toString(36).slice(2),
+        role: messageData.role,
+        message: messageData.message || "",
+        image: messageData.image || null,
+        timestamp: new Date().toISOString()
+    });
+
+    saveLocalMessages(messages);
+}
+
+/*
+|--------------------------------------------------------------------------
+| CSRF
+|--------------------------------------------------------------------------
+*/
+
+function getCsrfToken() {
+    const tokenInput = document.querySelector(
+        '#chat-form input[name="csrfmiddlewaretoken"]'
+    );
+
+    return tokenInput ? tokenInput.value : "";
+}
+
+/*
+|--------------------------------------------------------------------------
+| TEXTAREA RESIZE
+|--------------------------------------------------------------------------
+*/
+
+function adjustHeight(textarea) {
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+
+    const styles = window.getComputedStyle(textarea);
+    const maxHeight = parseFloat(styles.maxHeight) || 144;
+
+    textarea.style.height =
+        Math.min(textarea.scrollHeight, maxHeight) + "px";
+
+    textarea.style.overflowY =
+        textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+}
+
+/*
+|--------------------------------------------------------------------------
+| IMAGE COMPRESSION
+|--------------------------------------------------------------------------
+| Compress images before putting them in localStorage.
+| This helps reduce browser storage usage.
+*/
+
+async function compressImage(file) {
+    if (!file) return null;
+
+    if (!file.type.startsWith("image/")) {
+        throw new Error("Please select a valid image.");
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        throw new Error("Image must be smaller than 10 MB.");
+    }
+
+    try {
+        const imageBitmap = await createImageBitmap(file);
+
+        const maxDimension = 1280;
+
+        let width = imageBitmap.width;
+        let height = imageBitmap.height;
+
+        if (width > maxDimension || height > maxDimension) {
+            const ratio = Math.min(
+                maxDimension / width,
+                maxDimension / height
+            );
+
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const context = canvas.getContext("2d");
+
+        context.drawImage(
+            imageBitmap,
+            0,
+            0,
+            width,
+            height
+        );
+
+        imageBitmap.close();
+
+        const blob = await new Promise(resolve => {
+            canvas.toBlob(
+                resolve,
+                "image/jpeg",
+                0.75
+            );
+        });
+
+        if (!blob) {
+            throw new Error("Unable to process the image.");
+        }
+
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = () => resolve({
+                name: file.name,
+                type: "image/jpeg",
+                data: reader.result
+            });
+
+            reader.onerror = () => {
+                reject(new Error("Unable to read the image."));
+            };
+
+            reader.readAsDataURL(blob);
+        });
+
+    } catch (error) {
+        console.error("Image compression error:", error);
+        throw new Error(
+            error.message || "Unable to process the selected image."
+        );
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| WELCOME MESSAGE
+|--------------------------------------------------------------------------
+*/
+
+function showWelcomeMessage() {
+    const container = document.getElementById("chat-messages");
+
+    if (!container) return;
+
+    if (document.getElementById("welcome-message")) {
+        return;
     }
 
     /*
-     * Populate the input from a suggested prompt.
+     * Your original welcome markup is already included in the template.
+     * This fallback is used when Django rendered old database messages
+     * but there is no local chat history.
      */
-    function fillPrompt(prompt) {
-        const input = document.getElementById("chat-input");
+    const welcome = document.createElement("div");
 
-        if (!input) return;
+    welcome.id = "local-welcome-message";
+    welcome.className =
+        "welcome-section py-8 md:py-12 text-center max-w-2xl mx-auto";
 
-        input.value = prompt;
-        adjustHeight(input);
+    welcome.innerHTML = `
+        <div class="welcome-icon w-20 h-20 mx-auto rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center shadow-sm mb-6">
+            <svg viewBox="0 0 64 64" class="w-12 h-12 text-amber-600" fill="currentColor">
+                <path d="M32 23c-6 0-11 5-11 11 0 8 6 12 11 12s11-4 11-12c0-6-5-11-11-11z"/>
+                <circle cx="18" cy="22" r="5"/>
+                <circle cx="28" cy="14" r="5"/>
+                <circle cx="36" cy="14" r="5"/>
+                <circle cx="46" cy="22" r="5"/>
+            </svg>
+        </div>
+
+        <h1 class="text-3xl font-bold text-slate-800">
+            Welcome to
+        </h1>
+
+        <h2 class="text-3xl font-extrabold mt-2">
+            <span class="text-slate-900">We Care</span>
+            <span class="text-amber-600">Pet Care</span>
+        </h2>
+
+        <p class="mt-4 text-sm text-slate-600 leading-relaxed">
+            Your AI-powered veterinary assistant is ready to help with
+            pet health guidance, symptoms, nutrition, and general pet care.
+        </p>
+    `;
+
+    container.appendChild(welcome);
+}
+
+/*
+|--------------------------------------------------------------------------
+| RENDER MESSAGE
+|--------------------------------------------------------------------------
+*/
+
+function appendMessage(role, message, image = null) {
+    const container = document.getElementById("chat-messages");
+
+    if (!container) return null;
+
+    const welcome = document.getElementById("welcome-message");
+    const localWelcome = document.getElementById("local-welcome-message");
+
+    if (welcome) welcome.remove();
+    if (localWelcome) localWelcome.remove();
+
+    const row = document.createElement("div");
+
+    row.className = role === "user"
+        ? "flex justify-end min-w-0"
+        : "flex items-start gap-2 sm:gap-3 min-w-0";
+
+    if (role === "assistant") {
+        const avatar = document.createElement("div");
+
+        avatar.className =
+            "w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0";
+
+        avatar.innerHTML = `
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="w-4 h-4 text-amber-600"
+            >
+                <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
+                <circle cx="6.5" cy="10" r="1.5"/>
+                <circle cx="10" cy="7" r="1.5"/>
+                <circle cx="14" cy="7" r="1.5"/>
+                <circle cx="17.5" cy="10" r="1.5"/>
+            </svg>
+        `;
+
+        row.appendChild(avatar);
+    }
+
+    const bubble = document.createElement("div");
+
+    bubble.className = role === "user"
+        ? "chat-bubble bg-amber-600 text-white px-4 py-3 rounded-2xl shadow-sm"
+        : "chat-bubble bg-white border border-amber-100 rounded-2xl px-4 py-3 shadow-sm";
+
+    /*
+     * Display attached image.
+     */
+    if (image && image.data) {
+        const imageElement = document.createElement("img");
+
+        imageElement.src = image.data;
+        imageElement.alt = image.name || "Pet photo";
+        imageElement.className =
+            "max-w-full max-h-64 rounded-xl mb-3 object-cover";
+
+        imageElement.loading = "lazy";
+
+        bubble.appendChild(imageElement);
+    }
+
+    /*
+     * Display message text.
+     */
+    if (message) {
+        const text = document.createElement("div");
+
+        text.className = role === "user"
+            ? "message-text text-sm"
+            : "message-text text-sm text-slate-700";
+
+        text.textContent = message;
+
+        bubble.appendChild(text);
+    }
+
+    if (image && image.name && role === "user") {
+        const filename = document.createElement("p");
+
+        filename.className =
+            "text-xs mt-2 opacity-80";
+
+        filename.textContent = "📷 " + image.name;
+
+        bubble.appendChild(filename);
+    }
+
+    row.appendChild(bubble);
+    container.appendChild(row);
+
+    scrollChatToBottom();
+
+    return row;
+}
+
+/*
+|--------------------------------------------------------------------------
+| THINKING INDICATOR
+|--------------------------------------------------------------------------
+*/
+
+function appendThinkingIndicator() {
+    const row = appendMessage("assistant", "");
+
+    if (!row) return null;
+
+    const bubble = row.querySelector(".chat-bubble");
+
+    bubble.innerHTML = `
+        <div class="flex items-center gap-2 text-sm text-slate-500">
+            <span class="flex items-center gap-1">
+                <span class="w-1.5 h-1.5 bg-amber-600 rounded-full animate-bounce"></span>
+                <span class="w-1.5 h-1.5 bg-amber-600 rounded-full animate-bounce" style="animation-delay:0.15s"></span>
+                <span class="w-1.5 h-1.5 bg-amber-600 rounded-full animate-bounce" style="animation-delay:0.3s"></span>
+            </span>
+            <span>Thinking...</span>
+        </div>
+    `;
+
+    return row;
+}
+
+/*
+|--------------------------------------------------------------------------
+| RESTORE LOCAL CHAT
+|--------------------------------------------------------------------------
+*/
+
+function restoreLocalChat() {
+    const container = document.getElementById("chat-messages");
+
+    if (!container) return;
+
+    const savedMessages = getLocalMessages();
+
+    /*
+     * If there is no local history, leave the original welcome screen
+     * in place when available.
+     */
+    if (!savedMessages.length) {
+        const oldMessages = container.querySelectorAll(
+            ":scope > .flex.justify-end, :scope > .flex.items-start"
+        );
+
+        /*
+         * Import previously rendered Django messages once as a starting
+         * point for local history. New messages are stored locally.
+         */
+        if (oldMessages.length) {
+            const imported = [];
+
+            oldMessages.forEach(row => {
+                const textElement = row.querySelector(".message-text");
+
+                if (!textElement) return;
+
+                const role = row.classList.contains("justify-end")
+                    ? "user"
+                    : "assistant";
+
+                imported.push({
+                    id: Date.now() + "_" + Math.random().toString(36).slice(2),
+                    role: role,
+                    message: textElement.textContent || "",
+                    image: null,
+                    timestamp: new Date().toISOString()
+                });
+            });
+
+            if (imported.length) {
+                saveLocalMessages(imported);
+                restoreLocalChat();
+                return;
+            }
+        }
+
+        return;
+    }
+
+    /*
+     * Remove server-rendered conversation messages to avoid duplicates.
+     * The locally saved conversation becomes the displayed history.
+     */
+    container.innerHTML = "";
+
+    savedMessages.forEach(item => {
+        appendMessage(
+            item.role,
+            item.message,
+            item.image || null
+        );
+    });
+
+    scrollChatToBottom();
+}
+
+/*
+|--------------------------------------------------------------------------
+| SEND MESSAGE
+|--------------------------------------------------------------------------
+*/
+
+async function handleSend(event) {
+    event.preventDefault();
+
+    if (chatIsSending) return;
+
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("chat-input");
+    const sendButton = document.getElementById("send-button");
+    const fileInput = document.getElementById("image-file-input");
+
+    if (!form || !input || !sendButton) return;
+
+    const message = input.value.trim();
+
+    const selectedFile =
+        fileInput && fileInput.files
+            ? fileInput.files[0]
+            : null;
+
+    if (!message && !selectedFile) {
         input.focus();
+        return;
+    }
+
+    const sendUrl = form.dataset.sendUrl;
+
+    if (!sendUrl) {
+        alert("Chat endpoint is not configured.");
+        return;
     }
 
     /*
-     * Preview a selected image and validate its type and size.
+     * Build FormData before clearing the form.
+     * The original image file is retained for the Django request.
      */
-    function previewFile() {
-        const fileInput = document.getElementById("image-file-input");
-        const previewContainer = document.getElementById("image-preview-container");
-        const previewImage = document.getElementById("image-preview");
-        const fileNameText = document.getElementById("file-name-text");
+    const formData = new FormData(form);
 
-        if (!fileInput || !previewContainer || !previewImage || !fileNameText) {
-            return;
+    chatIsSending = true;
+
+    sendButton.disabled = true;
+    sendButton.classList.add("opacity-60", "cursor-not-allowed");
+    sendButton.setAttribute("aria-busy", "true");
+
+    let localImage = null;
+
+    try {
+        /*
+         * Compress and store the image locally before clearing it.
+         */
+        if (selectedFile) {
+            localImage = await compressImage(selectedFile);
         }
 
-        const file = fileInput.files && fileInput.files[0];
+        /*
+         * Store user message and image in localStorage.
+         */
+        saveLocalMessage({
+            role: "user",
+            message: message,
+            image: localImage
+        });
 
-        if (!file) {
-            clearImage();
-            return;
-        }
+        /*
+         * Clear composer immediately.
+         * The submitted message and image remain in the conversation.
+         */
+        input.value = "";
+        adjustHeight(input);
 
-        if (!file.type.startsWith("image/")) {
-            alert("Please select a valid image file.");
-            clearImage();
-            return;
-        }
+        /*
+         * Display submitted message.
+         */
+        appendMessage("user", message, localImage);
 
-        const maxFileSize = 10 * 1024 * 1024;
+        /*
+         * Clear preview only after FormData has been created
+         * and the image has been saved locally.
+         */
+        clearImage();
 
-        if (file.size > maxFileSize) {
-            alert("Please select an image smaller than 10 MB.");
-            clearImage();
-            return;
-        }
+        const thinkingRow = appendThinkingIndicator();
 
-        if (previewImage.dataset.objectUrl) {
-            URL.revokeObjectURL(previewImage.dataset.objectUrl);
-        }
+        try {
+            const response = await fetch(sendUrl, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": getCsrfToken(),
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                credentials: "same-origin"
+            });
 
-        const objectUrl = URL.createObjectURL(file);
+            const contentType =
+                response.headers.get("content-type") || "";
 
-        previewImage.src = objectUrl;
-        previewImage.dataset.objectUrl = objectUrl;
-        fileNameText.textContent = file.name;
-
-        previewContainer.classList.remove("hidden");
-        previewContainer.classList.add("flex");
-    }
-
-    /*
-     * Remove the selected image and release its object URL.
-     */
-    function clearImage() {
-        const fileInput = document.getElementById("image-file-input");
-        const previewContainer = document.getElementById("image-preview-container");
-        const previewImage = document.getElementById("image-preview");
-        const fileNameText = document.getElementById("file-name-text");
-
-        if (fileInput) {
-            fileInput.value = "";
-        }
-
-        if (previewImage) {
-            if (previewImage.dataset.objectUrl) {
-                URL.revokeObjectURL(previewImage.dataset.objectUrl);
-                delete previewImage.dataset.objectUrl;
+            if (!contentType.includes("application/json")) {
+                throw new Error(
+                    "The server did not return JSON. Check your Django view or login session."
+                );
             }
 
-            previewImage.removeAttribute("src");
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    "Unable to send your message."
+                );
+            }
+
+            if (thinkingRow) {
+                thinkingRow.remove();
+            }
+
+            const assistantMessage =
+                data.response || "No response was returned.";
+
+            /*
+             * Store AI response locally.
+             */
+            saveLocalMessage({
+                role: "assistant",
+                message: assistantMessage,
+                image: null
+            });
+
+            appendMessage("assistant", assistantMessage);
+
+        } catch (error) {
+            console.error("Chat request error:", error);
+
+            if (thinkingRow) {
+                thinkingRow.remove();
+            }
+
+            const errorMessage =
+                "Sorry, something went wrong. " +
+                (error.message || "Please try again.");
+
+            /*
+             * Keep the submitted user message and image in localStorage.
+             * The error is also saved locally.
+             */
+            saveLocalMessage({
+                role: "assistant",
+                message: errorMessage,
+                image: null
+            });
+
+            appendMessage("assistant", errorMessage);
         }
 
-        if (fileNameText) {
-            fileNameText.textContent = "Selected photo";
+    } catch (error) {
+        console.error("Chat processing error:", error);
+
+        alert(error.message || "Unable to process your message.");
+
+        /*
+         * Do not clear the selected image if local processing failed.
+         */
+    } finally {
+        chatIsSending = false;
+
+        sendButton.disabled = false;
+
+        sendButton.classList.remove(
+            "opacity-60",
+            "cursor-not-allowed"
+        );
+
+        sendButton.removeAttribute("aria-busy");
+
+        input.focus();
+
+        scrollChatToBottom();
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| ENTER KEY
+|--------------------------------------------------------------------------
+| Enter = Send
+| Shift + Enter = New line
+*/
+
+function initializeEnterKey() {
+    const input = document.getElementById("chat-input");
+
+    if (!input || input.dataset.enterHandlerAttached === "true") {
+        return;
+    }
+
+    input.dataset.enterHandlerAttached = "true";
+
+    input.addEventListener("keydown", function(event) {
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey &&
+            !event.isComposing
+        ) {
+            event.preventDefault();
+
+            if (chatIsSending) return;
+
+            const form = document.getElementById("chat-form");
+            const sendButton = document.getElementById("send-button");
+
+            if (form && sendButton && !sendButton.disabled) {
+                form.requestSubmit(sendButton);
+            }
+        }
+    });
+}
+
+/*
+|--------------------------------------------------------------------------
+| SUGGESTED PROMPTS
+|--------------------------------------------------------------------------
+*/
+
+function fillPrompt(prompt) {
+    const input = document.getElementById("chat-input");
+
+    if (!input) return;
+
+    input.value = prompt;
+
+    adjustHeight(input);
+    input.focus();
+}
+
+/*
+|--------------------------------------------------------------------------
+| IMAGE PREVIEW
+|--------------------------------------------------------------------------
+*/
+
+function previewFile() {
+    const fileInput = document.getElementById("image-file-input");
+    const previewContainer = document.getElementById("image-preview-container");
+    const previewImage = document.getElementById("image-preview");
+    const fileNameText = document.getElementById("file-name-text");
+
+    if (
+        !fileInput ||
+        !previewContainer ||
+        !previewImage ||
+        !fileNameText
+    ) {
+        return;
+    }
+
+    const file = fileInput.files && fileInput.files[0];
+
+    if (!file) {
+        clearImage();
+        return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image.");
+        clearImage();
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        alert("Image must be smaller than 10 MB.");
+        clearImage();
+        return;
+    }
+
+    if (previewImage.dataset.objectUrl) {
+        URL.revokeObjectURL(previewImage.dataset.objectUrl);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+
+    previewImage.src = objectUrl;
+    previewImage.dataset.objectUrl = objectUrl;
+
+    fileNameText.textContent = file.name;
+
+    previewContainer.classList.remove("hidden");
+    previewContainer.classList.add("flex");
+}
+
+/*
+|--------------------------------------------------------------------------
+| CLEAR SELECTED IMAGE
+|--------------------------------------------------------------------------
+*/
+
+function clearImage() {
+    const fileInput = document.getElementById("image-file-input");
+    const previewContainer = document.getElementById("image-preview-container");
+    const previewImage = document.getElementById("image-preview");
+    const fileNameText = document.getElementById("file-name-text");
+
+    if (fileInput) {
+        fileInput.value = "";
+    }
+
+    if (previewImage) {
+        if (previewImage.dataset.objectUrl) {
+            URL.revokeObjectURL(previewImage.dataset.objectUrl);
+            delete previewImage.dataset.objectUrl;
         }
 
-        if (previewContainer) {
-            previewContainer.classList.add("hidden");
-            previewContainer.classList.remove("flex");
+        previewImage.removeAttribute("src");
+    }
+
+    if (fileNameText) {
+        fileNameText.textContent = "Selected photo";
+    }
+
+    if (previewContainer) {
+        previewContainer.classList.add("hidden");
+        previewContainer.classList.remove("flex");
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| DELETE LOCAL CHAT HISTORY
+|--------------------------------------------------------------------------
+| Optional helper. Call clearLocalChat() from a button if you later
+| add a Clear Chat feature.
+*/
+
+function clearLocalChat() {
+    const confirmed = confirm(
+        "Are you sure you want to delete this conversation from this browser?"
+    );
+
+    if (!confirmed) return;
+
+    localStorage.removeItem(getChatStorageKey());
+
+    const container = document.getElementById("chat-messages");
+
+    if (container) {
+        container.innerHTML = "";
+        showWelcomeMessage();
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| SCROLL
+|--------------------------------------------------------------------------
+*/
+
+function scrollChatToBottom() {
+    const chatMessages = document.getElementById("chat-messages");
+
+    if (!chatMessages) return;
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+/*
+|--------------------------------------------------------------------------
+| CAMERA
+|--------------------------------------------------------------------------
+*/
+
+async function openCamera() {
+    const modal = document.getElementById("camera-modal");
+    const video = document.getElementById("camera-video");
+
+    if (!modal || !video) return;
+
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ) {
+        alert("Camera access is not supported by this browser.");
+        return;
+    }
+
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "environment"
+            },
+            audio: false
+        });
+
+        video.srcObject = cameraStream;
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+
+    } catch (error) {
+        console.error("Camera error:", error);
+
+        alert(
+            "Unable to access the camera. Please check your browser permissions."
+        );
+    }
+}
+
+function closeCamera() {
+    const modal = document.getElementById("camera-modal");
+    const video = document.getElementById("camera-video");
+
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+
+    if (video) {
+        video.srcObject = null;
+    }
+
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById("camera-video");
+    const canvas = document.getElementById("camera-canvas");
+    const fileInput = document.getElementById("image-file-input");
+
+    if (!video || !canvas || !fileInput) return;
+
+    if (!video.videoWidth || !video.videoHeight) {
+        alert("Camera is not ready.");
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    canvas.toBlob(function(blob) {
+        if (!blob) {
+            alert("Unable to capture photo.");
+            return;
         }
+
+        const photoFile = new File(
+            [blob],
+            "pet-camera-" + Date.now() + ".jpg",
+            {
+                type: "image/jpeg"
+            }
+        );
+
+        const dataTransfer = new DataTransfer();
+
+        dataTransfer.items.add(photoFile);
+
+        fileInput.files = dataTransfer.files;
+
+        previewFile();
+        closeCamera();
+
+    }, "image/jpeg", 0.92);
+}
+
+/*
+|--------------------------------------------------------------------------
+| INITIALIZE
+|--------------------------------------------------------------------------
+*/
+
+function initializeChat() {
+    const input = document.getElementById("chat-input");
+
+    /*
+     * Restore browser-stored messages and images.
+     */
+    restoreLocalChat();
+
+    initializeEnterKey();
+
+    if (input) {
+        adjustHeight(input);
     }
 
     /*
-     * Scroll the conversation to the latest message.
+     * IMPORTANT:
+     * Do not add another submit listener here.
+     * Your existing form already has:
+     * onsubmit="handleSend(event)"
+     *
+     * Adding a second listener would send the message twice.
      */
-    function scrollChatToBottom() {
+
+    scrollChatToBottom();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeChat);
+} else {
+    initializeChat();
+}
+
+/*
+|--------------------------------------------------------------------------
+| MOBILE KEYBOARD VIEWPORT
+|--------------------------------------------------------------------------
+*/
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", function() {
         const chatMessages = document.getElementById("chat-messages");
 
         if (!chatMessages) return;
 
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+        const distanceFromBottom =
+            chatMessages.scrollHeight -
+            chatMessages.scrollTop -
+            chatMessages.clientHeight;
 
-    /*
-     * Keep the chat positioned correctly when the mobile
-     * keyboard changes the visible viewport.
-     */
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", function () {
-            const chatMessages = document.getElementById("chat-messages");
-
-            if (!chatMessages) return;
-
-            const distanceFromBottom =
-                chatMessages.scrollHeight -
-                chatMessages.scrollTop -
-                chatMessages.clientHeight;
-
-            if (distanceFromBottom < 150) {
-                requestAnimationFrame(scrollChatToBottom);
-            }
-        });
-    }
-
-    /*
-     * Initialize the chat page.
-     */
-    document.addEventListener("DOMContentLoaded", function () {
-        const input = document.getElementById("chat-input");
-
-        if (input) {
-            adjustHeight(input);
-        }
-
-        scrollChatToBottom();
-    });
-
-    /*
-     * Release the image preview URL when leaving the page.
-     */
-    window.addEventListener("pagehide", function () {
-        const previewImage = document.getElementById("image-preview");
-
-        if (previewImage && previewImage.dataset.objectUrl) {
-            URL.revokeObjectURL(previewImage.dataset.objectUrl);
-            delete previewImage.dataset.objectUrl;
+        if (distanceFromBottom < 150) {
+            requestAnimationFrame(scrollChatToBottom);
         }
     });
+}
+
+/*
+|--------------------------------------------------------------------------
+| CLEANUP
+|--------------------------------------------------------------------------
+*/
+
+window.addEventListener("pagehide", function() {
+    const previewImage = document.getElementById("image-preview");
+
+    if (previewImage && previewImage.dataset.objectUrl) {
+        URL.revokeObjectURL(previewImage.dataset.objectUrl);
+        delete previewImage.dataset.objectUrl;
+    }
+
+    closeCamera();
+});
 </script>
 
 {% endblock content %}

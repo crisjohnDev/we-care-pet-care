@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-8ftlpnvyk+)%t52ec%#ubcnr*qq#2e$a4lo^29y9i*sbk6sxf$
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = os.getenv("DEBUG", "False") == "True"
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = [
     ".onrender.com",
     "localhost",
@@ -72,7 +72,7 @@ ROOT_URLCONF = 'petcare.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

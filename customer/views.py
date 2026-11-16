@@ -179,6 +179,7 @@ VETERINARY_CLINIC_ADDRESS = (
 
 
 
+
 @login_required
 @require_POST
 def send_message(request, session_id):
@@ -273,40 +274,74 @@ def send_message(request, session_id):
             print("DOG AGE ERROR:", exc)
 
     # =========================================================
-    # 5. SAVE USER MESSAGE
+    # 5. DO NOT SAVE USER MESSAGE TO DATABASE
     # =========================================================
+    # User messages are stored in browser localStorage.
+    # Django only processes the message and generates a response.
+    # Do not create ChatMessage records here.
+    #
+    # Do not update session.title using the user's message,
+    # because that would also persist chat content in the database.
 
-    if message:
-        ChatMessage.objects.create(
-            session=session,
-            role="user",
-            message=message
+    # =========================================================
+    # 6. LOAD CONVERSATION HISTORY FROM FRONTEND
+    # =========================================================
+    # The frontend sends previously stored messages from localStorage.
+    # The current user message is added below.
+    # No ChatMessage database query is performed.
+
+    try:
+        history_json = request.POST.get(
+            "conversation_history",
+            "[]"
         )
 
-    if session.title == "New Chat" and message:
-        session.title = message[:50]
-        session.save(update_fields=["title"])
+        submitted_history = json.loads(history_json)
 
-    # =========================================================
-    # 6. LOAD CONVERSATION HISTORY
-    # =========================================================
+        if not isinstance(submitted_history, list):
+            submitted_history = []
 
-    previous_messages = list(
-        ChatMessage.objects
-        .filter(session=session)
-        .order_by("-created_at")[:20]
-    )
-
-    previous_messages.reverse()
+    except (json.JSONDecodeError, TypeError):
+        submitted_history = []
 
     conversation_history = []
 
-    for chat_message in previous_messages:
-        if chat_message.role in ("user", "assistant"):
-            conversation_history.append({
-                "role": chat_message.role,
-                "content": chat_message.message
-            })
+    for item in submitted_history[-19:]:
+        if not isinstance(item, dict):
+            continue
+
+        role = item.get("role")
+        content = item.get("content", "")
+
+        if role not in ("user", "assistant"):
+            continue
+
+        if not isinstance(content, str):
+            continue
+
+        content = content.strip()
+
+        if not content:
+            continue
+
+        conversation_history.append({
+            "role": role,
+            "content": content[:8000]
+        })
+
+    # Add the current message exactly once.
+    if message:
+        conversation_history.append({
+            "role": "user",
+            "content": message[:8000]
+        })
+    elif image:
+        conversation_history.append({
+            "role": "user",
+            "content": "Please analyze my uploaded image."
+        })
+
+    conversation_history = conversation_history[-20:]
 
     # =========================================================
     # 7. IMAGE ANALYSIS AND BREED PERCENTAGES
@@ -317,6 +352,7 @@ def send_message(request, session_id):
     if image:
         try:
             image_bytes = image.read()
+
             image_base64 = base64.b64encode(
                 image_bytes
             ).decode("utf-8")
@@ -461,7 +497,6 @@ Return valid JSON only. Do not include Markdown.
                 image_response.choices[0].message.content
             )
 
-            # Normalize image-analysis fields.
             image_analysis.setdefault("breed", "Unknown")
             image_analysis.setdefault(
                 "detected_breed",
@@ -829,7 +864,6 @@ Return valid JSON only. Do not include Markdown.
     if risk_level not in ("low", "medium", "high"):
         risk_level = "medium"
 
-    # High urgency always triggers the existing emergency path.
     emergency = (
         risk_level == "high"
         or triage_result.get("emergency") is True
@@ -866,9 +900,7 @@ Return valid JSON only. Do not include Markdown.
     # =========================================================
     # HIGH-URGENCY SYMPTOM OVERRIDE
     # =========================================================
-    # The backend must not rely only on the AI-generated triage result.
-    # Owner-reported blood in vomit is treated as HIGH urgency even if
-    # the model incorrectly returns LOW or MEDIUM.
+
     normalized_message = " ".join(
         message.lower().strip().replace("vomitting", "vomiting").split()
     )
@@ -895,7 +927,6 @@ Return valid JSON only. Do not include Markdown.
         for phrase in blood_in_vomit_phrases
     )
 
-    # Avoid treating explicit denials as positive symptom reports.
     explicit_blood_denial = any(
         phrase in normalized_message
         for phrase in [
@@ -1288,9 +1319,7 @@ Do not display internal risk assessment fields.
     # =========================================================
     # 19A. DISPLAY URGENCY IN THE CHAT RESPONSE
     # =========================================================
-    # The frontend may currently display only the "response" text field.
-    # Include urgency directly in that text as well as in the JSON
-    # "risk_level" field, so the owner can see LOW, MEDIUM, or HIGH.
+
     urgency_label = {
         "low": "LOW",
         "medium": "MEDIUM",
@@ -1309,33 +1338,16 @@ Do not display internal risk assessment fields.
         )
 
     # =========================================================
-    # 20. SAVE ASSISTANT MESSAGE
+    # 20. DO NOT SAVE ASSISTANT MESSAGE TO DATABASE
     # =========================================================
-
-    ChatMessage.objects.create(
-        session=session,
-        role="assistant",
-        message=assistant_message
-    )
+    # The frontend stores the assistant response in localStorage.
+    # No ChatMessage record is created.
 
     # =========================================================
-    # 21. SAVE SAFE KNOWLEDGE BASE ANSWER
+    # 21. DO NOT SAVE CHAT TO KNOWLEDGE BASE
     # =========================================================
-
-    if (
-        message
-        and not emergency
-        and risk_level == "low"
-        and not needs_more_information
-        and not knowledge_answer
-    ):
-        try:
-            QuestionAnswer.objects.create(
-                question=message,
-                answer=assistant_message
-            )
-        except Exception as exc:
-            print("QUESTION ANSWER SAVE ERROR:", exc)
+    # Existing QuestionAnswer records can still be read above.
+    # New user questions and AI responses are not stored here.
 
     # =========================================================
     # 22. RETURN JSON TO FRONTEND
