@@ -16,282 +16,445 @@
         rel="stylesheet"
     >
 
-    <style>
-        :root {
-            --pet-cream: #FAF6F0;
-            --pet-amber: #d97706;
-            --pet-border: #f3e8d7;
-        }
 
-        * {
-            box-sizing: border-box;
-        }
+<style>
+    :root {
+        --pet-cream: #FAF6F0;
+        --pet-amber: #d97706;
+        --pet-border: #f3e8d7;
+    }
 
-        html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            -webkit-text-size-adjust: 100%;
-        }
+    * {
+        box-sizing: border-box;
+    }
 
-        body {
-            width: 100%;
-            height: 100%;
-            min-width: 0;
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--pet-cream);
-        }
+    html {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        -webkit-text-size-adjust: 100%;
+    }
 
-        button,
-        input,
-        textarea,
-        select {
-            font: inherit;
-        }
+    body {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--pet-cream);
+    }
 
-        button:disabled {
-            cursor: not-allowed;
-        }
+    button,
+    input,
+    textarea,
+    select {
+        font: inherit;
+    }
 
-        img,
-        video,
-        canvas,
-        svg {
-            max-width: 100%;
-        }
+    button:disabled {
+        cursor: not-allowed;
+    }
 
-        main,
-        aside,
-        section,
-        article {
-            min-width: 0;
-        }
+    img,
+    video,
+    canvas,
+    svg {
+        max-width: 100%;
+    }
 
-        .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #e6dcce transparent;
-        }
+    main,
+    aside,
+    section,
+    article {
+        min-width: 0;
+    }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #e6dcce transparent;
+    }
 
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #e6dcce;
-            border-radius: 99px;
-        }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #cbd5e1;
-        }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e6dcce;
+        border-radius: 99px;
+    }
 
-        #chat-messages {
-            scroll-behavior: smooth;
-            overflow-wrap: anywhere;
-            overscroll-behavior: contain;
-        }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+    }
 
-        .message-text {
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-            word-break: break-word;
-        }
+    #chat-messages {
+        scroll-behavior: smooth;
+        overflow-wrap: anywhere;
+        overscroll-behavior: contain;
+    }
 
-        /* Keep the mobile sidebar inside the viewport. */
+    .message-text {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+        height: 100%;
+        height: 100dvh;
+        overscroll-behavior: contain;
+        padding-bottom: env(safe-area-inset-bottom);
+        will-change: transform, width;
+    }
+
+    #sidebar-overlay {
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 300ms ease;
+    }
+
+    /* Desktop toggle visibility is controlled explicitly by CSS. */
+    .desktop-sidebar-toggle {
+        display: none !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+        .desktop-sidebar-toggle {
+            display: inline-flex !important;
+        }
+    }
+
+    @media (max-width: 1023px) {
         #sidebar {
-            height: 100%;
-            height: 100dvh;
-            overscroll-behavior: contain;
-            padding-bottom: env(safe-area-inset-bottom);
+            position: fixed !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            z-index: 50 !important;
+            width: min(18rem, 85vw) !important;
+            height: 100dvh !important;
+            transform: translateX(-100%);
+            transition: transform 300ms ease-in-out;
+        }
+
+        #sidebar.sidebar-visible {
+            transform: translateX(0) !important;
         }
 
         #sidebar-overlay {
-            -webkit-tap-highlight-color: transparent;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 40 !important;
         }
 
-        /* Camera preview: only the video disables touch gestures.
-           The modal itself must remain scrollable on small screens. */
-        #camera-video {
-            display: block;
-            width: 100%;
-            max-height: 60dvh;
-            object-fit: contain;
-            background: #000;
-            touch-action: none;
-            transform-origin: center center;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-user-drag: none;
+        /* Desktop collapse mode is disabled on mobile/tablet drawer layout. */
+        #sidebar .desktop-sidebar-toggle {
+            display: none !important;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        #sidebar {
+            position: relative !important;
+            width: 18rem;
+            min-width: 18rem;
+            max-width: none !important;
+            flex: 0 0 18rem;
+            transform: translateX(0) !important;
+            transition: width 250ms ease, min-width 250ms ease, flex-basis 250ms ease;
         }
 
-        .camera-modal {
-            backdrop-filter: blur(5px);
-            overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
+        #sidebar.sidebar-collapsed {
+            width: 5rem;
+            min-width: 5rem;
+            flex-basis: 5rem;
         }
 
+        #sidebar-overlay {
+            display: none !important;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-brand-text,
+        #sidebar.sidebar-collapsed .sidebar-label,
+        #sidebar.sidebar-collapsed .sidebar-section-title,
+        #sidebar.sidebar-collapsed .sidebar-chat-details,
+        #sidebar.sidebar-collapsed .sidebar-chat-actions,
+        #sidebar.sidebar-collapsed .sidebar-chat-count {
+            display: none !important;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-header {
+            justify-content: center;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-brand-link {
+            justify-content: center;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-new-session-wrap {
+            padding: 0.75rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-new-session {
+            min-height: 2.75rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-chat-list {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-chat-row {
+            justify-content: center;
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-chat-link {
+            flex: 0 0 auto;
+            justify-content: center;
+            padding: 0.5rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-footer {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-footer-link {
+            justify-content: center;
+            gap: 0;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        #sidebar.sidebar-collapsed .sidebar-footer-link svg {
+            flex-shrink: 0;
+        }
+    }
+
+    /* CAMERA */
+    #camera-video {
+        display: block;
+        width: 100%;
+        max-height: 60dvh;
+        object-fit: contain;
+        background: #000;
+        touch-action: none;
+        transform-origin: center center;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    .camera-modal {
+        backdrop-filter: blur(5px);
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #camera-modal {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    #camera-modal-card {
+        width: 100%;
+        max-width: 42rem;
+        max-height: 94dvh;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #camera-modal .camera-preview {
+        flex-shrink: 1;
+        min-height: 0;
+        overflow: hidden;
+        background: #000;
+    }
+
+    #camera-modal .camera-controls {
+        flex-shrink: 0;
+    }
+
+    #camera-modal.hidden {
+        display: none !important;
+    }
+
+    #camera-modal.flex {
+        display: flex !important;
+    }
+
+    /* CONTACT US MODAL */
+    #contact-modal {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 9999 !important;
+
+        /* Hidden by default */
+        display: none !important;
+
+        align-items: center;
+        justify-content: center;
+
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+
+        padding: 12px;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        background: rgba(15, 23, 42, 0.60);
+
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    /* Open state controlled by JavaScript */
+    #contact-modal.contact-modal-open {
+        display: flex !important;
+    }
+
+    #contact-modal-card {
+        position: relative;
+        flex-shrink: 0;
+
+        width: 100%;
+        max-width: 28rem;
+
+        max-height: 92dvh;
+        margin: auto;
+
+        display: flex;
+        flex-direction: column;
+
+        overflow: hidden;
+
+        background: #fff;
+        border-radius: 1rem;
+
+        box-shadow:
+            0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    #contact-modal-content {
+        flex: 1 1 auto;
+        min-height: 0;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* INPUTS */
+    input,
+    textarea,
+    select {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    /* MOBILE */
+    @media (max-width: 640px) {
         #camera-modal {
-            overflow-x: hidden;
-            overflow-y: auto;
+            padding: 8px;
+            align-items: flex-start;
         }
 
         #camera-modal-card {
-            width: 100%;
-            max-width: 42rem;
-            max-height: 94dvh;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
+            max-height: 96dvh;
+            border-radius: 16px;
         }
 
-        #camera-modal .camera-preview {
-            flex-shrink: 1;
-            min-height: 0;
-            overflow: hidden;
-            background: #000;
+        #camera-video {
+            max-height: 42dvh;
         }
 
-        #camera-modal .camera-controls {
-            flex-shrink: 0;
-        }
-
-        /* Contact modal: fixed header/footer and scrollable content. */
         #contact-modal {
-            overflow-x: hidden;
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
+            align-items: flex-start;
+            padding: 8px;
         }
 
         #contact-modal-card {
             width: 100%;
-            max-width: 28rem;
-            max-height: 92dvh;
+            max-height: 94dvh;
             margin: auto;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            border-radius: 16px;
         }
 
         #contact-modal-content {
-            min-height: 0;
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
+            padding: 16px;
         }
 
-        /* Don't allow long labels or controls to widen the page. */
+        #contact-modal-title {
+            font-size: 1.05rem;
+        }
+
+        #camera-modal-title {
+            font-size: 1rem;
+        }
+
+        #camera-modal .camera-controls button,
+        #contact-modal button {
+            min-height: 42px;
+        }
+
         input,
         textarea,
         select {
-            max-width: 100%;
-            min-width: 0;
+            font-size: 16px;
+        }
+    }
+
+    /* SHORT SCREENS */
+    @media (max-height: 600px) {
+        #camera-modal-card,
+        #contact-modal-card {
+            max-height: 96dvh;
         }
 
-        /* Tablets and smaller screens. */
-        @media (max-width: 1023px) {
-            #sidebar {
-                position: fixed;
-                inset: 0 auto 0 0;
-                z-index: 50;
-                width: min(18rem, 85vw);
-            }
-
-            #sidebar-overlay {
-                z-index: 40;
-            }
+        #camera-video {
+            max-height: 38dvh;
         }
+    }
 
-        /* Phones. */
-        @media (max-width: 640px) {
-            #camera-modal {
-                padding: 8px;
-                align-items: flex-start;
-            }
-
-            #camera-modal-card {
-                max-height: 96dvh;
-                border-radius: 16px;
-            }
-
-            #camera-video {
-                max-height: 42dvh;
-            }
-
-            #contact-modal {
-                padding: 8px;
-                align-items: flex-start;
-            }
-
-            #contact-modal-card {
-                max-height: 94dvh;
-                border-radius: 16px;
-            }
-
-            #contact-modal-content {
-                padding: 16px;
-            }
-
-            #contact-modal-title {
-                font-size: 1.05rem;
-            }
-
-            #camera-modal-title {
-                font-size: 1rem;
-            }
-
-            #camera-modal .camera-controls button {
-                min-height: 42px;
-            }
-
-            #contact-modal button {
-                min-height: 42px;
-            }
-
-            /* Avoid iOS Safari zooming when a form control is focused. */
-            input,
-            textarea,
-            select {
-                font-size: 16px;
-            }
+    /* REDUCED MOTION */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
         }
+    }
+</style>
 
-        @media (max-height: 600px) {
-            #camera-modal-card,
-            #contact-modal-card {
-                max-height: 96dvh;
-            }
-
-            #camera-video {
-                max-height: 38dvh;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                scroll-behavior: auto !important;
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
 </head>
 
 <body class="h-[100dvh] w-full min-w-0 flex overflow-hidden bg-[#FAF6F0]">
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
+    <!-- SIDEBAR -->
 
     <aside
         id="sidebar"
@@ -302,10 +465,9 @@
                lg:translate-x-0 lg:flex-shrink-0"
     >
 
-        <!-- Brand -->
-        <div class="flex h-16 shrink-0 items-center justify-between border-b border-amber-50 px-4 sm:px-6">
+        <div class="sidebar-header flex h-16 shrink-0 items-center justify-between border-b border-amber-50 px-4 sm:px-6">
 
-            <a href="{% url 'new_chat' %}" class="flex min-w-0 items-center gap-2.5">
+            <a href="{% url 'new_chat' %}" class="sidebar-brand-link flex min-w-0 items-center gap-2.5">
 
                 <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-600">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
@@ -317,7 +479,7 @@
                     </svg>
                 </div>
 
-                <span class="truncate text-sm font-bold tracking-tight text-slate-900">
+                <span class="sidebar-brand-text truncate text-sm font-bold tracking-tight text-slate-900">
                     We Care <span class="text-amber-600">Pet Care</span>
                 </span>
 
@@ -334,29 +496,43 @@
                 </svg>
             </button>
 
+            <button
+                type="button"
+                id="desktop-sidebar-toggle"
+                class="desktop-sidebar-toggle rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-amber-700"
+                onclick="toggleDesktopSidebar()"
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                aria-controls="sidebar"
+                aria-expanded="true"
+            >
+                <svg id="desktop-sidebar-icon" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>
+                </svg>
+            </button>
+
         </div>
 
-        <!-- New Session -->
-        <div class="shrink-0 p-4">
+        <div class="sidebar-new-session-wrap shrink-0 p-4">
             <a
                 href="{% url 'new_chat' %}"
-                class="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition hover:bg-amber-100"
+                class="sidebar-new-session flex w-full items-center justify-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition hover:bg-amber-100"
+                title="New Session"
             >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                 </svg>
-                New Session
+                <span class="sidebar-label">New Session</span>
             </a>
         </div>
 
-        <!-- Recent Chats -->
-        <div class="custom-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2">
+        <div class="sidebar-chat-list custom-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-2">
 
             <div class="mb-3 flex items-center justify-between px-3">
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <p class="sidebar-section-title text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Recent Chats
                 </p>
-                <span class="text-xs text-slate-400">
+                <span class="sidebar-chat-count text-xs text-slate-400">
                     {{ recent_chats|length }}
                 </span>
             </div>
@@ -371,11 +547,11 @@
                     {% endif %}
                 ">
 
-                    <div class="flex items-center gap-1 px-2 py-2">
+                    <div class="sidebar-chat-row flex items-center gap-1 px-2 py-2">
 
                         <a
                             href="{% url 'chat_session' chat.id %}"
-                            class="flex min-w-0 flex-1 items-center gap-2 py-1"
+                            class="sidebar-chat-link flex min-w-0 flex-1 items-center gap-2 py-1"
                             title="{{ chat.title }}"
                         >
 
@@ -393,7 +569,7 @@
                                 {% endif %}
                             </svg>
 
-                            <div class="min-w-0 flex-1">
+                            <div class="sidebar-chat-details min-w-0 flex-1">
                                 <p class="truncate text-sm font-medium {% if chat.id == session.id %}text-amber-800{% else %}text-slate-700{% endif %}">
                                     {{ chat.title|default:"New Chat" }}
                                 </p>
@@ -409,8 +585,7 @@
 
                         </a>
 
-                        <!-- Pin / Unpin -->
-                        <form method="POST" action="{% url 'toggle_pin_chat' chat.id %}" class="shrink-0">
+                        <form method="POST" action="{% url 'toggle_pin_chat' chat.id %}" class="sidebar-chat-actions shrink-0">
                             {% csrf_token %}
                             <input type="hidden" name="return_to" value="{{ session.id }}">
 
@@ -426,11 +601,10 @@
                             </button>
                         </form>
 
-                        <!-- Delete Chat -->
                         <form
                             method="POST"
                             action="{% url 'delete_chat' chat.id %}"
-                            class="shrink-0"
+                            class="sidebar-chat-actions shrink-0"
                             onsubmit="return confirm('Are you sure you want to permanently delete this conversation and all its messages? This action cannot be undone.');"
                         >
                             {% csrf_token %}
@@ -470,39 +644,41 @@
 
         </div>
 
-        <!-- Sidebar Footer -->
-        <div class="shrink-0 space-y-2 border-t border-slate-100 bg-slate-50/50 p-3">
+        <div class="sidebar-footer shrink-0 space-y-2 border-t border-slate-100 bg-slate-50/50 p-3">
 
             <a
                 href="{% url 'view_profile' %}"
-                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-amber-700"
+                class="sidebar-footer-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-amber-700"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="8" r="4"/>
                     <path d="M5 21v-2a7 7 0 0 1 14 0v2"/>
                 </svg>
-                <span>View Profile</span>
+                <span class="sidebar-label">View Profile</span>
             </a>
 
-            <button
-                type="button"
-                onclick="openContactModal()"
+            <a
+                href="{% url 'contact_us' %}"
                 class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-amber-700"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.84.58 2.8.7a2 2 0 0 1 1.73 2.03z"/>
                 </svg>
-                <span>Contact Us</span>
-            </button>
+                <span class="sidebar-label">Contact Us</span>
+            </a>
 
             <a
                 href="{% url 'logout' %}"
-                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                class="sidebar-footer-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600"
             >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                 </svg>
-                Log out
+                <span class="sidebar-label">Log out</span>
             </a>
 
         </div>
@@ -516,9 +692,7 @@
         aria-hidden="true"
     ></div>
 
-    <!-- =====================================================
-         MAIN WORKSPACE
-    ====================================================== -->
+    <!-- MAIN WORKSPACE -->
 
     <main class="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#FAF6F0]">
 
@@ -527,10 +701,12 @@
 
             <button
                 type="button"
-                onclick="toggleSidebar(true)"
+                onclick="toggleSidebar()"
                 class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-700 transition hover:bg-amber-100"
                 aria-label="Open navigation"
                 aria-controls="sidebar"
+                aria-expanded="false"
+                id="sidebar-open-button"
             >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
@@ -549,22 +725,24 @@
 
         </div>
 
-        <!-- =====================================================
-             CONTACT US MODAL
-        ====================================================== -->
 
-        <div
-            id="contact-modal"
-            class="fixed inset-0 z-[110] hidden items-center justify-center bg-slate-900/50 p-3 sm:p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="contact-modal-title"
-            onclick="if (event.target === this) closeContactModal()"
-        >
+        {% block content %}{% endblock %}
+
+    </main>
+
+        <!-- CONTACT US MODAL -->
+    <div
+        id="contact-modal"
+        class="fixed inset-0 z-[110] items-center justify-center bg-slate-900/50 p-3 sm:p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-modal-title"
+        aria-hidden="true"
+        onclick="if (event.target === this) closeContactModal()"
+    >
 
             <div id="contact-modal-card" class="rounded-2xl bg-white shadow-2xl">
 
-                <!-- Modal Header -->
                 <div class="flex shrink-0 items-center justify-between border-b border-amber-100 px-4 py-4 sm:px-5">
 
                     <div class="min-w-0">
@@ -589,10 +767,8 @@
 
                 </div>
 
-                <!-- Modal Content -->
                 <div id="contact-modal-content" class="space-y-5 p-4 sm:p-5">
 
-                    <!-- Introduction -->
                     <div class="text-center">
                         <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 text-amber-600">
                             <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
@@ -615,7 +791,6 @@
                         </p>
                     </div>
 
-                    <!-- Phone Number -->
                     <div class="flex items-start gap-3 rounded-xl border border-amber-100 bg-amber-50/70 p-3 sm:gap-4 sm:p-4">
 
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm sm:h-11 sm:w-11">
@@ -644,7 +819,6 @@
 
                     </div>
 
-                    <!-- Clinic Address -->
                     <div class="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 sm:gap-4 sm:p-4">
 
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-600 shadow-sm sm:h-11 sm:w-11">
@@ -678,7 +852,6 @@
 
                     </div>
 
-                    <!-- Pet Care Notice -->
                     <div class="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
                         <p class="text-xs leading-5 text-slate-600">
                             <span class="font-bold text-amber-800">Pet care reminder:</span>
@@ -688,7 +861,6 @@
 
                 </div>
 
-                <!-- Modal Footer -->
                 <div class="shrink-0 border-t border-slate-100 p-4 sm:p-5">
                     <button
                         type="button"
@@ -702,13 +874,7 @@
             </div>
         </div>
 
-        {% block content %}{% endblock %}
-
-    </main>
-
-    <!-- =====================================================
-         LIVE CAMERA MODAL
-    ====================================================== -->
+    <!-- LIVE CAMERA MODAL -->
 
     <div
         id="camera-modal"
@@ -721,7 +887,6 @@
 
         <div id="camera-modal-card" class="overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-            <!-- Modal Header -->
             <div class="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4">
 
                 <div class="min-w-0">
@@ -747,7 +912,6 @@
 
             </div>
 
-            <!-- Camera Preview -->
             <div class="camera-preview relative bg-black">
                 <video id="camera-video" autoplay playsinline muted></video>
                 <canvas id="camera-canvas" class="hidden"></canvas>
@@ -760,14 +924,12 @@
                 </div>
             </div>
 
-            <!-- Camera Error -->
             <div
                 id="camera-error"
                 class="mx-4 mt-4 hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm leading-5 text-red-700 sm:mx-5"
                 role="alert"
             ></div>
 
-            <!-- Camera Controls -->
             <div class="camera-controls flex shrink-0 flex-col-reverse gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-5">
 
                 <button
@@ -805,949 +967,1188 @@
         </div>
     </div>
 
-    <!-- =====================================================
-         JAVASCRIPT
-    ====================================================== -->
+    <!-- JAVASCRIPT -->
 
-    <script>
-        "use strict";
 
-        // =====================================================
-        // PREVENT WEBPAGE ZOOM WHILE USING THE CAMERA
-        // =====================================================
+<script>
+    "use strict";
 
-        (function preventPageZoomDuringCamera() {
-            const cameraModal = document.getElementById("camera-modal");
+    // =====================================================
+    // PREVENT WEBPAGE ZOOM WHILE USING THE CAMERA
+    // =====================================================
 
-            if (!cameraModal) return;
+    (function preventPageZoomDuringCamera() {
+        const cameraModal = document.getElementById("camera-modal");
 
-            cameraModal.addEventListener("touchmove", function(event) {
-                if (event.touches.length > 1) {
-                    event.preventDefault();
-                }
+        if (!cameraModal) return;
+
+        cameraModal.addEventListener("touchmove", function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        ["gesturestart", "gesturechange", "gestureend"].forEach(function(type) {
+            cameraModal.addEventListener(type, function(event) {
+                event.preventDefault();
             }, { passive: false });
-
-            ["gesturestart", "gesturechange", "gestureend"].forEach(function(type) {
-                cameraModal.addEventListener(type, function(event) {
-                    event.preventDefault();
-                }, { passive: false });
-            });
-
-            cameraModal.addEventListener("wheel", function(event) {
-                if (event.ctrlKey || event.metaKey) {
-                    event.preventDefault();
-                }
-            }, { passive: false });
-        })();
-
-        const SESSION_ID = "{{ session.id|escapejs }}";
-
-        let cameraStream = null;
-        let currentFacingMode = "environment";
-        let cameraOpening = false;
-        let isSending = false;
-
-        // =====================================================
-        // SIDEBAR
-        // =====================================================
-
-        function toggleSidebar(forceOpen) {
-            const sidebar = document.getElementById("sidebar");
-            const overlay = document.getElementById("sidebar-overlay");
-
-            if (!sidebar || !overlay) return;
-
-            const shouldOpen =
-                typeof forceOpen === "boolean"
-                    ? forceOpen
-                    : sidebar.classList.contains("-translate-x-full");
-
-            if (window.innerWidth >= 1024) {
-                sidebar.classList.remove("-translate-x-full");
-                overlay.classList.add("hidden");
-                return;
-            }
-
-            sidebar.classList.toggle("-translate-x-full", !shouldOpen);
-            overlay.classList.toggle("hidden", !shouldOpen);
-
-            document.body.classList.toggle("sidebar-open", shouldOpen);
-        }
-
-        function closeMobileSidebar() {
-            if (window.innerWidth < 1024) {
-                toggleSidebar(false);
-            }
-        }
-
-        window.addEventListener("resize", function() {
-            const sidebar = document.getElementById("sidebar");
-            const overlay = document.getElementById("sidebar-overlay");
-
-            if (window.innerWidth >= 1024) {
-                sidebar.classList.remove("-translate-x-full");
-                overlay.classList.add("hidden");
-                document.body.classList.remove("sidebar-open");
-            } else {
-                sidebar.classList.add("-translate-x-full");
-                overlay.classList.add("hidden");
-                document.body.classList.remove("sidebar-open");
-            }
         });
 
-        // Close the mobile sidebar after navigating to a chat.
-        document.querySelectorAll("#sidebar a").forEach(function(link) {
-            link.addEventListener("click", function() {
-                closeMobileSidebar();
-            });
-        });
+        cameraModal.addEventListener("wheel", function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    })();
 
-        // =====================================================
-        // TEXTAREA
-        // =====================================================
+    // =====================================================
+    // GLOBAL VARIABLES
+    // =====================================================
 
-        function adjustHeight(element) {
-            if (!element) return;
+    const SESSION_ID = "{{ session.id|escapejs }}";
 
-            element.style.height = "auto";
-            element.style.height = Math.min(element.scrollHeight, 144) + "px";
+    let cameraStream = null;
+    let currentFacingMode = "environment";
+    let cameraOpening = false;
+    let isSending = false;
+    let previousContactFocus = null;
+
+    // =====================================================
+    // SIDEBAR - DESKTOP COLLAPSE + MOBILE DRAWER
+    // =====================================================
+
+    const SIDEBAR_STORAGE_KEY = "weCareSidebarCollapsed";
+    const DESKTOP_BREAKPOINT = 1024;
+
+    function isDesktopSidebar() {
+        return window.matchMedia
+            ? window.matchMedia("(min-width: 1024px)").matches
+            : window.innerWidth >= DESKTOP_BREAKPOINT;
+    }
+
+    function setDesktopSidebarCollapsed(collapsed, savePreference = true) {
+        const sidebar = document.getElementById("sidebar");
+        const button = document.getElementById("desktop-sidebar-toggle");
+        const icon = document.getElementById("desktop-sidebar-icon");
+
+        if (!sidebar || !isDesktopSidebar()) return;
+
+        collapsed = Boolean(collapsed);
+        sidebar.classList.toggle("sidebar-collapsed", collapsed);
+
+        if (button) {
+            button.setAttribute("aria-expanded", String(!collapsed));
+            button.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+            button.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
         }
 
-        function fillPrompt(text) {
-            const input = document.getElementById("chat-input");
-
-            if (!input) return;
-
-            input.value = text;
-            input.focus();
-
-            adjustHeight(input);
+        if (icon) {
+            icon.innerHTML = collapsed
+                ? '<path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>';
         }
 
-        // =====================================================
-        // IMAGE PREVIEW
-        // =====================================================
-
-        function previewFile() {
-            const fileInput = document.getElementById("image-file-input");
-            const previewContainer = document.getElementById("image-preview-container");
-            const previewImage = document.getElementById("image-preview");
-            const fileNameText = document.getElementById("file-name-text");
-
-            if (!fileInput || !previewContainer || !previewImage || !fileNameText) {
-                return;
+        if (savePreference) {
+            try {
+                localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
+            } catch (error) {
+                console.warn("Unable to save sidebar preference:", error);
             }
+        }
+    }
 
-            const file = fileInput.files && fileInput.files[0];
+    function toggleDesktopSidebar() {
+        if (!isDesktopSidebar()) return;
+        const sidebar = document.getElementById("sidebar");
+        if (!sidebar) return;
 
-            if (!file) {
-                clearImage();
-                return;
+        setDesktopSidebarCollapsed(
+            !sidebar.classList.contains("sidebar-collapsed")
+        );
+    }
+
+    function toggleSidebar(forceOpen) {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("sidebar-overlay");
+        const openButton = document.getElementById("sidebar-open-button");
+
+        if (!sidebar || !overlay) return;
+
+        if (isDesktopSidebar()) {
+            sidebar.classList.remove("sidebar-visible");
+            overlay.classList.add("hidden");
+            document.body.style.overflow = "";
+            if (openButton) openButton.setAttribute("aria-expanded", "false");
+            return;
+        }
+
+        const currentlyOpen = sidebar.classList.contains("sidebar-visible");
+        const shouldOpen = typeof forceOpen === "boolean"
+            ? forceOpen
+            : !currentlyOpen;
+
+        sidebar.classList.toggle("sidebar-visible", shouldOpen);
+        overlay.classList.toggle("hidden", !shouldOpen);
+        document.body.style.overflow = shouldOpen ? "hidden" : "";
+
+        if (openButton) {
+            openButton.setAttribute("aria-expanded", String(shouldOpen));
+            openButton.setAttribute(
+                "aria-label",
+                shouldOpen ? "Close navigation" : "Open navigation"
+            );
+        }
+    }
+
+    function closeMobileSidebar() {
+        if (!isDesktopSidebar()) toggleSidebar(false);
+    }
+
+    function restoreSidebarPreference() {
+        const sidebar = document.getElementById("sidebar");
+        if (!sidebar) return;
+
+        let shouldCollapse = false;
+        try {
+            shouldCollapse = localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+        } catch (error) {
+            console.warn("Unable to read sidebar preference:", error);
+        }
+
+        if (isDesktopSidebar()) {
+            setDesktopSidebarCollapsed(shouldCollapse, false);
+        } else {
+            sidebar.classList.remove("sidebar-collapsed", "sidebar-visible");
+        }
+    }
+
+    // This script is placed after the page markup, so the sidebar exists now.
+    restoreSidebarPreference();
+
+    window.addEventListener("resize", function() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("sidebar-overlay");
+        const openButton = document.getElementById("sidebar-open-button");
+        if (!sidebar || !overlay) return;
+
+        sidebar.classList.remove("sidebar-visible");
+        overlay.classList.add("hidden");
+        if (openButton) openButton.setAttribute("aria-expanded", "false");
+
+        if (isDesktopSidebar()) {
+            let shouldCollapse = false;
+            try {
+                shouldCollapse = localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+            } catch (error) {
+                console.warn("Unable to read sidebar preference:", error);
             }
+            setDesktopSidebarCollapsed(shouldCollapse, false);
+        } else {
+            sidebar.classList.remove("sidebar-collapsed");
+        }
 
-            if (!file.type.startsWith("image/")) {
-                clearImage();
-                alert("Please select a valid image file.");
-                return;
-            }
+        const contactModal = document.getElementById("contact-modal");
+        const cameraModal = document.getElementById("camera-modal");
+        const contactOpen = contactModal &&
+            contactModal.classList.contains("contact-modal-open");
+        const cameraOpen = cameraModal &&
+            !cameraModal.classList.contains("hidden");
 
-            if (file.size > 10 * 1024 * 1024) {
-                clearImage();
-                alert("Please select an image smaller than 10 MB.");
-                return;
-            }
+        document.body.style.overflow = contactOpen || cameraOpen ? "hidden" : "";
+    });
 
+    document.querySelectorAll("#sidebar a").forEach(function(link) {
+        link.addEventListener("click", closeMobileSidebar);
+    });
+
+    // =====================================================
+    // TEXTAREA
+    // =====================================================
+
+    function adjustHeight(element) {
+        if (!element) return;
+
+        element.style.height = "auto";
+        element.style.height = Math.min(element.scrollHeight, 144) + "px";
+    }
+
+    function fillPrompt(text) {
+        const input = document.getElementById("chat-input");
+
+        if (!input) return;
+
+        input.value = text;
+        input.focus();
+
+        adjustHeight(input);
+    }
+
+    // =====================================================
+    // IMAGE PREVIEW
+    // =====================================================
+
+    function previewFile() {
+        const fileInput = document.getElementById("image-file-input");
+        const previewContainer = document.getElementById("image-preview-container");
+        const previewImage = document.getElementById("image-preview");
+        const fileNameText = document.getElementById("file-name-text");
+
+        if (!fileInput || !previewContainer || !previewImage || !fileNameText) {
+            return;
+        }
+
+        const file = fileInput.files && fileInput.files[0];
+
+        if (!file) {
+            clearImage();
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            clearImage();
+            alert("Please select a valid image file.");
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            clearImage();
+            alert("Please select an image smaller than 10 MB.");
+            return;
+        }
+
+        if (previewImage.dataset.objectUrl) {
+            URL.revokeObjectURL(previewImage.dataset.objectUrl);
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+
+        previewImage.src = objectUrl;
+        previewImage.dataset.objectUrl = objectUrl;
+
+        fileNameText.textContent = file.name;
+        previewContainer.classList.remove("hidden");
+    }
+
+    function clearImage() {
+        const fileInput = document.getElementById("image-file-input");
+        const previewContainer = document.getElementById("image-preview-container");
+        const previewImage = document.getElementById("image-preview");
+        const fileNameText = document.getElementById("file-name-text");
+
+        if (fileInput) {
+            fileInput.value = "";
+        }
+
+        if (previewImage) {
             if (previewImage.dataset.objectUrl) {
                 URL.revokeObjectURL(previewImage.dataset.objectUrl);
+                delete previewImage.dataset.objectUrl;
             }
 
-            const objectUrl = URL.createObjectURL(file);
-
-            previewImage.src = objectUrl;
-            previewImage.dataset.objectUrl = objectUrl;
-
-            fileNameText.textContent = file.name;
-            previewContainer.classList.remove("hidden");
+            previewImage.removeAttribute("src");
         }
 
-        function clearImage() {
-            const fileInput = document.getElementById("image-file-input");
-            const previewContainer = document.getElementById("image-preview-container");
-            const previewImage = document.getElementById("image-preview");
-            const fileNameText = document.getElementById("file-name-text");
-
-            if (fileInput) {
-                fileInput.value = "";
-            }
-
-            if (previewImage) {
-                if (previewImage.dataset.objectUrl) {
-                    URL.revokeObjectURL(previewImage.dataset.objectUrl);
-                    delete previewImage.dataset.objectUrl;
-                }
-
-                previewImage.removeAttribute("src");
-            }
-
-            if (fileNameText) {
-                fileNameText.textContent = "Selected photo";
-            }
-
-            if (previewContainer) {
-                previewContainer.classList.add("hidden");
-            }
+        if (fileNameText) {
+            fileNameText.textContent = "Selected photo";
         }
 
-        // =====================================================
-        // LIVE CAMERA
-        // =====================================================
+        if (previewContainer) {
+            previewContainer.classList.add("hidden");
+        }
+    }
 
-        async function openCamera() {
-            if (cameraOpening) return;
+    // =====================================================
+    // LIVE CAMERA
+    // =====================================================
 
-            const modal = document.getElementById("camera-modal");
-            const video = document.getElementById("camera-video");
-            const errorBox = document.getElementById("camera-error");
-            const starting = document.getElementById("camera-starting");
-            const captureButton = document.getElementById("capture-camera-button");
-            const switchButton = document.getElementById("switch-camera-button");
+    async function openCamera() {
+        if (cameraOpening) return;
 
-            if (!modal || !video || !errorBox || !starting || !captureButton || !switchButton) {
-                return;
-            }
+        const modal = document.getElementById("camera-modal");
+        const video = document.getElementById("camera-video");
+        const errorBox = document.getElementById("camera-error");
+        const starting = document.getElementById("camera-starting");
+        const captureButton = document.getElementById("capture-camera-button");
+        const switchButton = document.getElementById("switch-camera-button");
 
-            if (
-                !navigator.mediaDevices ||
-                typeof navigator.mediaDevices.getUserMedia !== "function"
-            ) {
-                modal.classList.remove("hidden");
-                modal.classList.add("flex");
+        if (!modal || !video || !errorBox || !starting || !captureButton || !switchButton) {
+            return;
+        }
 
-                showCameraError(
-                    "Camera access is unavailable. Open this website over HTTPS or use localhost during development."
-                );
-
-                starting.classList.add("hidden");
-                return;
-            }
-
-            cameraOpening = true;
-
+        if (
+            !navigator.mediaDevices ||
+            typeof navigator.mediaDevices.getUserMedia !== "function"
+        ) {
             modal.classList.remove("hidden");
             modal.classList.add("flex");
 
-            errorBox.classList.add("hidden");
-            starting.classList.remove("hidden");
+            showCameraError(
+                "Camera access is unavailable. Open this website over HTTPS or use localhost during development."
+            );
 
-            captureButton.disabled = true;
-            switchButton.classList.add("hidden");
+            starting.classList.add("hidden");
+            return;
+        }
 
-            try {
-                await stopCameraStream();
+        cameraOpening = true;
 
-                const constraints = {
-                    audio: false,
-                    video: {
-                        facingMode: {
-                            ideal: currentFacingMode
-                        },
-                        width: {
-                            ideal: 1280
-                        },
-                        height: {
-                            ideal: 720
-                        }
-                    }
-                };
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
 
-                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        document.body.style.overflow = "hidden";
 
-                video.srcObject = cameraStream;
+        errorBox.classList.add("hidden");
+        starting.classList.remove("hidden");
 
-                await video.play();
+        captureButton.disabled = true;
+        switchButton.classList.add("hidden");
 
-                starting.classList.add("hidden");
-                captureButton.disabled = false;
+        try {
+            await stopCameraStream();
 
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const cameras = devices.filter(function(device) {
-                    return device.kind === "videoinput";
-                });
-
-                if (cameras.length > 1) {
-                    switchButton.classList.remove("hidden");
+            const constraints = {
+                audio: false,
+                video: {
+                    facingMode: {
+                        ideal: currentFacingMode
+                    },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 }
+            };
 
-            } catch (error) {
-                console.error("Unable to open camera:", error);
+            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
 
-                starting.classList.add("hidden");
-                captureButton.disabled = true;
+            video.srcObject = cameraStream;
 
-                if (
-                    error.name === "NotAllowedError" ||
-                    error.name === "PermissionDeniedError"
-                ) {
-                    showCameraError(
-                        "Camera permission was denied. Allow camera access in your browser settings, then try again."
-                    );
-                } else if (
-                    error.name === "NotFoundError" ||
-                    error.name === "DevicesNotFoundError"
-                ) {
-                    showCameraError("No camera was found on this device.");
-                } else if (
-                    error.name === "NotReadableError" ||
-                    error.name === "TrackStartError"
-                ) {
-                    showCameraError(
-                        "The camera may already be in use by another application. Close that application and try again."
-                    );
-                } else {
-                    showCameraError(
-                        "Unable to start the camera. Check your browser permissions and try again."
-                    );
-                }
+            await video.play();
 
-                await stopCameraStream();
+            starting.classList.add("hidden");
+            captureButton.disabled = false;
 
-            } finally {
-                cameraOpening = false;
-            }
-        }
+            const devices = await navigator.mediaDevices.enumerateDevices();
 
-        function showCameraError(message) {
-            const errorBox = document.getElementById("camera-error");
+            const cameras = devices.filter(function(device) {
+                return device.kind === "videoinput";
+            });
 
-            if (!errorBox) return;
-
-            errorBox.textContent = message;
-            errorBox.classList.remove("hidden");
-        }
-
-        async function stopCameraStream() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(function(track) {
-                    track.stop();
-                });
-
-                cameraStream = null;
+            if (cameras.length > 1) {
+                switchButton.classList.remove("hidden");
             }
 
-            const video = document.getElementById("camera-video");
+        } catch (error) {
+            console.error("Unable to open camera:", error);
 
-            if (video) {
-                video.srcObject = null;
-            }
-        }
-
-        async function switchCamera() {
-            if (cameraOpening) return;
-
-            currentFacingMode =
-                currentFacingMode === "environment"
-                    ? "user"
-                    : "environment";
-
-            await openCamera();
-        }
-
-        function captureCameraPhoto() {
-            const video = document.getElementById("camera-video");
-            const canvas = document.getElementById("camera-canvas");
-            const captureButton = document.getElementById("capture-camera-button");
-
-            if (!cameraStream || !video.videoWidth || !video.videoHeight) {
-                showCameraError("Please wait until the camera is ready.");
-                return;
-            }
-
+            starting.classList.add("hidden");
             captureButton.disabled = true;
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            const context = canvas.getContext("2d");
-
-            if (!context) {
-                captureButton.disabled = false;
-                showCameraError("Unable to capture the image. Please try again.");
-                return;
-            }
-
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(function(blob) {
-                captureButton.disabled = false;
-
-                if (!blob) {
-                    showCameraError("The image could not be captured. Please try again.");
-                    return;
-                }
-
-                if (blob.size > 10 * 1024 * 1024) {
-                    showCameraError("The captured image is too large. Please try again.");
-                    return;
-                }
-
-                const file = new File(
-                    [blob],
-                    "pet-photo-" + Date.now() + ".jpg",
-                    {
-                        type: "image/jpeg",
-                        lastModified: Date.now()
-                    }
+            if (
+                error.name === "NotAllowedError" ||
+                error.name === "PermissionDeniedError"
+            ) {
+                showCameraError(
+                    "Camera permission was denied. Allow camera access in your browser settings, then try again."
                 );
-
-                const fileInput = document.getElementById("image-file-input");
-
-                if (!fileInput) {
-                    showCameraError("The image upload field could not be found.");
-                    return;
-                }
-
-                const transfer = new DataTransfer();
-                transfer.items.add(file);
-                fileInput.files = transfer.files;
-
-                previewFile();
-                closeCamera();
-
-                document.getElementById("chat-input")?.focus();
-
-            }, "image/jpeg", 0.90);
-        }
-
-        async function closeCamera() {
-            const modal = document.getElementById("camera-modal");
-            const starting = document.getElementById("camera-starting");
-            const captureButton = document.getElementById("capture-camera-button");
-            const switchButton = document.getElementById("switch-camera-button");
+            } else if (
+                error.name === "NotFoundError" ||
+                error.name === "DevicesNotFoundError"
+            ) {
+                showCameraError("No camera was found on this device.");
+            } else if (
+                error.name === "NotReadableError" ||
+                error.name === "TrackStartError"
+            ) {
+                showCameraError(
+                    "The camera may already be in use by another application. Close that application and try again."
+                );
+            } else {
+                showCameraError(
+                    "Unable to start the camera. Check your browser permissions and try again."
+                );
+            }
 
             await stopCameraStream();
 
-            if (modal) {
-                modal.classList.add("hidden");
-                modal.classList.remove("flex");
-            }
-
-            if (starting) starting.classList.remove("hidden");
-            if (captureButton) captureButton.disabled = true;
-            if (switchButton) switchButton.classList.add("hidden");
+        } finally {
+            cameraOpening = false;
         }
+    }
 
-        // =====================================================
-        // CHAT HELPERS
-        // =====================================================
+    function showCameraError(message) {
+        const errorBox = document.getElementById("camera-error");
 
-        function scrollChatToBottom() {
-            const chatMessages = document.getElementById("chat-messages");
+        if (!errorBox) return;
 
-            if (!chatMessages) return;
+        errorBox.textContent = message;
+        errorBox.classList.remove("hidden");
+    }
 
-            requestAnimationFrame(function() {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+    async function stopCameraStream() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(track) {
+                track.stop();
             });
+
+            cameraStream = null;
         }
 
-        function removeWelcomeMessage() {
-            const welcome = document.getElementById("welcome-message");
+        const video = document.getElementById("camera-video");
 
-            if (welcome) {
-                welcome.remove();
-            }
+        if (video) {
+            video.srcObject = null;
+        }
+    }
+
+    async function switchCamera() {
+        if (cameraOpening) return;
+
+        currentFacingMode =
+            currentFacingMode === "environment"
+                ? "user"
+                : "environment";
+
+        await openCamera();
+    }
+
+    function captureCameraPhoto() {
+        const video = document.getElementById("camera-video");
+        const canvas = document.getElementById("camera-canvas");
+        const captureButton = document.getElementById("capture-camera-button");
+
+        if (!cameraStream || !video.videoWidth || !video.videoHeight) {
+            showCameraError("Please wait until the camera is ready.");
+            return;
         }
 
-        function addUserMessage(message, imageFile = null) {
-            const chatMessages = document.getElementById("chat-messages");
+        captureButton.disabled = true;
 
-            if (!chatMessages) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-            const wrapper = document.createElement("div");
-            wrapper.className = "flex min-w-0 justify-end";
+        const context = canvas.getContext("2d");
 
-            const bubble = document.createElement("div");
-            bubble.className =
-                "max-w-[92%] rounded-2xl bg-amber-600 px-4 py-3 text-white shadow-sm sm:max-w-xl";
-
-            if (imageFile) {
-                const image = document.createElement("img");
-                image.src = URL.createObjectURL(imageFile);
-                image.className =
-                    "mb-3 max-h-80 max-w-full rounded-xl border border-amber-100 object-contain";
-                image.alt = "Uploaded pet photo";
-
-                bubble.appendChild(image);
-            }
-
-            if (message) {
-                const text = document.createElement("div");
-                text.className = "message-text text-sm";
-                text.textContent = message;
-
-                bubble.appendChild(text);
-            }
-
-            wrapper.appendChild(bubble);
-            chatMessages.appendChild(wrapper);
-
-            scrollChatToBottom();
+        if (!context) {
+            captureButton.disabled = false;
+            showCameraError("Unable to capture the image. Please try again.");
+            return;
         }
 
-        function addAssistantMessage(message) {
-            const chatMessages = document.getElementById("chat-messages");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            if (!chatMessages) return;
+        canvas.toBlob(function(blob) {
+            captureButton.disabled = false;
 
-            const wrapper = document.createElement("div");
-            wrapper.className = "flex min-w-0 items-start gap-3";
-
-            const icon = document.createElement("div");
-            icon.className =
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
-
-            icon.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                    fill="currentColor" class="h-4 w-4 text-amber-600">
-                    <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
-                    <circle cx="6.5" cy="10" r="1.5"/>
-                    <circle cx="10" cy="7" r="1.5"/>
-                    <circle cx="14" cy="7" r="1.5"/>
-                    <circle cx="17.5" cy="10" r="1.5"/>
-                </svg>
-            `;
-
-            const bubble = document.createElement("div");
-            bubble.className =
-                "min-w-0 max-w-[92%] rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm sm:max-w-xl";
-
-            const text = document.createElement("div");
-            text.className = "message-text text-sm text-slate-700";
-            text.textContent = message || "";
-
-            bubble.appendChild(text);
-            wrapper.append(icon, bubble);
-            chatMessages.appendChild(wrapper);
-
-            scrollChatToBottom();
-        }
-
-        function createThinkingBubble(isImage) {
-            const loadingBubble = document.createElement("div");
-            loadingBubble.id = "thinking-bubble";
-            loadingBubble.className = "flex min-w-0 items-start gap-3";
-
-            const icon = document.createElement("div");
-            icon.className =
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
-
-            icon.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                    fill="currentColor" class="h-4 w-4 text-amber-600">
-                    <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
-                    <circle cx="6.5" cy="10" r="1.5"/>
-                    <circle cx="10" cy="7" r="1.5"/>
-                    <circle cx="14" cy="7" r="1.5"/>
-                    <circle cx="17.5" cy="10" r="1.5"/>
-                </svg>
-            `;
-
-            const bubble = document.createElement("div");
-            bubble.className =
-                "min-w-0 rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm";
-
-            const row = document.createElement("div");
-            row.className = "flex flex-wrap items-center gap-3";
-
-            const label = document.createElement("span");
-            label.className = "text-sm text-slate-500";
-            label.textContent = isImage ? "Analyzing image..." : "Thinking...";
-
-            const dots = document.createElement("div");
-            dots.className = "flex gap-1";
-
-            for (let index = 0; index < 3; index++) {
-                const dot = document.createElement("span");
-                dot.className = "h-2 w-2 rounded-full bg-amber-500 animate-bounce";
-                dot.style.animationDelay = (index * 0.2) + "s";
-                dots.appendChild(dot);
-            }
-
-            row.append(label, dots);
-            bubble.appendChild(row);
-            loadingBubble.append(icon, bubble);
-
-            return loadingBubble;
-        }
-
-        // =====================================================
-        // BREED PERCENTAGE CHART
-        // =====================================================
-
-        function addBreedPercentageChart(imageAnalysis) {
-            if (
-                !imageAnalysis ||
-                !Array.isArray(imageAnalysis.breed_percentages) ||
-                imageAnalysis.dog_visible === false
-            ) {
+            if (!blob) {
+                showCameraError("The image could not be captured. Please try again.");
                 return;
             }
 
-            const breeds = imageAnalysis.breed_percentages.filter(function(item) {
-                if (!item || typeof item.breed !== "string") {
-                    return false;
+            if (blob.size > 10 * 1024 * 1024) {
+                showCameraError("The captured image is too large. Please try again.");
+                return;
+            }
+
+            const file = new File(
+                [blob],
+                "pet-photo-" + Date.now() + ".jpg",
+                {
+                    type: "image/jpeg",
+                    lastModified: Date.now()
                 }
-
-                const percentage = Number(item.percentage);
-
-                return (
-                    item.breed.trim() !== "" &&
-                    Number.isFinite(percentage) &&
-                    percentage >= 0 &&
-                    percentage <= 100
-                );
-            });
-
-            if (breeds.length === 0) return;
-
-            const chatMessages = document.getElementById("chat-messages");
-            if (!chatMessages) return;
-
-            const wrapper = document.createElement("div");
-            wrapper.className = "flex min-w-0 items-start gap-3";
-
-            const spacer = document.createElement("div");
-            spacer.className = "w-8 shrink-0";
-
-            const card = document.createElement("div");
-            card.className =
-                "w-full min-w-0 max-w-xl rounded-2xl border border-amber-100 bg-white p-4 shadow-sm sm:p-5";
-
-            const heading = document.createElement("h3");
-            heading.className = "text-base font-bold text-slate-800";
-            heading.textContent = "Dog Breed Identification";
-
-            const subtitle = document.createElement("p");
-            subtitle.className = "mt-1 text-xs leading-relaxed text-slate-500";
-            subtitle.textContent =
-                "Estimated breed resemblance based on the uploaded photograph.";
-
-            const chart = document.createElement("div");
-            chart.className = "mt-5 space-y-5";
-
-            breeds.forEach(function(item) {
-                const percentage = Number(item.percentage);
-
-                const row = document.createElement("div");
-                row.className = "space-y-2";
-
-                const labelRow = document.createElement("div");
-                labelRow.className = "flex items-start justify-between gap-3";
-
-                const name = document.createElement("p");
-                name.className = "break-words text-sm font-semibold text-slate-700";
-                name.textContent = item.breed;
-
-                const value = document.createElement("span");
-                value.className =
-                    "shrink-0 text-sm font-bold tabular-nums text-amber-700";
-                value.textContent = percentage + "%";
-
-                labelRow.append(name, value);
-
-                const track = document.createElement("div");
-                track.className = "h-3 w-full overflow-hidden rounded-full bg-slate-100";
-                track.setAttribute("role", "progressbar");
-                track.setAttribute("aria-label", item.breed);
-                track.setAttribute("aria-valuemin", "0");
-                track.setAttribute("aria-valuemax", "100");
-                track.setAttribute("aria-valuenow", String(percentage));
-
-                const bar = document.createElement("div");
-                bar.className =
-                    "h-full rounded-full bg-amber-500 transition-all duration-700";
-                bar.style.width = percentage + "%";
-
-                track.appendChild(bar);
-                row.append(labelRow, track);
-
-                if (typeof item.evidence === "string" && item.evidence.trim()) {
-                    const evidence = document.createElement("p");
-                    evidence.className = "text-xs leading-relaxed text-slate-500";
-                    evidence.textContent = item.evidence;
-                    row.appendChild(evidence);
-                }
-
-                chart.appendChild(row);
-            });
-
-            const disclaimer = document.createElement("div");
-            disclaimer.className =
-                "mt-5 rounded-xl border border-amber-100 bg-amber-50 p-3";
-
-            const disclaimerTitle = document.createElement("p");
-            disclaimerTitle.className = "text-xs font-semibold text-amber-900";
-            disclaimerTitle.textContent = "About these percentages";
-
-            const disclaimerText = document.createElement("p");
-            disclaimerText.className = "mt-1 text-xs leading-relaxed text-amber-800";
-            disclaimerText.textContent =
-                "These percentages estimate visual breed resemblance. They are not confirmed genetic ancestry or DNA test results.";
-
-            disclaimer.append(disclaimerTitle, disclaimerText);
-            card.append(heading, subtitle, chart, disclaimer);
-            wrapper.append(spacer, card);
-            chatMessages.appendChild(wrapper);
-
-            scrollChatToBottom();
-        }
-
-        // =====================================================
-        // SEND MESSAGE TO DJANGO
-        // =====================================================
-
-        async function handleSend(event) {
-            event.preventDefault();
-
-            if (isSending) return;
-
-            const input = document.getElementById("chat-input");
-            const imageInput = document.getElementById("image-file-input");
-            const chatMessages = document.getElementById("chat-messages");
-            const submitButton = document.getElementById("send-button");
-
-            if (!input || !chatMessages || !submitButton) {
-                console.error("Required chat elements were not found.");
-                return;
-            }
-
-            const messageText = input.value.trim();
-            const imageFile = imageInput && imageInput.files
-                ? imageInput.files[0]
-                : null;
-
-            if (!messageText && !imageFile) {
-                input.focus();
-                return;
-            }
-
-            const csrfInput = document.querySelector(
-                "#chat-form [name=csrfmiddlewaretoken]"
             );
 
-            if (!csrfInput) {
-                addAssistantMessage(
-                    "Unable to send your message because the security token is missing. Refresh the page and try again."
-                );
+            const fileInput = document.getElementById("image-file-input");
+
+            if (!fileInput) {
+                showCameraError("The image upload field could not be found.");
                 return;
             }
 
-            const csrfToken = csrfInput.value;
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            fileInput.files = transfer.files;
 
-            isSending = true;
-            submitButton.disabled = true;
-            submitButton.classList.add("opacity-50", "cursor-not-allowed");
+            previewFile();
+            closeCamera();
 
-            removeWelcomeMessage();
-            addUserMessage(messageText, imageFile);
+            document.getElementById("chat-input")?.focus();
 
-            const loadingBubble = createThinkingBubble(Boolean(imageFile));
-            chatMessages.appendChild(loadingBubble);
-            scrollChatToBottom();
+        }, "image/jpeg", 0.90);
+    }
 
-            const formData = new FormData();
-            formData.append("message", messageText);
+    async function closeCamera() {
+        const modal = document.getElementById("camera-modal");
+        const starting = document.getElementById("camera-starting");
+        const captureButton = document.getElementById("capture-camera-button");
+        const switchButton = document.getElementById("switch-camera-button");
 
-            if (imageFile) {
-                formData.append("image", imageFile);
-            }
+        await stopCameraStream();
 
-            try {
-                const response = await fetch(
-                    `/customer/chat/${SESSION_ID}/send/`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrfToken
-                        },
-                        body: formData,
-                        credentials: "same-origin"
-                    }
-                );
-
-                let data;
-
-                try {
-                    data = await response.json();
-                } catch (jsonError) {
-                    throw new Error(
-                        "The server returned an invalid response. Check your Django logs."
-                    );
-                }
-
-                loadingBubble.remove();
-
-                if (!response.ok || !data.success) {
-                    addAssistantMessage(
-                        data.error ||
-                        "I couldn't process your request. Please try again."
-                    );
-                    return;
-                }
-
-                if (data.response) {
-                    addAssistantMessage(data.response);
-                } else {
-                    addAssistantMessage(
-                        "I received your request, but the assistant did not return a response."
-                    );
-                }
-
-                if (data.type === "image" && data.image_analysis) {
-                    addBreedPercentageChart(data.image_analysis);
-                }
-
-                if (data.emergency) {
-                    console.log("Emergency detected.");
-                    console.log("Risk level:", data.risk_level);
-                    console.log("SMS sent:", data.sms_sent);
-                }
-
-                if (data.needs_more_information && data.follow_up_question) {
-                    console.log("Follow-up question:", data.follow_up_question);
-                }
-
-            } catch (error) {
-                console.error("CHAT ERROR:", error);
-
-                if (loadingBubble.isConnected) {
-                    loadingBubble.remove();
-                }
-
-                addAssistantMessage(
-                    error.message ||
-                    "I couldn't connect to the AI assistant. Please try again."
-                );
-
-            } finally {
-                input.value = "";
-                input.style.height = "auto";
-
-                clearImage();
-
-                isSending = false;
-                submitButton.disabled = false;
-
-                submitButton.classList.remove(
-                    "opacity-50",
-                    "cursor-not-allowed"
-                );
-
-                input.focus();
-                scrollChatToBottom();
-            }
-        }
-
-        // =====================================================
-        // ENTER TO SEND; SHIFT+ENTER FOR NEW LINE
-        // =====================================================
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const input = document.getElementById("chat-input");
-            const chatForm = document.getElementById("chat-form");
-
-            if (input && chatForm) {
-                input.addEventListener("keydown", function(event) {
-                    if (
-                        event.key === "Enter" &&
-                        !event.shiftKey &&
-                        !event.isComposing
-                    ) {
-                        event.preventDefault();
-                        chatForm.requestSubmit();
-                    }
-                });
-            }
-
-            scrollChatToBottom();
-        });
-
-        // =====================================================
-        // KEYBOARD HANDLING
-        // =====================================================
-
-        document.addEventListener("keydown", function(event) {
-            const cameraModal = document.getElementById("camera-modal");
-            const contactModal = document.getElementById("contact-modal");
-
-            if (
-                event.key === "Escape" &&
-                cameraModal &&
-                !cameraModal.classList.contains("hidden")
-            ) {
-                closeCamera();
-                return;
-            }
-
-            if (
-                event.key === "Escape" &&
-                contactModal &&
-                !contactModal.classList.contains("hidden")
-            ) {
-                closeContactModal();
-                return;
-            }
-
-            if (
-                event.key === "Escape" &&
-                window.innerWidth < 1024
-            ) {
-                closeMobileSidebar();
-            }
-        });
-
-        // =====================================================
-        // PAGE LIFECYCLE
-        // =====================================================
-
-        window.addEventListener("pagehide", function() {
-            if (cameraStream) {
-                cameraStream.getTracks().forEach(function(track) {
-                    track.stop();
-                });
-
-                cameraStream = null;
-            }
-        });
-
-        // =====================================================
-        // CONTACT US MODAL
-        // =====================================================
-
-        function openContactModal() {
-            const modal = document.getElementById("contact-modal");
-
-            if (!modal) return;
-
-            closeMobileSidebar();
-
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-
-            document.body.style.overflow = "hidden";
-        }
-
-        function closeContactModal() {
-            const modal = document.getElementById("contact-modal");
-
-            if (!modal) return;
-
+        if (modal) {
             modal.classList.add("hidden");
             modal.classList.remove("flex");
+        }
 
+        if (starting) starting.classList.remove("hidden");
+        if (captureButton) captureButton.disabled = true;
+        if (switchButton) switchButton.classList.add("hidden");
+
+        // Keep scrolling locked if Contact Us is still open.
+        const contactModal = document.getElementById("contact-modal");
+
+        if (
+            !contactModal ||
+            !contactModal.classList.contains("contact-modal-open")
+        ) {
             document.body.style.overflow = "";
         }
-    </script>
+    }
+
+    // =====================================================
+    // CHAT HELPERS
+    // =====================================================
+
+    function scrollChatToBottom() {
+        const chatMessages = document.getElementById("chat-messages");
+
+        if (!chatMessages) return;
+
+        requestAnimationFrame(function() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    }
+
+    function removeWelcomeMessage() {
+        const welcome = document.getElementById("welcome-message");
+
+        if (welcome) {
+            welcome.remove();
+        }
+    }
+
+    function addUserMessage(message, imageFile = null) {
+        const chatMessages = document.getElementById("chat-messages");
+
+        if (!chatMessages) return;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex min-w-0 justify-end";
+
+        const bubble = document.createElement("div");
+        bubble.className =
+            "max-w-[92%] rounded-2xl bg-amber-600 px-4 py-3 text-white shadow-sm sm:max-w-xl";
+
+        if (imageFile) {
+            const image = document.createElement("img");
+
+            image.src = URL.createObjectURL(imageFile);
+            image.className =
+                "mb-3 max-h-80 max-w-full rounded-xl border border-amber-100 object-contain";
+            image.alt = "Uploaded pet photo";
+
+            bubble.appendChild(image);
+        }
+
+        if (message) {
+            const text = document.createElement("div");
+
+            text.className = "message-text text-sm";
+            text.textContent = message;
+
+            bubble.appendChild(text);
+        }
+
+        wrapper.appendChild(bubble);
+        chatMessages.appendChild(wrapper);
+
+        scrollChatToBottom();
+    }
+
+    function addAssistantMessage(message) {
+        const chatMessages = document.getElementById("chat-messages");
+
+        if (!chatMessages) return;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex min-w-0 items-start gap-3";
+
+        const icon = document.createElement("div");
+        icon.className =
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
+
+        icon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor" class="h-4 w-4 text-amber-600">
+                <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
+                <circle cx="6.5" cy="10" r="1.5"/>
+                <circle cx="10" cy="7" r="1.5"/>
+                <circle cx="14" cy="7" r="1.5"/>
+                <circle cx="17.5" cy="10" r="1.5"/>
+            </svg>
+        `;
+
+        const bubble = document.createElement("div");
+        bubble.className =
+            "min-w-0 max-w-[92%] rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm sm:max-w-xl";
+
+        const text = document.createElement("div");
+        text.className = "message-text text-sm text-slate-700";
+        text.textContent = message || "";
+
+        bubble.appendChild(text);
+        wrapper.append(icon, bubble);
+        chatMessages.appendChild(wrapper);
+
+        scrollChatToBottom();
+    }
+
+    function createThinkingBubble(isImage) {
+        const loadingBubble = document.createElement("div");
+
+        loadingBubble.id = "thinking-bubble";
+        loadingBubble.className = "flex min-w-0 items-start gap-3";
+
+        const icon = document.createElement("div");
+        icon.className =
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
+
+        icon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor" class="h-4 w-4 text-amber-600">
+                <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
+                <circle cx="6.5" cy="10" r="1.5"/>
+                <circle cx="10" cy="7" r="1.5"/>
+                <circle cx="14" cy="7" r="1.5"/>
+                <circle cx="17.5" cy="10" r="1.5"/>
+            </svg>
+        `;
+
+        const bubble = document.createElement("div");
+        bubble.className =
+            "min-w-0 rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm";
+
+        const row = document.createElement("div");
+        row.className = "flex flex-wrap items-center gap-3";
+
+        const label = document.createElement("span");
+        label.className = "text-sm text-slate-500";
+        label.textContent = isImage ? "Analyzing image..." : "Thinking...";
+
+        const dots = document.createElement("div");
+        dots.className = "flex gap-1";
+
+        for (let index = 0; index < 3; index++) {
+            const dot = document.createElement("span");
+
+            dot.className = "h-2 w-2 rounded-full bg-amber-500 animate-bounce";
+            dot.style.animationDelay = (index * 0.2) + "s";
+
+            dots.appendChild(dot);
+        }
+
+        row.append(label, dots);
+        bubble.appendChild(row);
+        loadingBubble.append(icon, bubble);
+
+        return loadingBubble;
+    }
+
+    // =====================================================
+    // BREED PERCENTAGE CHART
+    // =====================================================
+
+    function addBreedPercentageChart(imageAnalysis) {
+        if (
+            !imageAnalysis ||
+            !Array.isArray(imageAnalysis.breed_percentages) ||
+            imageAnalysis.dog_visible === false
+        ) {
+            return;
+        }
+
+        const breeds = imageAnalysis.breed_percentages.filter(function(item) {
+            if (!item || typeof item.breed !== "string") {
+                return false;
+            }
+
+            const percentage = Number(item.percentage);
+
+            return (
+                item.breed.trim() !== "" &&
+                Number.isFinite(percentage) &&
+                percentage >= 0 &&
+                percentage <= 100
+            );
+        });
+
+        if (breeds.length === 0) return;
+
+        const chatMessages = document.getElementById("chat-messages");
+
+        if (!chatMessages) return;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex min-w-0 items-start gap-3";
+
+        const spacer = document.createElement("div");
+        spacer.className = "w-8 shrink-0";
+
+        const card = document.createElement("div");
+        card.className =
+            "w-full min-w-0 max-w-xl rounded-2xl border border-amber-100 bg-white p-4 shadow-sm sm:p-5";
+
+        const heading = document.createElement("h3");
+        heading.className = "text-base font-bold text-slate-800";
+        heading.textContent = "Dog Breed Identification";
+
+        const subtitle = document.createElement("p");
+        subtitle.className = "mt-1 text-xs leading-relaxed text-slate-500";
+        subtitle.textContent =
+            "Estimated breed resemblance based on the uploaded photograph.";
+
+        const chart = document.createElement("div");
+        chart.className = "mt-5 space-y-5";
+
+        breeds.forEach(function(item) {
+            const percentage = Number(item.percentage);
+
+            const row = document.createElement("div");
+            row.className = "space-y-2";
+
+            const labelRow = document.createElement("div");
+            labelRow.className = "flex items-start justify-between gap-3";
+
+            const name = document.createElement("p");
+            name.className = "break-words text-sm font-semibold text-slate-700";
+            name.textContent = item.breed;
+
+            const value = document.createElement("span");
+            value.className =
+                "shrink-0 text-sm font-bold tabular-nums text-amber-700";
+            value.textContent = percentage + "%";
+
+            labelRow.append(name, value);
+
+            const track = document.createElement("div");
+            track.className = "h-3 w-full overflow-hidden rounded-full bg-slate-100";
+
+            track.setAttribute("role", "progressbar");
+            track.setAttribute("aria-label", item.breed);
+            track.setAttribute("aria-valuemin", "0");
+            track.setAttribute("aria-valuemax", "100");
+            track.setAttribute("aria-valuenow", String(percentage));
+
+            const bar = document.createElement("div");
+            bar.className =
+                "h-full rounded-full bg-amber-500 transition-all duration-700";
+            bar.style.width = percentage + "%";
+
+            track.appendChild(bar);
+            row.append(labelRow, track);
+
+            if (typeof item.evidence === "string" && item.evidence.trim()) {
+                const evidence = document.createElement("p");
+
+                evidence.className = "text-xs leading-relaxed text-slate-500";
+                evidence.textContent = item.evidence;
+
+                row.appendChild(evidence);
+            }
+
+            chart.appendChild(row);
+        });
+
+        const disclaimer = document.createElement("div");
+        disclaimer.className =
+            "mt-5 rounded-xl border border-amber-100 bg-amber-50 p-3";
+
+        const disclaimerTitle = document.createElement("p");
+        disclaimerTitle.className = "text-xs font-semibold text-amber-900";
+        disclaimerTitle.textContent = "About these percentages";
+
+        const disclaimerText = document.createElement("p");
+        disclaimerText.className = "mt-1 text-xs leading-relaxed text-amber-800";
+        disclaimerText.textContent =
+            "These percentages estimate visual breed resemblance. They are not confirmed genetic ancestry or DNA test results.";
+
+        disclaimer.append(disclaimerTitle, disclaimerText);
+        card.append(heading, subtitle, chart, disclaimer);
+        wrapper.append(spacer, card);
+
+        chatMessages.appendChild(wrapper);
+
+        scrollChatToBottom();
+    }
+
+    // =====================================================
+    // SEND MESSAGE TO DJANGO
+    // =====================================================
+
+    async function handleSend(event) {
+        event.preventDefault();
+
+        if (isSending) return;
+
+        const input = document.getElementById("chat-input");
+        const imageInput = document.getElementById("image-file-input");
+        const chatMessages = document.getElementById("chat-messages");
+        const submitButton = document.getElementById("send-button");
+
+        if (!input || !chatMessages || !submitButton) {
+            console.error("Required chat elements were not found.");
+            return;
+        }
+
+        const messageText = input.value.trim();
+
+        const imageFile = imageInput && imageInput.files
+            ? imageInput.files[0]
+            : null;
+
+        if (!messageText && !imageFile) {
+            input.focus();
+            return;
+        }
+
+        const csrfInput = document.querySelector(
+            "#chat-form [name=csrfmiddlewaretoken]"
+        );
+
+        if (!csrfInput) {
+            addAssistantMessage(
+                "Unable to send your message because the security token is missing. Refresh the page and try again."
+            );
+            return;
+        }
+
+        const csrfToken = csrfInput.value;
+
+        isSending = true;
+
+        submitButton.disabled = true;
+        submitButton.classList.add("opacity-50", "cursor-not-allowed");
+
+        removeWelcomeMessage();
+        addUserMessage(messageText, imageFile);
+
+        const loadingBubble = createThinkingBubble(Boolean(imageFile));
+
+        chatMessages.appendChild(loadingBubble);
+        scrollChatToBottom();
+
+        const formData = new FormData();
+
+        formData.append("message", messageText);
+
+        if (imageFile) {
+            formData.append("image", imageFile);
+        }
+
+        try {
+            const response = await fetch(
+                `/customer/chat/${SESSION_ID}/send/`,
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: formData,
+                    credentials: "same-origin"
+                }
+            );
+
+            let data;
+
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                throw new Error(
+                    "The server returned an invalid response. Check your Django logs."
+                );
+            }
+
+            loadingBubble.remove();
+
+            if (!response.ok || !data.success) {
+                addAssistantMessage(
+                    data.error ||
+                    "I couldn't process your request. Please try again."
+                );
+                return;
+            }
+
+            if (data.response) {
+                addAssistantMessage(data.response);
+            } else {
+                addAssistantMessage(
+                    "I received your request, but the assistant did not return a response."
+                );
+            }
+
+            if (data.type === "image" && data.image_analysis) {
+                addBreedPercentageChart(data.image_analysis);
+            }
+
+            if (data.emergency) {
+                console.log("Emergency detected.");
+                console.log("Risk level:", data.risk_level);
+                console.log("SMS sent:", data.sms_sent);
+            }
+
+            if (data.needs_more_information && data.follow_up_question) {
+                console.log("Follow-up question:", data.follow_up_question);
+            }
+
+        } catch (error) {
+            console.error("CHAT ERROR:", error);
+
+            if (loadingBubble.isConnected) {
+                loadingBubble.remove();
+            }
+
+            addAssistantMessage(
+                error.message ||
+                "I couldn't connect to the AI assistant. Please try again."
+            );
+
+        } finally {
+            input.value = "";
+            input.style.height = "auto";
+
+            clearImage();
+
+            isSending = false;
+            submitButton.disabled = false;
+
+            submitButton.classList.remove(
+                "opacity-50",
+                "cursor-not-allowed"
+            );
+
+            input.focus();
+            scrollChatToBottom();
+        }
+    }
+
+    // =====================================================
+    // ENTER TO SEND; SHIFT+ENTER FOR NEW LINE
+    // =====================================================
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const input = document.getElementById("chat-input");
+        const chatForm = document.getElementById("chat-form");
+
+        if (input && chatForm) {
+            input.addEventListener("keydown", function(event) {
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    !event.isComposing
+                ) {
+                    event.preventDefault();
+                    chatForm.requestSubmit();
+                }
+            });
+        }
+
+        scrollChatToBottom();
+    });
+
+    // =====================================================
+    // CONTACT US MODAL
+    // =====================================================
+
+    function openContactModal() {
+        const modal = document.getElementById("contact-modal");
+
+        if (!modal) {
+            console.error("Contact modal not found.");
+            return;
+        }
+
+        if (modal.classList.contains("contact-modal-open")) {
+            return;
+        }
+
+        previousContactFocus = document.activeElement;
+
+        // Close mobile sidebar before opening the modal.
+        closeMobileSidebar();
+
+        // Open using the CSS class defined in the stylesheet.
+        modal.classList.add("contact-modal-open");
+        modal.setAttribute("aria-hidden", "false");
+
+        document.body.style.overflow = "hidden";
+
+        const closeButton = modal.querySelector(
+            'button[aria-label="Close contact dialog"]'
+        );
+
+        if (closeButton) {
+            requestAnimationFrame(function() {
+                closeButton.focus();
+            });
+        }
+    }
+
+    function closeContactModal() {
+        const modal = document.getElementById("contact-modal");
+
+        if (!modal) return;
+
+        modal.classList.remove("contact-modal-open");
+        modal.setAttribute("aria-hidden", "true");
+
+        document.body.style.overflow = "";
+
+        // On mobile, focus the sidebar opener rather than
+        // an element inside the now-hidden sidebar.
+        if (
+            window.innerWidth < 1024 &&
+            previousContactFocus &&
+            previousContactFocus.closest("#sidebar")
+        ) {
+            const sidebarOpenButton = document.getElementById(
+                "sidebar-open-button"
+            );
+
+            if (sidebarOpenButton) {
+                sidebarOpenButton.focus();
+            }
+        } else if (
+            previousContactFocus &&
+            typeof previousContactFocus.focus === "function"
+        ) {
+            previousContactFocus.focus();
+        }
+
+        previousContactFocus = null;
+    }
+
+    // =====================================================
+    // KEYBOARD HANDLING
+    // =====================================================
+
+    document.addEventListener("keydown", function(event) {
+        if (event.key !== "Escape") return;
+
+        const contactModal = document.getElementById("contact-modal");
+        const cameraModal = document.getElementById("camera-modal");
+
+        // Contact modal has priority.
+        if (
+            contactModal &&
+            contactModal.classList.contains("contact-modal-open")
+        ) {
+            event.preventDefault();
+            closeContactModal();
+            return;
+        }
+
+        // Close camera.
+        if (
+            cameraModal &&
+            !cameraModal.classList.contains("hidden")
+        ) {
+            event.preventDefault();
+            closeCamera();
+            return;
+        }
+
+        // Close mobile sidebar.
+        if (window.innerWidth < 1024) {
+            closeMobileSidebar();
+        }
+    });
+
+    // =====================================================
+    // CONTACT MODAL FOCUS TRAP
+    // =====================================================
+
+    document.addEventListener("keydown", function(event) {
+        if (event.key !== "Tab") return;
+
+        const modal = document.getElementById("contact-modal");
+
+        if (
+            !modal ||
+            !modal.classList.contains("contact-modal-open")
+        ) {
+            return;
+        }
+
+        const focusableElements = modal.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+
+        const focusable = Array.from(focusableElements).filter(function(element) {
+            return element.offsetWidth > 0 || element.offsetHeight > 0;
+        });
+
+        if (focusable.length === 0) {
+            event.preventDefault();
+            return;
+        }
+
+        const firstElement = focusable[0];
+        const lastElement = focusable[focusable.length - 1];
+
+        if (
+            event.shiftKey &&
+            document.activeElement === firstElement
+        ) {
+            event.preventDefault();
+            lastElement.focus();
+        } else if (
+            !event.shiftKey &&
+            document.activeElement === lastElement
+        ) {
+            event.preventDefault();
+            firstElement.focus();
+        }
+    });
+
+    // =====================================================
+    // PAGE LIFECYCLE
+    // =====================================================
+
+    window.addEventListener("pagehide", function() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(track) {
+                track.stop();
+            });
+
+            cameraStream = null;
+        }
+    });
+
+    // =====================================================
+    // GLOBAL FUNCTIONS FOR HTML ONCLICK HANDLERS
+    // =====================================================
+
+    window.toggleSidebar = toggleSidebar;
+    window.toggleDesktopSidebar = toggleDesktopSidebar;
+    window.closeMobileSidebar = closeMobileSidebar;
+
+    window.adjustHeight = adjustHeight;
+    window.fillPrompt = fillPrompt;
+
+    window.previewFile = previewFile;
+    window.clearImage = clearImage;
+
+    window.openCamera = openCamera;
+    window.switchCamera = switchCamera;
+    window.captureCameraPhoto = captureCameraPhoto;
+    window.closeCamera = closeCamera;
+
+    window.handleSend = handleSend;
+
+    window.openContactModal = openContactModal;
+    window.closeContactModal = closeContactModal;
+
+</script>
+
 
 </body>
 </html>

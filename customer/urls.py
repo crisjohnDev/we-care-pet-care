@@ -69,4 +69,5 @@ urlpatterns = [
         views.delete_dog,
         name="delete-dog",
     ),
+path("contact/", views.contact_us, name="contact_us"),
 ]

@@ -177,6 +177,10 @@ VETERINARY_CLINIC_ADDRESS = (
     "Purok 2, Caratagan, Pio Duran, Albay, Philippines"
 )
 
+@login_required
+def contact_us(request):
+    return render(request, "pages/contact_us.html")
+
 
 
 
