@@ -17,12 +17,17 @@
     >
 
 
+
 <style>
     :root {
         --pet-cream: #FAF6F0;
         --pet-amber: #d97706;
         --pet-border: #f3e8d7;
     }
+
+    /* =====================================================
+       GLOBAL RESET
+    ===================================================== */
 
     * {
         box-sizing: border-box;
@@ -70,6 +75,10 @@
         min-width: 0;
     }
 
+    /* =====================================================
+       CUSTOM SCROLLBAR
+    ===================================================== */
+
     .custom-scrollbar {
         scrollbar-width: thin;
         scrollbar-color: #e6dcce transparent;
@@ -93,6 +102,10 @@
         background: #cbd5e1;
     }
 
+    /* =====================================================
+       CHAT MESSAGES
+    ===================================================== */
+
     #chat-messages {
         scroll-behavior: smooth;
         overflow-wrap: anywhere;
@@ -105,83 +118,151 @@
         word-break: break-word;
     }
 
-    /* SIDEBAR */
+    /* =====================================================
+       SIDEBAR - BASE
+    ===================================================== */
+
     #sidebar {
         height: 100%;
         height: 100dvh;
         overscroll-behavior: contain;
         padding-bottom: env(safe-area-inset-bottom);
-        will-change: transform, width;
+        will-change: transform, width, flex-basis;
+        z-index: 9999;
     }
 
     #sidebar-overlay {
         -webkit-tap-highlight-color: transparent;
-        transition: opacity 300ms ease;
+        transition:
+            opacity 300ms ease,
+            visibility 300ms ease;
+        z-index: 9998;
     }
 
-    /* Desktop toggle visibility is controlled explicitly by CSS. */
+    /* Desktop toggle button hidden by default */
     .desktop-sidebar-toggle {
         display: none !important;
         align-items: center;
         justify-content: center;
     }
 
-    @media (min-width: 1024px) {
-        .desktop-sidebar-toggle {
-            display: inline-flex !important;
-        }
-    }
+    /* =====================================================
+       MOBILE SIDEBAR - DRAWER
+    ===================================================== */
 
     @media (max-width: 1023px) {
+
         #sidebar {
             position: fixed !important;
             top: 0 !important;
             bottom: 0 !important;
             left: 0 !important;
-            z-index: 50 !important;
+            right: auto !important;
+
+            display: flex !important;
             width: min(18rem, 85vw) !important;
+            min-width: 0 !important;
+            max-width: 85vw !important;
+            height: 100vh !important;
             height: 100dvh !important;
-            transform: translateX(-100%);
-            transition: transform 300ms ease-in-out;
+            flex: 0 0 min(18rem, 85vw) !important;
+
+            background-color: #fff !important;
+            z-index: 10001 !important;
+            isolation: isolate;
+
+            transform: translate3d(-105%, 0, 0) !important;
+            transition: transform 300ms ease-in-out !important;
+            visibility: visible !important;
+            pointer-events: none !important;
+
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
+        /* The open class is the single source of truth for drawer visibility. */
         #sidebar.sidebar-visible {
-            transform: translateX(0) !important;
+            transform: translate3d(0, 0, 0) !important;
+            pointer-events: auto !important;
         }
 
+        /* Overlay */
         #sidebar-overlay {
             position: fixed !important;
             inset: 0 !important;
-            z-index: 40 !important;
+
+            z-index: 10000 !important;
+            display: block;
+
+            background: rgba(0, 0, 0, 0.45);
+
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+
+            transition:
+                opacity 300ms ease,
+                visibility 300ms ease;
         }
 
-        /* Desktop collapse mode is disabled on mobile/tablet drawer layout. */
+        /* Overlay visible */
+        #sidebar-overlay.sidebar-overlay-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        /* Hide desktop toggle on mobile */
         #sidebar .desktop-sidebar-toggle {
             display: none !important;
         }
     }
 
+    /* =====================================================
+       DESKTOP SIDEBAR
+    ===================================================== */
+
     @media (min-width: 1024px) {
+
+        .desktop-sidebar-toggle {
+            display: inline-flex !important;
+        }
+
         #sidebar {
             position: relative !important;
-            width: 18rem;
-            min-width: 18rem;
+
+            width: 18rem !important;
+            min-width: 18rem !important;
             max-width: none !important;
-            flex: 0 0 18rem;
+
+            height: 100% !important;
+
+            flex: 0 0 18rem !important;
+
             transform: translateX(0) !important;
-            transition: width 250ms ease, min-width 250ms ease, flex-basis 250ms ease;
+
+            transition:
+                width 250ms ease,
+                min-width 250ms ease,
+                flex-basis 250ms ease;
+
+            overflow-x: hidden;
         }
 
+        /* Collapsed sidebar */
         #sidebar.sidebar-collapsed {
-            width: 5rem;
-            min-width: 5rem;
-            flex-basis: 5rem;
+            width: 5rem !important;
+            min-width: 5rem !important;
+            flex-basis: 5rem !important;
         }
 
+        /* Hide overlay on desktop */
         #sidebar-overlay {
             display: none !important;
         }
 
+        /* Hide text elements */
         #sidebar.sidebar-collapsed .sidebar-brand-text,
         #sidebar.sidebar-collapsed .sidebar-label,
         #sidebar.sidebar-collapsed .sidebar-section-title,
@@ -191,6 +272,7 @@
             display: none !important;
         }
 
+        /* Header */
         #sidebar.sidebar-collapsed .sidebar-header {
             justify-content: center;
             padding-left: 0.5rem;
@@ -201,6 +283,7 @@
             justify-content: center;
         }
 
+        /* New session button */
         #sidebar.sidebar-collapsed .sidebar-new-session-wrap {
             padding: 0.75rem;
         }
@@ -209,8 +292,10 @@
             min-height: 2.75rem;
             padding-left: 0.5rem;
             padding-right: 0.5rem;
+            justify-content: center;
         }
 
+        /* Chat list */
         #sidebar.sidebar-collapsed .sidebar-chat-list {
             padding-left: 0.5rem;
             padding-right: 0.5rem;
@@ -228,6 +313,7 @@
             padding: 0.5rem;
         }
 
+        /* Footer */
         #sidebar.sidebar-collapsed .sidebar-footer {
             padding-left: 0.5rem;
             padding-right: 0.5rem;
@@ -245,15 +331,21 @@
         }
     }
 
-    /* CAMERA */
+    /* =====================================================
+       CAMERA
+    ===================================================== */
+
     #camera-video {
         display: block;
         width: 100%;
         max-height: 60dvh;
         object-fit: contain;
         background: #000;
+
         touch-action: none;
+
         transform-origin: center center;
+
         user-select: none;
         -webkit-user-select: none;
         -webkit-user-drag: none;
@@ -275,6 +367,7 @@
         max-width: 42rem;
         max-height: 94dvh;
         margin: auto;
+
         display: flex;
         flex-direction: column;
     }
@@ -298,13 +391,16 @@
         display: flex !important;
     }
 
-    /* CONTACT US MODAL */
+    /* =====================================================
+       CONTACT US MODAL
+    ===================================================== */
+
     #contact-modal {
         position: fixed !important;
         inset: 0 !important;
-        z-index: 9999 !important;
 
-        /* Hidden by default */
+        z-index: 10000 !important;
+
         display: none !important;
 
         align-items: center;
@@ -323,11 +419,12 @@
 
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
+
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
     }
 
-    /* Open state controlled by JavaScript */
+    /* Open state */
     #contact-modal.contact-modal-open {
         display: flex !important;
     }
@@ -365,7 +462,10 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* INPUTS */
+    /* =====================================================
+       INPUTS
+    ===================================================== */
+
     input,
     textarea,
     select {
@@ -373,8 +473,13 @@
         min-width: 0;
     }
 
-    /* MOBILE */
+    /* =====================================================
+       MOBILE RESPONSIVE
+    ===================================================== */
+
     @media (max-width: 640px) {
+
+        /* Camera modal */
         #camera-modal {
             padding: 8px;
             align-items: flex-start;
@@ -389,6 +494,7 @@
             max-height: 42dvh;
         }
 
+        /* Contact modal */
         #contact-modal {
             align-items: flex-start;
             padding: 8px;
@@ -413,11 +519,13 @@
             font-size: 1rem;
         }
 
+        /* Buttons */
         #camera-modal .camera-controls button,
         #contact-modal button {
             min-height: 42px;
         }
 
+        /* Prevent iOS input zoom */
         input,
         textarea,
         select {
@@ -425,8 +533,31 @@
         }
     }
 
-    /* SHORT SCREENS */
+    /* =====================================================
+       TABLET RESPONSIVE
+    ===================================================== */
+
+    @media (min-width: 641px) and (max-width: 1023px) {
+
+        #sidebar {
+            width: min(20rem, 75vw) !important;
+        }
+
+        #camera-modal-card {
+            max-width: 38rem;
+        }
+
+        #contact-modal-card {
+            max-width: 30rem;
+        }
+    }
+
+    /* =====================================================
+       SHORT SCREENS
+    ===================================================== */
+
     @media (max-height: 600px) {
+
         #camera-modal-card,
         #contact-modal-card {
             max-height: 96dvh;
@@ -437,8 +568,12 @@
         }
     }
 
-    /* REDUCED MOTION */
+    /* =====================================================
+       REDUCED MOTION
+    ===================================================== */
+
     @media (prefers-reduced-motion: reduce) {
+
         *,
         *::before,
         *::after {
@@ -449,6 +584,7 @@
         }
     }
 </style>
+
 
 </head>
 
@@ -487,7 +623,7 @@
 
             <button
                 type="button"
-                onclick="toggleSidebar(false)"
+                onclick="window.toggleSidebar(false)"
                 class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 lg:hidden"
                 aria-label="Close sidebar"
             >
@@ -500,7 +636,7 @@
                 type="button"
                 id="desktop-sidebar-toggle"
                 class="desktop-sidebar-toggle rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-amber-700"
-                onclick="toggleDesktopSidebar()"
+                onclick="window.toggleDesktopSidebar()"
                 aria-label="Collapse sidebar"
                 title="Collapse sidebar"
                 aria-controls="sidebar"
@@ -687,7 +823,6 @@
     <!-- Mobile Sidebar Overlay -->
     <div
         id="sidebar-overlay"
-        onclick="toggleSidebar(false)"
         class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"
         aria-hidden="true"
     ></div>
@@ -701,7 +836,7 @@
 
             <button
                 type="button"
-                onclick="toggleSidebar()"
+                onclick="window.toggleSidebar()"
                 class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-700 transition hover:bg-amber-100"
                 aria-label="Open navigation"
                 aria-controls="sidebar"
@@ -969,1183 +1104,1454 @@
 
     <!-- JAVASCRIPT -->
 
-
-<script>
-    "use strict";
-
-    // =====================================================
-    // PREVENT WEBPAGE ZOOM WHILE USING THE CAMERA
-    // =====================================================
-
-    (function preventPageZoomDuringCamera() {
-        const cameraModal = document.getElementById("camera-modal");
-
-        if (!cameraModal) return;
-
-        cameraModal.addEventListener("touchmove", function(event) {
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
-
-        ["gesturestart", "gesturechange", "gestureend"].forEach(function(type) {
-            cameraModal.addEventListener(type, function(event) {
-                event.preventDefault();
-            }, { passive: false });
-        });
-
-        cameraModal.addEventListener("wheel", function(event) {
-            if (event.ctrlKey || event.metaKey) {
-                event.preventDefault();
-            }
-        }, { passive: false });
-    })();
-
-    // =====================================================
-    // GLOBAL VARIABLES
-    // =====================================================
-
-    const SESSION_ID = "{{ session.id|escapejs }}";
-
-    let cameraStream = null;
-    let currentFacingMode = "environment";
-    let cameraOpening = false;
-    let isSending = false;
-    let previousContactFocus = null;
-
-    // =====================================================
-    // SIDEBAR - DESKTOP COLLAPSE + MOBILE DRAWER
-    // =====================================================
-
-    const SIDEBAR_STORAGE_KEY = "weCareSidebarCollapsed";
-    const DESKTOP_BREAKPOINT = 1024;
-
-    function isDesktopSidebar() {
-        return window.matchMedia
-            ? window.matchMedia("(min-width: 1024px)").matches
-            : window.innerWidth >= DESKTOP_BREAKPOINT;
-    }
-
-    function setDesktopSidebarCollapsed(collapsed, savePreference = true) {
-        const sidebar = document.getElementById("sidebar");
-        const button = document.getElementById("desktop-sidebar-toggle");
-        const icon = document.getElementById("desktop-sidebar-icon");
-
-        if (!sidebar || !isDesktopSidebar()) return;
-
-        collapsed = Boolean(collapsed);
-        sidebar.classList.toggle("sidebar-collapsed", collapsed);
-
-        if (button) {
-            button.setAttribute("aria-expanded", String(!collapsed));
-            button.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
-            button.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
-        }
-
-        if (icon) {
-            icon.innerHTML = collapsed
-                ? '<path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>'
-                : '<path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>';
-        }
-
-        if (savePreference) {
-            try {
-                localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
-            } catch (error) {
-                console.warn("Unable to save sidebar preference:", error);
-            }
-        }
-    }
-
-    function toggleDesktopSidebar() {
-        if (!isDesktopSidebar()) return;
-        const sidebar = document.getElementById("sidebar");
-        if (!sidebar) return;
-
-        setDesktopSidebarCollapsed(
-            !sidebar.classList.contains("sidebar-collapsed")
-        );
-    }
-
-    function toggleSidebar(forceOpen) {
+    <script>
+(function () {
+    // Define the mobile sidebar function independently
+    // of the main dashboard script.
+    window.toggleSidebar = function (forceOpen) {
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("sidebar-overlay");
-        const openButton = document.getElementById("sidebar-open-button");
+        const button = document.getElementById("sidebar-open-button");
 
-        if (!sidebar || !overlay) return;
-
-        if (isDesktopSidebar()) {
-            sidebar.classList.remove("sidebar-visible");
-            overlay.classList.add("hidden");
-            document.body.style.overflow = "";
-            if (openButton) openButton.setAttribute("aria-expanded", "false");
+        if (!sidebar) {
+            console.error("Sidebar element #sidebar was not found.");
             return;
         }
 
-        const currentlyOpen = sidebar.classList.contains("sidebar-visible");
-        const shouldOpen = typeof forceOpen === "boolean"
-            ? forceOpen
-            : !currentlyOpen;
+        // Desktop: do not open the mobile drawer.
+        if (window.innerWidth >= 1024) {
+            sidebar.classList.remove("sidebar-visible");
+            if (overlay) {
+                overlay.classList.add("hidden");
+                overlay.classList.remove("sidebar-overlay-visible");
+            }
+            return;
+        }
+
+        const isOpen = sidebar.classList.contains("sidebar-visible");
+        const shouldOpen =
+            typeof forceOpen === "boolean" ? forceOpen : !isOpen;
 
         sidebar.classList.toggle("sidebar-visible", shouldOpen);
-        overlay.classList.toggle("hidden", !shouldOpen);
-        document.body.style.overflow = shouldOpen ? "hidden" : "";
 
-        if (openButton) {
-            openButton.setAttribute("aria-expanded", String(shouldOpen));
-            openButton.setAttribute(
-                "aria-label",
-                shouldOpen ? "Close navigation" : "Open navigation"
+        if (overlay) {
+            overlay.classList.toggle("hidden", !shouldOpen);
+            overlay.classList.toggle("sidebar-overlay-visible", shouldOpen);
+        }
+
+        if (button) {
+            button.setAttribute("aria-expanded", String(shouldOpen));
+        }
+
+        document.body.style.overflow = shouldOpen ? "hidden" : "";
+    };
+
+    console.log(
+        "Sidebar function registered:",
+        typeof window.toggleSidebar
+    );
+})();
+</script>
+
+<script>
+
+"use strict";
+
+// =====================================================
+// PREVENT WEBPAGE ZOOM WHILE USING THE CAMERA
+// =====================================================
+
+(function preventPageZoomDuringCamera() {
+    const cameraModal = document.getElementById("camera-modal");
+
+    if (!cameraModal) return;
+
+    cameraModal.addEventListener("touchmove", function(event) {
+        if (event.touches.length > 1) {
+            event.preventDefault();
+        }
+    }, { passive: false });
+
+    ["gesturestart", "gesturechange", "gestureend"].forEach(function(type) {
+        cameraModal.addEventListener(type, function(event) {
+            event.preventDefault();
+        }, { passive: false });
+    });
+
+    cameraModal.addEventListener("wheel", function(event) {
+        if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+        }
+    }, { passive: false });
+})();
+
+// =====================================================
+// GLOBAL VARIABLES
+// =====================================================
+
+const SESSION_ID = "{{ session.id|escapejs }}";
+
+let cameraStream = null;
+let currentFacingMode = "environment";
+let cameraOpening = false;
+let isSending = false;
+let previousContactFocus = null;
+
+const SIDEBAR_STORAGE_KEY = "weCareSidebarCollapsed";
+const DESKTOP_BREAKPOINT = 1024;
+
+// =====================================================
+// RESPONSIVE HELPERS
+// =====================================================
+
+function isDesktopSidebar() {
+    return window.matchMedia
+        ? window.matchMedia("(min-width: 1024px)").matches
+        : window.innerWidth >= DESKTOP_BREAKPOINT;
+}
+
+function isCameraOpen() {
+    const modal = document.getElementById("camera-modal");
+
+    return modal && !modal.classList.contains("hidden");
+}
+
+function isContactModalOpen() {
+    const modal = document.getElementById("contact-modal");
+
+    return modal && modal.classList.contains("contact-modal-open");
+}
+
+// Keep body scrolling locked whenever a drawer or modal is open.
+function updateBodyScrollLock() {
+    const sidebar = document.getElementById("sidebar");
+
+    const mobileSidebarOpen =
+        !isDesktopSidebar() &&
+        sidebar &&
+        sidebar.classList.contains("sidebar-visible");
+
+    const shouldLock =
+        Boolean(mobileSidebarOpen) ||
+        Boolean(isCameraOpen()) ||
+        Boolean(isContactModalOpen());
+
+    document.body.style.overflow = shouldLock ? "hidden" : "";
+}
+
+// =====================================================
+// SIDEBAR - DESKTOP COLLAPSE
+// =====================================================
+
+function setDesktopSidebarCollapsed(collapsed, savePreference = true) {
+    const sidebar = document.getElementById("sidebar");
+    const button = document.getElementById("desktop-sidebar-toggle");
+    const icon = document.getElementById("desktop-sidebar-icon");
+
+    if (!sidebar || !isDesktopSidebar()) return;
+
+    collapsed = Boolean(collapsed);
+
+    sidebar.classList.toggle("sidebar-collapsed", collapsed);
+
+    if (button) {
+        button.setAttribute("aria-expanded", String(!collapsed));
+        button.setAttribute(
+            "aria-label",
+            collapsed ? "Expand sidebar" : "Collapse sidebar"
+        );
+        button.title = collapsed ? "Expand sidebar" : "Collapse sidebar";
+    }
+
+    if (icon) {
+        icon.innerHTML = collapsed
+            ? '<path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>';
+    }
+
+    if (savePreference) {
+        try {
+            localStorage.setItem(
+                SIDEBAR_STORAGE_KEY,
+                String(collapsed)
             );
+        } catch (error) {
+            console.warn("Unable to save sidebar preference:", error);
         }
     }
+}
 
-    function closeMobileSidebar() {
-        if (!isDesktopSidebar()) toggleSidebar(false);
+function toggleDesktopSidebar() {
+    if (!isDesktopSidebar()) return;
+
+    const sidebar = document.getElementById("sidebar");
+
+    if (!sidebar) return;
+
+    const collapsed = sidebar.classList.contains("sidebar-collapsed");
+
+    setDesktopSidebarCollapsed(!collapsed);
+}
+
+// Expose the desktop toggle to HTML onclick handlers immediately.
+window.toggleDesktopSidebar = toggleDesktopSidebar;
+
+// =====================================================
+// SIDEBAR - MOBILE DRAWER
+// =====================================================
+
+function toggleSidebar(forceOpen) {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const openButton = document.getElementById("sidebar-open-button");
+
+    if (!sidebar) {
+        console.error("Sidebar element #sidebar was not found.");
+        return;
     }
 
-    function restoreSidebarPreference() {
-        const sidebar = document.getElementById("sidebar");
-        if (!sidebar) return;
+    // Desktop uses the width-collapse control, never the mobile drawer.
+    if (isDesktopSidebar()) {
+        sidebar.classList.remove("sidebar-visible");
+        sidebar.style.removeProperty("transform");
 
+        if (overlay) {
+            overlay.classList.add("hidden");
+            overlay.classList.remove("sidebar-overlay-visible");
+        }
+
+        if (openButton) {
+            openButton.setAttribute("aria-expanded", "false");
+        }
+
+        updateBodyScrollLock();
+        return;
+    }
+
+    const currentlyOpen = sidebar.classList.contains("sidebar-visible");
+    const shouldOpen = typeof forceOpen === "boolean"
+        ? forceOpen
+        : !currentlyOpen;
+
+    sidebar.classList.toggle("sidebar-visible", shouldOpen);
+
+    // Apply the transform directly as a fallback if another stylesheet
+    // overrides the drawer's transform rule.
+    sidebar.style.setProperty(
+        "transform",
+        shouldOpen ? "translate3d(0, 0, 0)" : "translate3d(-105%, 0, 0)",
+        "important"
+    );
+
+    if (overlay) {
+        overlay.classList.toggle("hidden", !shouldOpen);
+        overlay.classList.toggle("sidebar-overlay-visible", shouldOpen);
+        overlay.setAttribute("aria-hidden", String(!shouldOpen));
+    }
+
+    if (openButton) {
+        openButton.setAttribute("aria-expanded", String(shouldOpen));
+        openButton.setAttribute(
+            "aria-label",
+            shouldOpen ? "Close navigation" : "Open navigation"
+        );
+    }
+
+    updateBodyScrollLock();
+}
+
+// Expose the mobile drawer toggle immediately, before page initialization.
+window.toggleSidebar = toggleSidebar;
+
+function closeMobileSidebar() {
+    if (!isDesktopSidebar()) {
+        toggleSidebar(false);
+    }
+}
+
+window.closeMobileSidebar = closeMobileSidebar;
+
+// =====================================================
+// RESTORE SIDEBAR PREFERENCE
+// =====================================================
+
+function restoreSidebarPreference() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+
+    if (!sidebar) return;
+
+    let shouldCollapse = false;
+
+    try {
+        shouldCollapse =
+            localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+    } catch (error) {
+        console.warn("Unable to read sidebar preference:", error);
+    }
+
+    if (isDesktopSidebar()) {
+        setDesktopSidebarCollapsed(shouldCollapse, false);
+    } else {
+        sidebar.classList.remove(
+            "sidebar-collapsed",
+            "sidebar-visible"
+        );
+        sidebar.style.setProperty(
+            "transform",
+            "translate3d(-105%, 0, 0)",
+            "important"
+        );
+    }
+
+    if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("sidebar-overlay-visible");
+    }
+
+    updateBodyScrollLock();
+}
+
+// =====================================================
+// SIDEBAR EVENT LISTENERS
+// =====================================================
+
+restoreSidebarPreference();
+
+const sidebarOverlay = document.getElementById("sidebar-overlay");
+const sidebarOpenButton = document.getElementById("sidebar-open-button");
+
+if (sidebarOpenButton) {
+    sidebarOpenButton.addEventListener("click", function(event) {
+        event.preventDefault();
+        toggleSidebar();
+    });
+}
+
+if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", function(event) {
+        event.preventDefault();
+        closeMobileSidebar();
+    });
+}
+
+document.querySelectorAll("#sidebar a").forEach(function(link) {
+    link.addEventListener("click", function() {
+        closeMobileSidebar();
+    });
+});
+
+window.addEventListener("resize", function() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const openButton = document.getElementById("sidebar-open-button");
+
+    if (!sidebar) return;
+
+    // Close the mobile drawer when the viewport changes.
+    sidebar.classList.remove("sidebar-visible");
+
+    if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("sidebar-overlay-visible");
+    }
+
+    if (openButton) {
+        openButton.setAttribute("aria-expanded", "false");
+    }
+
+    if (isDesktopSidebar()) {
+        sidebar.style.removeProperty("transform");
         let shouldCollapse = false;
+
         try {
-            shouldCollapse = localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+            shouldCollapse =
+                localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
         } catch (error) {
             console.warn("Unable to read sidebar preference:", error);
         }
 
-        if (isDesktopSidebar()) {
-            setDesktopSidebarCollapsed(shouldCollapse, false);
-        } else {
-            sidebar.classList.remove("sidebar-collapsed", "sidebar-visible");
-        }
+        setDesktopSidebarCollapsed(shouldCollapse, false);
+    } else {
+        sidebar.classList.remove("sidebar-collapsed");
+        sidebar.style.setProperty(
+            "transform",
+            "translate3d(-105%, 0, 0)",
+            "important"
+        );
     }
 
-    // This script is placed after the page markup, so the sidebar exists now.
-    restoreSidebarPreference();
+    updateBodyScrollLock();
+});
 
-    window.addEventListener("resize", function() {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("sidebar-overlay");
-        const openButton = document.getElementById("sidebar-open-button");
-        if (!sidebar || !overlay) return;
+// =====================================================
+// TEXTAREA
+// =====================================================
 
-        sidebar.classList.remove("sidebar-visible");
-        overlay.classList.add("hidden");
-        if (openButton) openButton.setAttribute("aria-expanded", "false");
+function adjustHeight(element) {
+    if (!element) return;
 
-        if (isDesktopSidebar()) {
-            let shouldCollapse = false;
-            try {
-                shouldCollapse = localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
-            } catch (error) {
-                console.warn("Unable to read sidebar preference:", error);
-            }
-            setDesktopSidebarCollapsed(shouldCollapse, false);
-        } else {
-            sidebar.classList.remove("sidebar-collapsed");
-        }
+    element.style.height = "auto";
 
-        const contactModal = document.getElementById("contact-modal");
-        const cameraModal = document.getElementById("camera-modal");
-        const contactOpen = contactModal &&
-            contactModal.classList.contains("contact-modal-open");
-        const cameraOpen = cameraModal &&
-            !cameraModal.classList.contains("hidden");
+    element.style.height =
+        Math.min(element.scrollHeight, 144) + "px";
+}
 
-        document.body.style.overflow = contactOpen || cameraOpen ? "hidden" : "";
-    });
+function fillPrompt(text) {
+    const input = document.getElementById("chat-input");
 
-    document.querySelectorAll("#sidebar a").forEach(function(link) {
-        link.addEventListener("click", closeMobileSidebar);
-    });
+    if (!input) return;
 
-    // =====================================================
-    // TEXTAREA
-    // =====================================================
+    input.value = text;
+    input.focus();
 
-    function adjustHeight(element) {
-        if (!element) return;
+    adjustHeight(input);
+}
 
-        element.style.height = "auto";
-        element.style.height = Math.min(element.scrollHeight, 144) + "px";
+// =====================================================
+// IMAGE PREVIEW
+// =====================================================
+
+function previewFile() {
+    const fileInput = document.getElementById("image-file-input");
+    const previewContainer = document.getElementById("image-preview-container");
+    const previewImage = document.getElementById("image-preview");
+    const fileNameText = document.getElementById("file-name-text");
+
+    if (
+        !fileInput ||
+        !previewContainer ||
+        !previewImage ||
+        !fileNameText
+    ) {
+        return;
     }
 
-    function fillPrompt(text) {
-        const input = document.getElementById("chat-input");
+    const file = fileInput.files && fileInput.files[0];
 
-        if (!input) return;
-
-        input.value = text;
-        input.focus();
-
-        adjustHeight(input);
+    if (!file) {
+        clearImage();
+        return;
     }
 
-    // =====================================================
-    // IMAGE PREVIEW
-    // =====================================================
+    if (!file.type.startsWith("image/")) {
+        clearImage();
+        alert("Please select a valid image file.");
+        return;
+    }
 
-    function previewFile() {
-        const fileInput = document.getElementById("image-file-input");
-        const previewContainer = document.getElementById("image-preview-container");
-        const previewImage = document.getElementById("image-preview");
-        const fileNameText = document.getElementById("file-name-text");
+    if (file.size > 10 * 1024 * 1024) {
+        clearImage();
+        alert("Please select an image smaller than 10 MB.");
+        return;
+    }
 
-        if (!fileInput || !previewContainer || !previewImage || !fileNameText) {
-            return;
-        }
+    if (previewImage.dataset.objectUrl) {
+        URL.revokeObjectURL(previewImage.dataset.objectUrl);
+    }
 
-        const file = fileInput.files && fileInput.files[0];
+    const objectUrl = URL.createObjectURL(file);
 
-        if (!file) {
-            clearImage();
-            return;
-        }
+    previewImage.src = objectUrl;
+    previewImage.dataset.objectUrl = objectUrl;
 
-        if (!file.type.startsWith("image/")) {
-            clearImage();
-            alert("Please select a valid image file.");
-            return;
-        }
+    fileNameText.textContent = file.name;
+    previewContainer.classList.remove("hidden");
+}
 
-        if (file.size > 10 * 1024 * 1024) {
-            clearImage();
-            alert("Please select an image smaller than 10 MB.");
-            return;
-        }
+function clearImage() {
+    const fileInput = document.getElementById("image-file-input");
+    const previewContainer = document.getElementById("image-preview-container");
+    const previewImage = document.getElementById("image-preview");
+    const fileNameText = document.getElementById("file-name-text");
 
+    if (fileInput) {
+        fileInput.value = "";
+    }
+
+    if (previewImage) {
         if (previewImage.dataset.objectUrl) {
             URL.revokeObjectURL(previewImage.dataset.objectUrl);
+            delete previewImage.dataset.objectUrl;
         }
 
-        const objectUrl = URL.createObjectURL(file);
-
-        previewImage.src = objectUrl;
-        previewImage.dataset.objectUrl = objectUrl;
-
-        fileNameText.textContent = file.name;
-        previewContainer.classList.remove("hidden");
+        previewImage.removeAttribute("src");
     }
 
-    function clearImage() {
-        const fileInput = document.getElementById("image-file-input");
-        const previewContainer = document.getElementById("image-preview-container");
-        const previewImage = document.getElementById("image-preview");
-        const fileNameText = document.getElementById("file-name-text");
-
-        if (fileInput) {
-            fileInput.value = "";
-        }
-
-        if (previewImage) {
-            if (previewImage.dataset.objectUrl) {
-                URL.revokeObjectURL(previewImage.dataset.objectUrl);
-                delete previewImage.dataset.objectUrl;
-            }
-
-            previewImage.removeAttribute("src");
-        }
-
-        if (fileNameText) {
-            fileNameText.textContent = "Selected photo";
-        }
-
-        if (previewContainer) {
-            previewContainer.classList.add("hidden");
-        }
+    if (fileNameText) {
+        fileNameText.textContent = "Selected photo";
     }
 
-    // =====================================================
-    // LIVE CAMERA
-    // =====================================================
+    if (previewContainer) {
+        previewContainer.classList.add("hidden");
+    }
+}
 
-    async function openCamera() {
-        if (cameraOpening) return;
+// =====================================================
+// LIVE CAMERA
+// =====================================================
 
-        const modal = document.getElementById("camera-modal");
-        const video = document.getElementById("camera-video");
-        const errorBox = document.getElementById("camera-error");
-        const starting = document.getElementById("camera-starting");
-        const captureButton = document.getElementById("capture-camera-button");
-        const switchButton = document.getElementById("switch-camera-button");
+async function openCamera() {
+    if (cameraOpening) return;
 
-        if (!modal || !video || !errorBox || !starting || !captureButton || !switchButton) {
-            return;
-        }
+    const modal = document.getElementById("camera-modal");
+    const video = document.getElementById("camera-video");
+    const errorBox = document.getElementById("camera-error");
+    const starting = document.getElementById("camera-starting");
+    const captureButton = document.getElementById("capture-camera-button");
+    const switchButton = document.getElementById("switch-camera-button");
 
-        if (
-            !navigator.mediaDevices ||
-            typeof navigator.mediaDevices.getUserMedia !== "function"
-        ) {
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
+    if (
+        !modal ||
+        !video ||
+        !errorBox ||
+        !starting ||
+        !captureButton ||
+        !switchButton
+    ) {
+        return;
+    }
 
-            showCameraError(
-                "Camera access is unavailable. Open this website over HTTPS or use localhost during development."
-            );
-
-            starting.classList.add("hidden");
-            return;
-        }
-
-        cameraOpening = true;
-
+    if (
+        !navigator.mediaDevices ||
+        typeof navigator.mediaDevices.getUserMedia !== "function"
+    ) {
         modal.classList.remove("hidden");
         modal.classList.add("flex");
 
-        document.body.style.overflow = "hidden";
+        updateBodyScrollLock();
 
-        errorBox.classList.add("hidden");
-        starting.classList.remove("hidden");
+        showCameraError(
+            "Camera access is unavailable. Open this website over HTTPS or use localhost during development."
+        );
 
-        captureButton.disabled = true;
-        switchButton.classList.add("hidden");
+        starting.classList.add("hidden");
+        return;
+    }
 
-        try {
-            await stopCameraStream();
+    cameraOpening = true;
 
-            const constraints = {
-                audio: false,
-                video: {
-                    facingMode: {
-                        ideal: currentFacingMode
-                    },
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
-            };
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
 
-            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+    updateBodyScrollLock();
 
-            video.srcObject = cameraStream;
+    errorBox.classList.add("hidden");
+    starting.classList.remove("hidden");
 
-            await video.play();
+    captureButton.disabled = true;
+    switchButton.classList.add("hidden");
 
-            starting.classList.add("hidden");
-            captureButton.disabled = false;
+    try {
+        await stopCameraStream();
 
-            const devices = await navigator.mediaDevices.enumerateDevices();
-
-            const cameras = devices.filter(function(device) {
-                return device.kind === "videoinput";
-            });
-
-            if (cameras.length > 1) {
-                switchButton.classList.remove("hidden");
+        const constraints = {
+            audio: false,
+            video: {
+                facingMode: {
+                    ideal: currentFacingMode
+                },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             }
+        };
 
-        } catch (error) {
-            console.error("Unable to open camera:", error);
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia(constraints);
 
-            starting.classList.add("hidden");
-            captureButton.disabled = true;
+        video.srcObject = cameraStream;
 
-            if (
-                error.name === "NotAllowedError" ||
-                error.name === "PermissionDeniedError"
-            ) {
-                showCameraError(
-                    "Camera permission was denied. Allow camera access in your browser settings, then try again."
-                );
-            } else if (
-                error.name === "NotFoundError" ||
-                error.name === "DevicesNotFoundError"
-            ) {
-                showCameraError("No camera was found on this device.");
-            } else if (
-                error.name === "NotReadableError" ||
-                error.name === "TrackStartError"
-            ) {
-                showCameraError(
-                    "The camera may already be in use by another application. Close that application and try again."
-                );
-            } else {
-                showCameraError(
-                    "Unable to start the camera. Check your browser permissions and try again."
-                );
-            }
+        await video.play();
 
-            await stopCameraStream();
+        starting.classList.add("hidden");
+        captureButton.disabled = false;
 
-        } finally {
-            cameraOpening = false;
-        }
-    }
+        const devices =
+            await navigator.mediaDevices.enumerateDevices();
 
-    function showCameraError(message) {
-        const errorBox = document.getElementById("camera-error");
+        const cameras = devices.filter(function(device) {
+            return device.kind === "videoinput";
+        });
 
-        if (!errorBox) return;
-
-        errorBox.textContent = message;
-        errorBox.classList.remove("hidden");
-    }
-
-    async function stopCameraStream() {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(function(track) {
-                track.stop();
-            });
-
-            cameraStream = null;
+        if (cameras.length > 1) {
+            switchButton.classList.remove("hidden");
         }
 
-        const video = document.getElementById("camera-video");
+    } catch (error) {
+        console.error("Unable to open camera:", error);
 
-        if (video) {
-            video.srcObject = null;
-        }
-    }
-
-    async function switchCamera() {
-        if (cameraOpening) return;
-
-        currentFacingMode =
-            currentFacingMode === "environment"
-                ? "user"
-                : "environment";
-
-        await openCamera();
-    }
-
-    function captureCameraPhoto() {
-        const video = document.getElementById("camera-video");
-        const canvas = document.getElementById("camera-canvas");
-        const captureButton = document.getElementById("capture-camera-button");
-
-        if (!cameraStream || !video.videoWidth || !video.videoHeight) {
-            showCameraError("Please wait until the camera is ready.");
-            return;
-        }
-
+        starting.classList.add("hidden");
         captureButton.disabled = true;
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        const context = canvas.getContext("2d");
-
-        if (!context) {
-            captureButton.disabled = false;
-            showCameraError("Unable to capture the image. Please try again.");
-            return;
-        }
-
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob(function(blob) {
-            captureButton.disabled = false;
-
-            if (!blob) {
-                showCameraError("The image could not be captured. Please try again.");
-                return;
-            }
-
-            if (blob.size > 10 * 1024 * 1024) {
-                showCameraError("The captured image is too large. Please try again.");
-                return;
-            }
-
-            const file = new File(
-                [blob],
-                "pet-photo-" + Date.now() + ".jpg",
-                {
-                    type: "image/jpeg",
-                    lastModified: Date.now()
-                }
+        if (
+            error.name === "NotAllowedError" ||
+            error.name === "PermissionDeniedError"
+        ) {
+            showCameraError(
+                "Camera permission was denied. Allow camera access in your browser settings, then try again."
             );
-
-            const fileInput = document.getElementById("image-file-input");
-
-            if (!fileInput) {
-                showCameraError("The image upload field could not be found.");
-                return;
-            }
-
-            const transfer = new DataTransfer();
-            transfer.items.add(file);
-            fileInput.files = transfer.files;
-
-            previewFile();
-            closeCamera();
-
-            document.getElementById("chat-input")?.focus();
-
-        }, "image/jpeg", 0.90);
-    }
-
-    async function closeCamera() {
-        const modal = document.getElementById("camera-modal");
-        const starting = document.getElementById("camera-starting");
-        const captureButton = document.getElementById("capture-camera-button");
-        const switchButton = document.getElementById("switch-camera-button");
+        } else if (
+            error.name === "NotFoundError" ||
+            error.name === "DevicesNotFoundError"
+        ) {
+            showCameraError("No camera was found on this device.");
+        } else if (
+            error.name === "NotReadableError" ||
+            error.name === "TrackStartError"
+        ) {
+            showCameraError(
+                "The camera may already be in use by another application. Close that application and try again."
+            );
+        } else {
+            showCameraError(
+                "Unable to start the camera. Check your browser permissions and try again."
+            );
+        }
 
         await stopCameraStream();
 
-        if (modal) {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-        }
-
-        if (starting) starting.classList.remove("hidden");
-        if (captureButton) captureButton.disabled = true;
-        if (switchButton) switchButton.classList.add("hidden");
-
-        // Keep scrolling locked if Contact Us is still open.
-        const contactModal = document.getElementById("contact-modal");
-
-        if (
-            !contactModal ||
-            !contactModal.classList.contains("contact-modal-open")
-        ) {
-            document.body.style.overflow = "";
-        }
+    } finally {
+        cameraOpening = false;
     }
+}
 
-    // =====================================================
-    // CHAT HELPERS
-    // =====================================================
+function showCameraError(message) {
+    const errorBox = document.getElementById("camera-error");
 
-    function scrollChatToBottom() {
-        const chatMessages = document.getElementById("chat-messages");
+    if (!errorBox) return;
 
-        if (!chatMessages) return;
+    errorBox.textContent = message;
+    errorBox.classList.remove("hidden");
+}
 
-        requestAnimationFrame(function() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+async function stopCameraStream() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(function(track) {
+            track.stop();
         });
+
+        cameraStream = null;
     }
 
-    function removeWelcomeMessage() {
-        const welcome = document.getElementById("welcome-message");
+    const video = document.getElementById("camera-video");
 
-        if (welcome) {
-            welcome.remove();
-        }
+    if (video) {
+        video.srcObject = null;
+    }
+}
+
+async function switchCamera() {
+    if (cameraOpening) return;
+
+    currentFacingMode =
+        currentFacingMode === "environment"
+            ? "user"
+            : "environment";
+
+    await openCamera();
+}
+
+function captureCameraPhoto() {
+    const video = document.getElementById("camera-video");
+    const canvas = document.getElementById("camera-canvas");
+    const captureButton = document.getElementById("capture-camera-button");
+
+    if (!cameraStream || !video.videoWidth || !video.videoHeight) {
+        showCameraError("Please wait until the camera is ready.");
+        return;
     }
 
-    function addUserMessage(message, imageFile = null) {
-        const chatMessages = document.getElementById("chat-messages");
+    captureButton.disabled = true;
 
-        if (!chatMessages) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-        const wrapper = document.createElement("div");
-        wrapper.className = "flex min-w-0 justify-end";
+    const context = canvas.getContext("2d");
 
-        const bubble = document.createElement("div");
-        bubble.className =
-            "max-w-[92%] rounded-2xl bg-amber-600 px-4 py-3 text-white shadow-sm sm:max-w-xl";
+    if (!context) {
+        captureButton.disabled = false;
 
-        if (imageFile) {
-            const image = document.createElement("img");
+        showCameraError(
+            "Unable to capture the image. Please try again."
+        );
 
-            image.src = URL.createObjectURL(imageFile);
-            image.className =
-                "mb-3 max-h-80 max-w-full rounded-xl border border-amber-100 object-contain";
-            image.alt = "Uploaded pet photo";
-
-            bubble.appendChild(image);
-        }
-
-        if (message) {
-            const text = document.createElement("div");
-
-            text.className = "message-text text-sm";
-            text.textContent = message;
-
-            bubble.appendChild(text);
-        }
-
-        wrapper.appendChild(bubble);
-        chatMessages.appendChild(wrapper);
-
-        scrollChatToBottom();
+        return;
     }
 
-    function addAssistantMessage(message) {
-        const chatMessages = document.getElementById("chat-messages");
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
-        if (!chatMessages) return;
+    canvas.toBlob(function(blob) {
+        captureButton.disabled = false;
 
-        const wrapper = document.createElement("div");
-        wrapper.className = "flex min-w-0 items-start gap-3";
+        if (!blob) {
+            showCameraError(
+                "The image could not be captured. Please try again."
+            );
+            return;
+        }
 
-        const icon = document.createElement("div");
-        icon.className =
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
+        if (blob.size > 10 * 1024 * 1024) {
+            showCameraError(
+                "The captured image is too large. Please try again."
+            );
+            return;
+        }
 
-        icon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                fill="currentColor" class="h-4 w-4 text-amber-600">
-                <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
-                <circle cx="6.5" cy="10" r="1.5"/>
-                <circle cx="10" cy="7" r="1.5"/>
-                <circle cx="14" cy="7" r="1.5"/>
-                <circle cx="17.5" cy="10" r="1.5"/>
-            </svg>
-        `;
+        const file = new File(
+            [blob],
+            "pet-photo-" + Date.now() + ".jpg",
+            {
+                type: "image/jpeg",
+                lastModified: Date.now()
+            }
+        );
 
-        const bubble = document.createElement("div");
-        bubble.className =
-            "min-w-0 max-w-[92%] rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm sm:max-w-xl";
+        const fileInput = document.getElementById("image-file-input");
 
+        if (!fileInput) {
+            showCameraError(
+                "The image upload field could not be found."
+            );
+            return;
+        }
+
+        const transfer = new DataTransfer();
+
+        transfer.items.add(file);
+        fileInput.files = transfer.files;
+
+        previewFile();
+        closeCamera();
+
+        document.getElementById("chat-input")?.focus();
+
+    }, "image/jpeg", 0.90);
+}
+
+async function closeCamera() {
+    const modal = document.getElementById("camera-modal");
+    const starting = document.getElementById("camera-starting");
+    const captureButton = document.getElementById("capture-camera-button");
+    const switchButton = document.getElementById("switch-camera-button");
+
+    await stopCameraStream();
+
+    if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }
+
+    if (starting) starting.classList.remove("hidden");
+    if (captureButton) captureButton.disabled = true;
+    if (switchButton) switchButton.classList.add("hidden");
+
+    updateBodyScrollLock();
+}
+
+// =====================================================
+// CHAT HELPERS
+// =====================================================
+
+function scrollChatToBottom() {
+    const chatMessages = document.getElementById("chat-messages");
+
+    if (!chatMessages) return;
+
+    requestAnimationFrame(function() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+}
+
+function removeWelcomeMessage() {
+    const welcome = document.getElementById("welcome-message");
+
+    if (welcome) {
+        welcome.remove();
+    }
+}
+
+function addUserMessage(message, imageFile = null) {
+    const chatMessages = document.getElementById("chat-messages");
+
+    if (!chatMessages) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex min-w-0 justify-end";
+
+    const bubble = document.createElement("div");
+    bubble.className =
+        "max-w-[92%] rounded-2xl bg-amber-600 px-4 py-3 text-white shadow-sm sm:max-w-xl";
+
+    if (imageFile) {
+        const image = document.createElement("img");
+
+        image.src = URL.createObjectURL(imageFile);
+        image.className =
+            "mb-3 max-h-80 max-w-full rounded-xl border border-amber-100 object-contain";
+        image.alt = "Uploaded pet photo";
+
+        bubble.appendChild(image);
+    }
+
+    if (message) {
         const text = document.createElement("div");
-        text.className = "message-text text-sm text-slate-700";
-        text.textContent = message || "";
+
+        text.className = "message-text text-sm";
+        text.textContent = message;
 
         bubble.appendChild(text);
-        wrapper.append(icon, bubble);
-        chatMessages.appendChild(wrapper);
-
-        scrollChatToBottom();
     }
 
-    function createThinkingBubble(isImage) {
-        const loadingBubble = document.createElement("div");
+    wrapper.appendChild(bubble);
+    chatMessages.appendChild(wrapper);
 
-        loadingBubble.id = "thinking-bubble";
-        loadingBubble.className = "flex min-w-0 items-start gap-3";
+    scrollChatToBottom();
+}
 
-        const icon = document.createElement("div");
-        icon.className =
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
+function addAssistantMessage(message) {
+    const chatMessages = document.getElementById("chat-messages");
 
-        icon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                fill="currentColor" class="h-4 w-4 text-amber-600">
-                <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
-                <circle cx="6.5" cy="10" r="1.5"/>
-                <circle cx="10" cy="7" r="1.5"/>
-                <circle cx="14" cy="7" r="1.5"/>
-                <circle cx="17.5" cy="10" r="1.5"/>
-            </svg>
-        `;
+    if (!chatMessages) return;
 
-        const bubble = document.createElement("div");
-        bubble.className =
-            "min-w-0 rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm";
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex min-w-0 items-start gap-3";
+
+    const icon = document.createElement("div");
+
+    icon.className =
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
+
+    icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="h-4 w-4 text-amber-600">
+            <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
+            <circle cx="6.5" cy="10" r="1.5"/>
+            <circle cx="10" cy="7" r="1.5"/>
+            <circle cx="14" cy="7" r="1.5"/>
+            <circle cx="17.5" cy="10" r="1.5"/>
+        </svg>
+    `;
+
+    const bubble = document.createElement("div");
+
+    bubble.className =
+        "min-w-0 max-w-[92%] rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm sm:max-w-xl";
+
+    const text = document.createElement("div");
+
+    text.className = "message-text text-sm text-slate-700";
+    text.textContent = message || "";
+
+    bubble.appendChild(text);
+    wrapper.append(icon, bubble);
+
+    chatMessages.appendChild(wrapper);
+
+    scrollChatToBottom();
+}
+
+function createThinkingBubble(isImage) {
+    const loadingBubble = document.createElement("div");
+
+    loadingBubble.id = "thinking-bubble";
+    loadingBubble.className =
+        "flex min-w-0 items-start gap-3";
+
+    const icon = document.createElement("div");
+
+    icon.className =
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100";
+
+    icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="h-4 w-4 text-amber-600">
+            <path d="M12 10a4 4 0 0 0-4 4c0 3 2.5 4.5 4 4.5s4-1.5 4-4.5a4 4 0 0 0-4-4z"/>
+            <circle cx="6.5" cy="10" r="1.5"/>
+            <circle cx="10" cy="7" r="1.5"/>
+            <circle cx="14" cy="7" r="1.5"/>
+            <circle cx="17.5" cy="10" r="1.5"/>
+        </svg>
+    `;
+
+    const bubble = document.createElement("div");
+
+    bubble.className =
+        "min-w-0 rounded-2xl border border-amber-100 bg-white px-4 py-3 shadow-sm";
+
+    const row = document.createElement("div");
+    row.className = "flex flex-wrap items-center gap-3";
+
+    const label = document.createElement("span");
+
+    label.className = "text-sm text-slate-500";
+    label.textContent = isImage
+        ? "Analyzing image..."
+        : "Thinking...";
+
+    const dots = document.createElement("div");
+    dots.className = "flex gap-1";
+
+    for (let index = 0; index < 3; index++) {
+        const dot = document.createElement("span");
+
+        dot.className =
+            "h-2 w-2 rounded-full bg-amber-500 animate-bounce";
+
+        dot.style.animationDelay = (index * 0.2) + "s";
+
+        dots.appendChild(dot);
+    }
+
+    row.append(label, dots);
+    bubble.appendChild(row);
+
+    loadingBubble.append(icon, bubble);
+
+    return loadingBubble;
+}
+
+// =====================================================
+// BREED PERCENTAGE CHART
+// =====================================================
+
+function addBreedPercentageChart(imageAnalysis) {
+    if (
+        !imageAnalysis ||
+        !Array.isArray(imageAnalysis.breed_percentages) ||
+        imageAnalysis.dog_visible === false
+    ) {
+        return;
+    }
+
+    const breeds = imageAnalysis.breed_percentages.filter(function(item) {
+        if (!item || typeof item.breed !== "string") {
+            return false;
+        }
+
+        const percentage = Number(item.percentage);
+
+        return (
+            item.breed.trim() !== "" &&
+            Number.isFinite(percentage) &&
+            percentage >= 0 &&
+            percentage <= 100
+        );
+    });
+
+    if (breeds.length === 0) return;
+
+    const chatMessages = document.getElementById("chat-messages");
+
+    if (!chatMessages) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex min-w-0 items-start gap-3";
+
+    const spacer = document.createElement("div");
+    spacer.className = "w-8 shrink-0";
+
+    const card = document.createElement("div");
+
+    card.className =
+        "w-full min-w-0 max-w-xl rounded-2xl border border-amber-100 bg-white p-4 shadow-sm sm:p-5";
+
+    const heading = document.createElement("h3");
+
+    heading.className = "text-base font-bold text-slate-800";
+    heading.textContent = "Dog Breed Identification";
+
+    const subtitle = document.createElement("p");
+
+    subtitle.className = "mt-1 text-xs leading-relaxed text-slate-500";
+    subtitle.textContent =
+        "Estimated breed resemblance based on the uploaded photograph.";
+
+    const chart = document.createElement("div");
+    chart.className = "mt-5 space-y-5";
+
+    breeds.forEach(function(item) {
+        const percentage = Number(item.percentage);
 
         const row = document.createElement("div");
-        row.className = "flex flex-wrap items-center gap-3";
+        row.className = "space-y-2";
 
-        const label = document.createElement("span");
-        label.className = "text-sm text-slate-500";
-        label.textContent = isImage ? "Analyzing image..." : "Thinking...";
+        const labelRow = document.createElement("div");
+        labelRow.className =
+            "flex items-start justify-between gap-3";
 
-        const dots = document.createElement("div");
-        dots.className = "flex gap-1";
+        const name = document.createElement("p");
 
-        for (let index = 0; index < 3; index++) {
-            const dot = document.createElement("span");
+        name.className =
+            "break-words text-sm font-semibold text-slate-700";
+        name.textContent = item.breed;
 
-            dot.className = "h-2 w-2 rounded-full bg-amber-500 animate-bounce";
-            dot.style.animationDelay = (index * 0.2) + "s";
+        const value = document.createElement("span");
 
-            dots.appendChild(dot);
-        }
+        value.className =
+            "shrink-0 text-sm font-bold tabular-nums text-amber-700";
+        value.textContent = percentage + "%";
 
-        row.append(label, dots);
-        bubble.appendChild(row);
-        loadingBubble.append(icon, bubble);
+        labelRow.append(name, value);
 
-        return loadingBubble;
-    }
+        const track = document.createElement("div");
 
-    // =====================================================
-    // BREED PERCENTAGE CHART
-    // =====================================================
+        track.className =
+            "h-3 w-full overflow-hidden rounded-full bg-slate-100";
 
-    function addBreedPercentageChart(imageAnalysis) {
+        track.setAttribute("role", "progressbar");
+        track.setAttribute("aria-label", item.breed);
+        track.setAttribute("aria-valuemin", "0");
+        track.setAttribute("aria-valuemax", "100");
+        track.setAttribute("aria-valuenow", String(percentage));
+
+        const bar = document.createElement("div");
+
+        bar.className =
+            "h-full rounded-full bg-amber-500 transition-all duration-700";
+
+        bar.style.width = percentage + "%";
+
+        track.appendChild(bar);
+        row.append(labelRow, track);
+
         if (
-            !imageAnalysis ||
-            !Array.isArray(imageAnalysis.breed_percentages) ||
-            imageAnalysis.dog_visible === false
+            typeof item.evidence === "string" &&
+            item.evidence.trim()
         ) {
-            return;
+            const evidence = document.createElement("p");
+
+            evidence.className =
+                "text-xs leading-relaxed text-slate-500";
+
+            evidence.textContent = item.evidence;
+
+            row.appendChild(evidence);
         }
 
-        const breeds = imageAnalysis.breed_percentages.filter(function(item) {
-            if (!item || typeof item.breed !== "string") {
-                return false;
-            }
+        chart.appendChild(row);
+    });
 
-            const percentage = Number(item.percentage);
+    const disclaimer = document.createElement("div");
 
-            return (
-                item.breed.trim() !== "" &&
-                Number.isFinite(percentage) &&
-                percentage >= 0 &&
-                percentage <= 100
-            );
-        });
+    disclaimer.className =
+        "mt-5 rounded-xl border border-amber-100 bg-amber-50 p-3";
 
-        if (breeds.length === 0) return;
+    const disclaimerTitle = document.createElement("p");
 
-        const chatMessages = document.getElementById("chat-messages");
+    disclaimerTitle.className =
+        "text-xs font-semibold text-amber-900";
 
-        if (!chatMessages) return;
+    disclaimerTitle.textContent = "About these percentages";
 
-        const wrapper = document.createElement("div");
-        wrapper.className = "flex min-w-0 items-start gap-3";
+    const disclaimerText = document.createElement("p");
 
-        const spacer = document.createElement("div");
-        spacer.className = "w-8 shrink-0";
+    disclaimerText.className =
+        "mt-1 text-xs leading-relaxed text-amber-800";
 
-        const card = document.createElement("div");
-        card.className =
-            "w-full min-w-0 max-w-xl rounded-2xl border border-amber-100 bg-white p-4 shadow-sm sm:p-5";
+    disclaimerText.textContent =
+        "These percentages estimate visual breed resemblance. They are not confirmed genetic ancestry or DNA test results.";
 
-        const heading = document.createElement("h3");
-        heading.className = "text-base font-bold text-slate-800";
-        heading.textContent = "Dog Breed Identification";
+    disclaimer.append(disclaimerTitle, disclaimerText);
 
-        const subtitle = document.createElement("p");
-        subtitle.className = "mt-1 text-xs leading-relaxed text-slate-500";
-        subtitle.textContent =
-            "Estimated breed resemblance based on the uploaded photograph.";
+    card.append(heading, subtitle, chart, disclaimer);
+    wrapper.append(spacer, card);
 
-        const chart = document.createElement("div");
-        chart.className = "mt-5 space-y-5";
+    chatMessages.appendChild(wrapper);
 
-        breeds.forEach(function(item) {
-            const percentage = Number(item.percentage);
+    scrollChatToBottom();
+}
 
-            const row = document.createElement("div");
-            row.className = "space-y-2";
+// =====================================================
+// SEND MESSAGE TO DJANGO
+// =====================================================
 
-            const labelRow = document.createElement("div");
-            labelRow.className = "flex items-start justify-between gap-3";
+async function handleSend(event) {
+    event.preventDefault();
 
-            const name = document.createElement("p");
-            name.className = "break-words text-sm font-semibold text-slate-700";
-            name.textContent = item.breed;
+    if (isSending) return;
 
-            const value = document.createElement("span");
-            value.className =
-                "shrink-0 text-sm font-bold tabular-nums text-amber-700";
-            value.textContent = percentage + "%";
+    const input = document.getElementById("chat-input");
+    const imageInput = document.getElementById("image-file-input");
+    const chatMessages = document.getElementById("chat-messages");
+    const submitButton = document.getElementById("send-button");
 
-            labelRow.append(name, value);
-
-            const track = document.createElement("div");
-            track.className = "h-3 w-full overflow-hidden rounded-full bg-slate-100";
-
-            track.setAttribute("role", "progressbar");
-            track.setAttribute("aria-label", item.breed);
-            track.setAttribute("aria-valuemin", "0");
-            track.setAttribute("aria-valuemax", "100");
-            track.setAttribute("aria-valuenow", String(percentage));
-
-            const bar = document.createElement("div");
-            bar.className =
-                "h-full rounded-full bg-amber-500 transition-all duration-700";
-            bar.style.width = percentage + "%";
-
-            track.appendChild(bar);
-            row.append(labelRow, track);
-
-            if (typeof item.evidence === "string" && item.evidence.trim()) {
-                const evidence = document.createElement("p");
-
-                evidence.className = "text-xs leading-relaxed text-slate-500";
-                evidence.textContent = item.evidence;
-
-                row.appendChild(evidence);
-            }
-
-            chart.appendChild(row);
-        });
-
-        const disclaimer = document.createElement("div");
-        disclaimer.className =
-            "mt-5 rounded-xl border border-amber-100 bg-amber-50 p-3";
-
-        const disclaimerTitle = document.createElement("p");
-        disclaimerTitle.className = "text-xs font-semibold text-amber-900";
-        disclaimerTitle.textContent = "About these percentages";
-
-        const disclaimerText = document.createElement("p");
-        disclaimerText.className = "mt-1 text-xs leading-relaxed text-amber-800";
-        disclaimerText.textContent =
-            "These percentages estimate visual breed resemblance. They are not confirmed genetic ancestry or DNA test results.";
-
-        disclaimer.append(disclaimerTitle, disclaimerText);
-        card.append(heading, subtitle, chart, disclaimer);
-        wrapper.append(spacer, card);
-
-        chatMessages.appendChild(wrapper);
-
-        scrollChatToBottom();
+    if (!input || !chatMessages || !submitButton) {
+        console.error("Required chat elements were not found.");
+        return;
     }
 
-    // =====================================================
-    // SEND MESSAGE TO DJANGO
-    // =====================================================
+    const messageText = input.value.trim();
 
-    async function handleSend(event) {
-        event.preventDefault();
+    const imageFile = imageInput && imageInput.files
+        ? imageInput.files[0]
+        : null;
 
-        if (isSending) return;
+    if (!messageText && !imageFile) {
+        input.focus();
+        return;
+    }
 
-        const input = document.getElementById("chat-input");
-        const imageInput = document.getElementById("image-file-input");
-        const chatMessages = document.getElementById("chat-messages");
-        const submitButton = document.getElementById("send-button");
+    const csrfInput = document.querySelector(
+        "#chat-form [name=csrfmiddlewaretoken]"
+    );
 
-        if (!input || !chatMessages || !submitButton) {
-            console.error("Required chat elements were not found.");
-            return;
-        }
+    if (!csrfInput) {
+        addAssistantMessage(
+            "Unable to send your message because the security token is missing. Refresh the page and try again."
+        );
+        return;
+    }
 
-        const messageText = input.value.trim();
+    const csrfToken = csrfInput.value;
 
-        const imageFile = imageInput && imageInput.files
-            ? imageInput.files[0]
-            : null;
+    isSending = true;
 
-        if (!messageText && !imageFile) {
-            input.focus();
-            return;
-        }
+    submitButton.disabled = true;
 
-        const csrfInput = document.querySelector(
-            "#chat-form [name=csrfmiddlewaretoken]"
+    submitButton.classList.add(
+        "opacity-50",
+        "cursor-not-allowed"
+    );
+
+    removeWelcomeMessage();
+
+    addUserMessage(messageText, imageFile);
+
+    const loadingBubble =
+        createThinkingBubble(Boolean(imageFile));
+
+    chatMessages.appendChild(loadingBubble);
+
+    scrollChatToBottom();
+
+    const formData = new FormData();
+
+    formData.append("message", messageText);
+
+    if (imageFile) {
+        formData.append("image", imageFile);
+    }
+
+    try {
+        const response = await fetch(
+            `/customer/chat/${SESSION_ID}/send/`,
+            {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                body: formData,
+                credentials: "same-origin"
+            }
         );
 
-        if (!csrfInput) {
-            addAssistantMessage(
-                "Unable to send your message because the security token is missing. Refresh the page and try again."
-            );
-            return;
-        }
-
-        const csrfToken = csrfInput.value;
-
-        isSending = true;
-
-        submitButton.disabled = true;
-        submitButton.classList.add("opacity-50", "cursor-not-allowed");
-
-        removeWelcomeMessage();
-        addUserMessage(messageText, imageFile);
-
-        const loadingBubble = createThinkingBubble(Boolean(imageFile));
-
-        chatMessages.appendChild(loadingBubble);
-        scrollChatToBottom();
-
-        const formData = new FormData();
-
-        formData.append("message", messageText);
-
-        if (imageFile) {
-            formData.append("image", imageFile);
-        }
+        let data;
 
         try {
-            const response = await fetch(
-                `/customer/chat/${SESSION_ID}/send/`,
-                {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: formData,
-                    credentials: "same-origin"
-                }
+            data = await response.json();
+        } catch (jsonError) {
+            throw new Error(
+                "The server returned an invalid response. Check your Django logs."
             );
+        }
 
-            let data;
+        loadingBubble.remove();
 
-            try {
-                data = await response.json();
-            } catch (jsonError) {
-                throw new Error(
-                    "The server returned an invalid response. Check your Django logs."
-                );
-            }
-
-            loadingBubble.remove();
-
-            if (!response.ok || !data.success) {
-                addAssistantMessage(
-                    data.error ||
-                    "I couldn't process your request. Please try again."
-                );
-                return;
-            }
-
-            if (data.response) {
-                addAssistantMessage(data.response);
-            } else {
-                addAssistantMessage(
-                    "I received your request, but the assistant did not return a response."
-                );
-            }
-
-            if (data.type === "image" && data.image_analysis) {
-                addBreedPercentageChart(data.image_analysis);
-            }
-
-            if (data.emergency) {
-                console.log("Emergency detected.");
-                console.log("Risk level:", data.risk_level);
-                console.log("SMS sent:", data.sms_sent);
-            }
-
-            if (data.needs_more_information && data.follow_up_question) {
-                console.log("Follow-up question:", data.follow_up_question);
-            }
-
-        } catch (error) {
-            console.error("CHAT ERROR:", error);
-
-            if (loadingBubble.isConnected) {
-                loadingBubble.remove();
-            }
-
+        if (!response.ok || !data.success) {
             addAssistantMessage(
-                error.message ||
-                "I couldn't connect to the AI assistant. Please try again."
+                data.error ||
+                "I couldn't process your request. Please try again."
             );
 
-        } finally {
-            input.value = "";
-            input.style.height = "auto";
+            return;
+        }
 
-            clearImage();
-
-            isSending = false;
-            submitButton.disabled = false;
-
-            submitButton.classList.remove(
-                "opacity-50",
-                "cursor-not-allowed"
+        if (data.response) {
+            addAssistantMessage(data.response);
+        } else {
+            addAssistantMessage(
+                "I received your request, but the assistant did not return a response."
             );
-
-            input.focus();
-            scrollChatToBottom();
         }
-    }
 
-    // =====================================================
-    // ENTER TO SEND; SHIFT+ENTER FOR NEW LINE
-    // =====================================================
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const input = document.getElementById("chat-input");
-        const chatForm = document.getElementById("chat-form");
-
-        if (input && chatForm) {
-            input.addEventListener("keydown", function(event) {
-                if (
-                    event.key === "Enter" &&
-                    !event.shiftKey &&
-                    !event.isComposing
-                ) {
-                    event.preventDefault();
-                    chatForm.requestSubmit();
-                }
-            });
+        if (
+            data.type === "image" &&
+            data.image_analysis
+        ) {
+            addBreedPercentageChart(data.image_analysis);
         }
+
+        if (data.emergency) {
+            console.log("Emergency detected.");
+            console.log("Risk level:", data.risk_level);
+            console.log("SMS sent:", data.sms_sent);
+        }
+
+        if (
+            data.needs_more_information &&
+            data.follow_up_question
+        ) {
+            console.log(
+                "Follow-up question:",
+                data.follow_up_question
+            );
+        }
+
+    } catch (error) {
+        console.error("CHAT ERROR:", error);
+
+        if (loadingBubble.isConnected) {
+            loadingBubble.remove();
+        }
+
+        addAssistantMessage(
+            error.message ||
+            "I couldn't connect to the AI assistant. Please try again."
+        );
+
+    } finally {
+        input.value = "";
+        input.style.height = "auto";
+
+        clearImage();
+
+        isSending = false;
+        submitButton.disabled = false;
+
+        submitButton.classList.remove(
+            "opacity-50",
+            "cursor-not-allowed"
+        );
+
+        input.focus();
 
         scrollChatToBottom();
-    });
-
-    // =====================================================
-    // CONTACT US MODAL
-    // =====================================================
-
-    function openContactModal() {
-        const modal = document.getElementById("contact-modal");
-
-        if (!modal) {
-            console.error("Contact modal not found.");
-            return;
-        }
-
-        if (modal.classList.contains("contact-modal-open")) {
-            return;
-        }
-
-        previousContactFocus = document.activeElement;
-
-        // Close mobile sidebar before opening the modal.
-        closeMobileSidebar();
-
-        // Open using the CSS class defined in the stylesheet.
-        modal.classList.add("contact-modal-open");
-        modal.setAttribute("aria-hidden", "false");
-
-        document.body.style.overflow = "hidden";
-
-        const closeButton = modal.querySelector(
-            'button[aria-label="Close contact dialog"]'
-        );
-
-        if (closeButton) {
-            requestAnimationFrame(function() {
-                closeButton.focus();
-            });
-        }
     }
+}
 
-    function closeContactModal() {
-        const modal = document.getElementById("contact-modal");
+// =====================================================
+// ENTER TO SEND; SHIFT+ENTER FOR NEW LINE
+// =====================================================
 
-        if (!modal) return;
+document.addEventListener("DOMContentLoaded", function() {
+    const input = document.getElementById("chat-input");
+    const chatForm = document.getElementById("chat-form");
 
-        modal.classList.remove("contact-modal-open");
-        modal.setAttribute("aria-hidden", "true");
-
-        document.body.style.overflow = "";
-
-        // On mobile, focus the sidebar opener rather than
-        // an element inside the now-hidden sidebar.
-        if (
-            window.innerWidth < 1024 &&
-            previousContactFocus &&
-            previousContactFocus.closest("#sidebar")
-        ) {
-            const sidebarOpenButton = document.getElementById(
-                "sidebar-open-button"
-            );
-
-            if (sidebarOpenButton) {
-                sidebarOpenButton.focus();
+    if (input && chatForm) {
+        input.addEventListener("keydown", function(event) {
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey &&
+                !event.isComposing
+            ) {
+                event.preventDefault();
+                chatForm.requestSubmit();
             }
-        } else if (
-            previousContactFocus &&
-            typeof previousContactFocus.focus === "function"
-        ) {
-            previousContactFocus.focus();
-        }
-
-        previousContactFocus = null;
+        });
     }
 
-    // =====================================================
-    // KEYBOARD HANDLING
-    // =====================================================
+    scrollChatToBottom();
+});
 
-    document.addEventListener("keydown", function(event) {
-        if (event.key !== "Escape") return;
+// =====================================================
+// CONTACT US MODAL
+// =====================================================
 
-        const contactModal = document.getElementById("contact-modal");
-        const cameraModal = document.getElementById("camera-modal");
+function openContactModal() {
+    const modal = document.getElementById("contact-modal");
 
-        // Contact modal has priority.
-        if (
-            contactModal &&
-            contactModal.classList.contains("contact-modal-open")
-        ) {
-            event.preventDefault();
-            closeContactModal();
-            return;
+    if (!modal) {
+        console.error("Contact modal not found.");
+        return;
+    }
+
+    if (modal.classList.contains("contact-modal-open")) {
+        return;
+    }
+
+    previousContactFocus = document.activeElement;
+
+    // Close mobile sidebar first.
+    closeMobileSidebar();
+
+    modal.classList.add("contact-modal-open");
+    modal.setAttribute("aria-hidden", "false");
+
+    updateBodyScrollLock();
+
+    const closeButton = modal.querySelector(
+        'button[aria-label="Close contact dialog"]'
+    );
+
+    if (closeButton) {
+        requestAnimationFrame(function() {
+            closeButton.focus();
+        });
+    }
+}
+
+function closeContactModal() {
+    const modal = document.getElementById("contact-modal");
+
+    if (!modal) return;
+
+    modal.classList.remove("contact-modal-open");
+    modal.setAttribute("aria-hidden", "true");
+
+    updateBodyScrollLock();
+
+    if (
+        window.innerWidth < DESKTOP_BREAKPOINT &&
+        previousContactFocus &&
+        previousContactFocus.closest("#sidebar")
+    ) {
+        const sidebarOpenButton =
+            document.getElementById("sidebar-open-button");
+
+        if (sidebarOpenButton) {
+            sidebarOpenButton.focus();
         }
+    } else if (
+        previousContactFocus &&
+        typeof previousContactFocus.focus === "function"
+    ) {
+        previousContactFocus.focus();
+    }
 
-        // Close camera.
-        if (
-            cameraModal &&
-            !cameraModal.classList.contains("hidden")
-        ) {
-            event.preventDefault();
-            closeCamera();
-            return;
-        }
+    previousContactFocus = null;
+}
 
-        // Close mobile sidebar.
-        if (window.innerWidth < 1024) {
-            closeMobileSidebar();
-        }
+// =====================================================
+// KEYBOARD HANDLING - ESCAPE
+// =====================================================
+
+document.addEventListener("keydown", function(event) {
+    if (event.key !== "Escape") return;
+
+    const contactModal = document.getElementById("contact-modal");
+    const cameraModal = document.getElementById("camera-modal");
+
+    if (
+        contactModal &&
+        contactModal.classList.contains("contact-modal-open")
+    ) {
+        event.preventDefault();
+        closeContactModal();
+        return;
+    }
+
+    if (
+        cameraModal &&
+        !cameraModal.classList.contains("hidden")
+    ) {
+        event.preventDefault();
+        closeCamera();
+        return;
+    }
+
+    if (!isDesktopSidebar()) {
+        closeMobileSidebar();
+    }
+});
+
+// =====================================================
+// CONTACT MODAL FOCUS TRAP
+// =====================================================
+
+document.addEventListener("keydown", function(event) {
+    if (event.key !== "Tab") return;
+
+    const modal = document.getElementById("contact-modal");
+
+    if (
+        !modal ||
+        !modal.classList.contains("contact-modal-open")
+    ) {
+        return;
+    }
+
+    const focusableElements = modal.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+
+    const focusable = Array.from(focusableElements).filter(function(element) {
+        return element.offsetWidth > 0 || element.offsetHeight > 0;
     });
 
-    // =====================================================
-    // CONTACT MODAL FOCUS TRAP
-    // =====================================================
+    if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+    }
 
-    document.addEventListener("keydown", function(event) {
-        if (event.key !== "Tab") return;
+    const firstElement = focusable[0];
+    const lastElement = focusable[focusable.length - 1];
 
-        const modal = document.getElementById("contact-modal");
+    if (
+        event.shiftKey &&
+        document.activeElement === firstElement
+    ) {
+        event.preventDefault();
+        lastElement.focus();
+    } else if (
+        !event.shiftKey &&
+        document.activeElement === lastElement
+    ) {
+        event.preventDefault();
+        firstElement.focus();
+    }
+});
 
-        if (
-            !modal ||
-            !modal.classList.contains("contact-modal-open")
-        ) {
-            return;
-        }
+// =====================================================
+// PAGE LIFECYCLE
+// =====================================================
 
-        const focusableElements = modal.querySelectorAll(
-            'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-
-        const focusable = Array.from(focusableElements).filter(function(element) {
-            return element.offsetWidth > 0 || element.offsetHeight > 0;
+window.addEventListener("pagehide", function() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(function(track) {
+            track.stop();
         });
 
-        if (focusable.length === 0) {
-            event.preventDefault();
-            return;
-        }
+        cameraStream = null;
+    }
+});
 
-        const firstElement = focusable[0];
-        const lastElement = focusable[focusable.length - 1];
+// =====================================================
+// GLOBAL FUNCTIONS FOR HTML ONCLICK HANDLERS
+// =====================================================
 
-        if (
-            event.shiftKey &&
-            document.activeElement === firstElement
-        ) {
-            event.preventDefault();
-            lastElement.focus();
-        } else if (
-            !event.shiftKey &&
-            document.activeElement === lastElement
-        ) {
-            event.preventDefault();
-            firstElement.focus();
-        }
-    });
+// =====================================================
+// GLOBAL FUNCTIONS FOR HTML ONCLICK HANDLERS
+// =====================================================
 
-    // =====================================================
-    // PAGE LIFECYCLE
-    // =====================================================
+window.toggleSidebar = toggleSidebar;
+window.toggleDesktopSidebar = toggleDesktopSidebar;
+window.closeMobileSidebar = closeMobileSidebar;
 
-    window.addEventListener("pagehide", function() {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(function(track) {
-                track.stop();
-            });
+window.adjustHeight = adjustHeight;
+window.fillPrompt = fillPrompt;
 
-            cameraStream = null;
-        }
-    });
+window.previewFile = previewFile;
+window.clearImage = clearImage;
 
-    // =====================================================
-    // GLOBAL FUNCTIONS FOR HTML ONCLICK HANDLERS
-    // =====================================================
+window.openCamera = openCamera;
+window.switchCamera = switchCamera;
+window.captureCameraPhoto = captureCameraPhoto;
+window.closeCamera = closeCamera;
 
-    window.toggleSidebar = toggleSidebar;
-    window.toggleDesktopSidebar = toggleDesktopSidebar;
-    window.closeMobileSidebar = closeMobileSidebar;
+window.handleSend = handleSend;
 
-    window.adjustHeight = adjustHeight;
-    window.fillPrompt = fillPrompt;
-
-    window.previewFile = previewFile;
-    window.clearImage = clearImage;
-
-    window.openCamera = openCamera;
-    window.switchCamera = switchCamera;
-    window.captureCameraPhoto = captureCameraPhoto;
-    window.closeCamera = closeCamera;
-
-    window.handleSend = handleSend;
-
-    window.openContactModal = openContactModal;
-    window.closeContactModal = closeContactModal;
+window.openContactModal = openContactModal;
+window.closeContactModal = closeContactModal;
 
 </script>
 
