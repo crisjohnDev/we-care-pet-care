@@ -362,6 +362,12 @@
         overflow-y: auto;
     }
 
+
+    /* Keep the camera above the desktop sidebar and its overlay. */
+    #camera-modal {
+        z-index: 10000 !important;
+    }
+
     #camera-modal-card {
         width: 100%;
         max-width: 42rem;
@@ -1104,54 +1110,6 @@
 
     <!-- JAVASCRIPT -->
 
-    <script>
-(function () {
-    // Define the mobile sidebar function independently
-    // of the main dashboard script.
-    window.toggleSidebar = function (forceOpen) {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("sidebar-overlay");
-        const button = document.getElementById("sidebar-open-button");
-
-        if (!sidebar) {
-            console.error("Sidebar element #sidebar was not found.");
-            return;
-        }
-
-        // Desktop: do not open the mobile drawer.
-        if (window.innerWidth >= 1024) {
-            sidebar.classList.remove("sidebar-visible");
-            if (overlay) {
-                overlay.classList.add("hidden");
-                overlay.classList.remove("sidebar-overlay-visible");
-            }
-            return;
-        }
-
-        const isOpen = sidebar.classList.contains("sidebar-visible");
-        const shouldOpen =
-            typeof forceOpen === "boolean" ? forceOpen : !isOpen;
-
-        sidebar.classList.toggle("sidebar-visible", shouldOpen);
-
-        if (overlay) {
-            overlay.classList.toggle("hidden", !shouldOpen);
-            overlay.classList.toggle("sidebar-overlay-visible", shouldOpen);
-        }
-
-        if (button) {
-            button.setAttribute("aria-expanded", String(shouldOpen));
-        }
-
-        document.body.style.overflow = shouldOpen ? "hidden" : "";
-    };
-
-    console.log(
-        "Sidebar function registered:",
-        typeof window.toggleSidebar
-    );
-})();
-</script>
 
 <script>
 
@@ -1630,6 +1588,11 @@ async function openCamera() {
     }
 
     cameraOpening = true;
+
+    // Avoid stacking the mobile navigation drawer over the camera dialog.
+    if (typeof window.closeMobileSidebar === "function") {
+        window.closeMobileSidebar();
+    }
 
     modal.classList.remove("hidden");
     modal.classList.add("flex");
@@ -2555,6 +2518,73 @@ window.closeContactModal = closeContactModal;
 
 </script>
 
+
+<script>
+(function () {
+    window.toggleSidebar = function (forceOpen) {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("sidebar-overlay");
+        const button = document.getElementById("sidebar-open-button");
+
+        if (!sidebar) {
+            console.error("Sidebar element #sidebar was not found.");
+            return;
+        }
+
+        if (window.innerWidth >= 1024) {
+            sidebar.classList.remove("sidebar-visible");
+            if (overlay) {
+                overlay.classList.add("hidden");
+                overlay.classList.remove("sidebar-overlay-visible");
+                overlay.setAttribute("aria-hidden", "true");
+            }
+            if (button) button.setAttribute("aria-expanded", "false");
+            document.body.style.overflow = "";
+            return;
+        }
+
+        const isOpen = sidebar.classList.contains("sidebar-visible");
+        const shouldOpen =
+            typeof forceOpen === "boolean" ? forceOpen : !isOpen;
+
+        sidebar.classList.toggle("sidebar-visible", shouldOpen);
+        sidebar.style.setProperty(
+            "transform",
+            shouldOpen ? "translate3d(0, 0, 0)" : "translate3d(-105%, 0, 0)",
+            "important"
+        );
+
+        if (overlay) {
+            overlay.classList.toggle("hidden", !shouldOpen);
+            overlay.classList.toggle("sidebar-overlay-visible", shouldOpen);
+            overlay.setAttribute("aria-hidden", String(!shouldOpen));
+        }
+
+        if (button) {
+            button.setAttribute("aria-expanded", String(shouldOpen));
+            button.setAttribute(
+                "aria-label",
+                shouldOpen ? "Close navigation" : "Open navigation"
+            );
+        }
+
+        const camera = document.getElementById("camera-modal");
+        const contact = document.getElementById("contact-modal");
+        const cameraOpen = camera && !camera.classList.contains("hidden");
+        const contactOpen = contact && contact.classList.contains("contact-modal-open");
+        document.body.style.overflow =
+            shouldOpen || cameraOpen || contactOpen ? "hidden" : "";
+    };
+
+    window.closeMobileSidebar = function () {
+        if (window.innerWidth < 1024) {
+            window.toggleSidebar(false);
+        }
+    };
+
+    console.log("Sidebar function registered:", typeof window.toggleSidebar);
+})();
+</script>
 
 </body>
 </html>
