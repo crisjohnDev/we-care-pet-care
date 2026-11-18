@@ -285,6 +285,88 @@
             font-size: 9px;
         }
     }
+
+    /* DOG BREED ANALYSIS */
+    .breed-analysis {
+        width: 100%;
+        min-width: 0;
+        margin-top: 12px;
+    }
+
+    .breed-analysis-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 14px;
+    }
+
+    .breed-item {
+        margin-bottom: 14px;
+    }
+
+    .breed-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .breed-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+
+    .breed-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        overflow-wrap: anywhere;
+    }
+
+    .breed-percentage {
+        font-size: 12px;
+        font-weight: 700;
+        color: #b45309;
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .breed-progress-track {
+        width: 100%;
+        height: 9px;
+        background: #f1f5f9;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .breed-progress-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        transition: width 0.8s ease;
+    }
+
+    .breed-disclaimer {
+        font-size: 10px;
+        color: #94a3b8;
+        line-height: 1.5;
+        margin-top: 12px;
+    }
+
+    @media (max-width: 640px) {
+        .breed-analysis-title {
+            font-size: 12px;
+        }
+
+        .breed-name,
+        .breed-percentage {
+            font-size: 11px;
+        }
+
+        .breed-progress-track {
+            height: 8px;
+        }
+    }
 </style>
 
 <div class="chat-page">
@@ -855,7 +937,231 @@ function showWelcomeMessage() {
 |--------------------------------------------------------------------------
 */
 
-function appendMessage(role, message, image = null) {
+
+/*
+|--------------------------------------------------------------------------
+| DOG BREED ANALYSIS
+|--------------------------------------------------------------------------
+*/
+
+const breedColors = [
+    "#d97706",
+    "#0d9488",
+    "#6366f1",
+    "#ec4899",
+    "#16a34a"
+];
+
+/*
+Expected structure:
+
+{
+    "breeds": [
+        {
+            "name": "Golden Retriever",
+            "percentage": 75
+        },
+        {
+            "name": "Labrador Retriever",
+            "percentage": 20
+        },
+        {
+            "name": "Other",
+            "percentage": 5
+        }
+    ]
+}
+*/
+
+
+
+function validateBreedData(data) {
+    if (!data) return null;
+
+    const sourceBreeds = Array.isArray(data.breeds)
+        ? data.breeds
+        : Array.isArray(data.breed_percentages)
+            ? data.breed_percentages
+            : [];
+
+    const breeds = sourceBreeds
+        .map(item => ({
+            name: String(item.name || item.breed || "").trim(),
+            percentage: Number(item.percentage),
+            evidence: item.evidence || ""
+        }))
+        .filter(item =>
+            item.name &&
+            Number.isFinite(item.percentage) &&
+            item.percentage >= 0 &&
+            item.percentage <= 100
+        );
+
+    if (!breeds.length) return null;
+
+    const total = breeds.reduce(
+        (sum, item) => sum + item.percentage,
+        0
+    );
+
+    if (total !== 100) {
+        console.warn("Breed percentages must total 100:", total);
+        return null;
+    }
+
+    return breeds;
+}
+
+
+
+/*
+Detect structured breed data embedded in the AI response.
+*/
+
+function extractBreedData(message) {
+    if (typeof message !== "string") {
+        return {
+            text: "",
+            breeds: null
+        };
+    }
+
+    const startMarker = "[[BREED_RESULT]]";
+    const endMarker = "[[/BREED_RESULT]]";
+
+    const start = message.indexOf(startMarker);
+    const end = message.indexOf(endMarker);
+
+    if (start === -1 || end === -1 || end <= start) {
+        return {
+            text: message,
+            breeds: null
+        };
+    }
+
+    try {
+        const jsonText = message.slice(
+            start + startMarker.length,
+            end
+        ).trim();
+
+        const parsed = JSON.parse(jsonText);
+        const breeds = validateBreedData(parsed);
+
+        if (!breeds) {
+            return {
+                text: message,
+                breeds: null
+            };
+        }
+
+        const cleanText = (
+            message.slice(0, start) +
+            message.slice(end + endMarker.length)
+        ).trim();
+
+        return {
+            text: cleanText,
+            breeds: breeds
+        };
+
+    } catch (error) {
+        console.error("Breed data parsing error:", error);
+
+        return {
+            text: message,
+            breeds: null
+        };
+    }
+}
+
+/*
+Create the visual percentage bars.
+*/
+
+function createBreedAnalysis(breeds) {
+    const validatedBreeds = validateBreedData({
+        breeds: breeds
+    });
+
+    if (!validatedBreeds) return null;
+
+    const container = document.createElement("div");
+
+    container.className = "breed-analysis";
+
+    const heading = document.createElement("h4");
+
+    heading.className = "breed-analysis-title";
+    heading.textContent = "🐕 Dog Breed Identification";
+
+    container.appendChild(heading);
+
+    validatedBreeds.forEach((breed, index) => {
+        const item = document.createElement("div");
+
+        item.className = "breed-item";
+
+        const header = document.createElement("div");
+
+        header.className = "breed-item-header";
+
+        const name = document.createElement("span");
+
+        name.className = "breed-name";
+        name.textContent = breed.name;
+
+        const percentage = document.createElement("span");
+
+        percentage.className = "breed-percentage";
+        percentage.textContent =
+            breed.percentage.toFixed(1).replace(/\.0$/, "") + "%";
+
+        header.appendChild(name);
+        header.appendChild(percentage);
+
+        const track = document.createElement("div");
+
+        track.className = "breed-progress-track";
+
+        const fill = document.createElement("div");
+
+        fill.className = "breed-progress-fill";
+
+        fill.style.backgroundColor =
+            breedColors[index % breedColors.length];
+
+        track.appendChild(fill);
+
+        item.appendChild(header);
+        item.appendChild(track);
+
+        container.appendChild(item);
+
+        // Animate the progress bar after rendering.
+        requestAnimationFrame(() => {
+            fill.style.width = breed.percentage + "%";
+        });
+    });
+
+    const disclaimer = document.createElement("p");
+
+    disclaimer.className = "breed-disclaimer";
+
+    disclaimer.textContent =
+        "AI visual estimates only. These percentages are not verified DNA or genetic breed composition.";
+
+    container.appendChild(disclaimer);
+
+    return container;
+}
+
+function appendMessage(
+    role,
+    message,
+    image = null,
+    breedData = null
+) {
     const container = document.getElementById("chat-messages");
 
     if (!container) return null;
@@ -902,14 +1208,13 @@ function appendMessage(role, message, image = null) {
         ? "chat-bubble bg-amber-600 text-white px-4 py-3 rounded-2xl shadow-sm"
         : "chat-bubble bg-white border border-amber-100 rounded-2xl px-4 py-3 shadow-sm";
 
-    /*
-     * Display attached image.
-     */
+    // Display image.
     if (image && image.data) {
         const imageElement = document.createElement("img");
 
         imageElement.src = image.data;
         imageElement.alt = image.name || "Pet photo";
+
         imageElement.className =
             "max-w-full max-h-64 rounded-xl mb-3 object-cover";
 
@@ -918,30 +1223,54 @@ function appendMessage(role, message, image = null) {
         bubble.appendChild(imageElement);
     }
 
-    /*
-     * Display message text.
-     */
-    if (message) {
-        const text = document.createElement("div");
+    // Automatically extract breed results from AI response.
+    let parsedMessage = {
+        text: message || "",
+        breeds: null
+    };
 
-        text.className = role === "user"
+    if (role === "assistant") {
+        parsedMessage = extractBreedData(message || "");
+    }
+
+    // Display normal text.
+    if (parsedMessage.text) {
+        const textElement = document.createElement("div");
+
+        textElement.className = role === "user"
             ? "message-text text-sm"
             : "message-text text-sm text-slate-700";
 
-        text.textContent = message;
+        textElement.textContent = parsedMessage.text;
 
-        bubble.appendChild(text);
+        bubble.appendChild(textElement);
     }
 
+    // Display image filename.
     if (image && image.name && role === "user") {
         const filename = document.createElement("p");
 
-        filename.className =
-            "text-xs mt-2 opacity-80";
-
+        filename.className = "text-xs mt-2 opacity-80";
         filename.textContent = "📷 " + image.name;
 
         bubble.appendChild(filename);
+    }
+
+    // Display breed percentage visualization.
+    if (role === "assistant") {
+        const breeds = validateBreedData(
+            breedData || {
+                breeds: parsedMessage.breeds || []
+            }
+        );
+
+        if (breeds) {
+            const breedElement = createBreedAnalysis(breeds);
+
+            if (breedElement) {
+                bubble.appendChild(breedElement);
+            }
+        }
     }
 
     row.appendChild(bubble);
@@ -1059,6 +1388,7 @@ function restoreLocalChat() {
 |--------------------------------------------------------------------------
 */
 
+
 async function handleSend(event) {
     event.preventDefault();
 
@@ -1092,7 +1422,7 @@ async function handleSend(event) {
 
     /*
      * Build FormData before clearing the form.
-     * The original image file is retained for the Django request.
+     * The original image file is retained for Django.
      */
     const formData = new FormData(form);
 
@@ -1106,14 +1436,14 @@ async function handleSend(event) {
 
     try {
         /*
-         * Compress and store the image locally before clearing it.
+         * Compress and store image locally.
          */
         if (selectedFile) {
             localImage = await compressImage(selectedFile);
         }
 
         /*
-         * Store user message and image in localStorage.
+         * Save user message and image in localStorage.
          */
         saveLocalMessage({
             role: "user",
@@ -1122,26 +1452,30 @@ async function handleSend(event) {
         });
 
         /*
-         * Clear composer immediately.
-         * The submitted message and image remain in the conversation.
+         * Clear composer.
          */
         input.value = "";
         adjustHeight(input);
 
         /*
-         * Display submitted message.
+         * Display submitted user message.
          */
         appendMessage("user", message, localImage);
 
         /*
-         * Clear preview only after FormData has been created
-         * and the image has been saved locally.
+         * Clear image preview.
          */
         clearImage();
 
+        /*
+         * Display thinking indicator.
+         */
         const thinkingRow = appendThinkingIndicator();
 
         try {
+            /*
+             * Send request to Django.
+             */
             const response = await fetch(sendUrl, {
                 method: "POST",
                 body: formData,
@@ -1152,6 +1486,9 @@ async function handleSend(event) {
                 credentials: "same-origin"
             });
 
+            /*
+             * Validate response content type.
+             */
             const contentType =
                 response.headers.get("content-type") || "";
 
@@ -1163,6 +1500,9 @@ async function handleSend(event) {
 
             const data = await response.json();
 
+            /*
+             * Check Django response.
+             */
             if (!response.ok || !data.success) {
                 throw new Error(
                     data.error ||
@@ -1171,23 +1511,74 @@ async function handleSend(event) {
                 );
             }
 
+            /*
+             * Remove thinking indicator.
+             */
             if (thinkingRow) {
                 thinkingRow.remove();
             }
 
+            /*
+             * Get assistant response.
+             */
             const assistantMessage =
                 data.response || "No response was returned.";
 
             /*
-             * Store AI response locally.
+             * Get structured image analysis from Django.
+             */
+            const imageAnalysis =
+                data.image_analysis || null;
+
+            /*
+             * Extract breed percentages.
+             *
+             * Backend format:
+             * {
+             *   breed_percentages: [
+             *     { breed: "Shiba Inu", percentage: 95 },
+             *     { breed: "Other or uncertain ancestry", percentage: 5 }
+             *   ]
+             * }
+             */
+            const breedData = imageAnalysis
+                ? validateBreedData(imageAnalysis)
+                : null;
+
+            /*
+             * Debugging information.
+             */
+            console.log(
+                "IMAGE ANALYSIS FROM DJANGO:",
+                imageAnalysis
+            );
+
+            console.log(
+                "VALIDATED BREED DATA:",
+                breedData
+            );
+
+            /*
+             * Save assistant response and breed data locally.
              */
             saveLocalMessage({
                 role: "assistant",
                 message: assistantMessage,
-                image: null
+                image: null,
+                breedData: breedData
             });
 
-            appendMessage("assistant", assistantMessage);
+            /*
+             * Render assistant response and breed analysis.
+             *
+             * appendMessage must support its fourth parameter.
+             */
+            appendMessage(
+                "assistant",
+                assistantMessage,
+                null,
+                imageAnalysis
+            );
 
         } catch (error) {
             console.error("Chat request error:", error);
@@ -1201,8 +1592,7 @@ async function handleSend(event) {
                 (error.message || "Please try again.");
 
             /*
-             * Keep the submitted user message and image in localStorage.
-             * The error is also saved locally.
+             * Save error locally.
              */
             saveLocalMessage({
                 role: "assistant",
@@ -1216,12 +1606,15 @@ async function handleSend(event) {
     } catch (error) {
         console.error("Chat processing error:", error);
 
-        alert(error.message || "Unable to process your message.");
+        alert(
+            error.message ||
+            "Unable to process your message."
+        );
 
-        /*
-         * Do not clear the selected image if local processing failed.
-         */
     } finally {
+        /*
+         * Restore send button.
+         */
         chatIsSending = false;
 
         sendButton.disabled = false;
