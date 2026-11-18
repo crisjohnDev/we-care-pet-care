@@ -184,6 +184,7 @@ def contact_us(request):
 
 
 
+
 @login_required
 @require_POST
 def send_message(request, session_id):
@@ -284,15 +285,11 @@ def send_message(request, session_id):
     # Django only processes the message and generates a response.
     # Do not create ChatMessage records here.
     #
-    # Do not update session.title using the user's message,
-    # because that would also persist chat content in the database.
+    # Do not update session.title using the user's message.
 
     # =========================================================
     # 6. LOAD CONVERSATION HISTORY FROM FRONTEND
     # =========================================================
-    # The frontend sends previously stored messages from localStorage.
-    # The current user message is added below.
-    # No ChatMessage database query is performed.
 
     try:
         history_json = request.POST.get(
@@ -342,10 +339,158 @@ def send_message(request, session_id):
     elif image:
         conversation_history.append({
             "role": "user",
-            "content": "Please analyze my uploaded image."
+            "content": "Please analyze my uploaded dog image."
         })
 
     conversation_history = conversation_history[-20:]
+
+    # =========================================================
+    # 6A. DOG-ONLY TEXT RESTRICTION
+    # =========================================================
+    # Only dog-related questions are supported.
+    # Greetings and conversational follow-ups are allowed.
+    # Questions about other animal species are rejected.
+
+    if message:
+        try:
+            scope_response = client.chat.completions.create(
+                model="gpt-4.1-mini",
+                response_format={"type": "json_object"},
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """
+You are the request scope classifier for We Care Pet Care.
+
+STRICT POLICY:
+This application exclusively supports DOGS.
+
+Determine whether the latest user message is within the
+supported dog-only scope.
+
+SUPPORTED:
+- Dog health and wellness.
+- Dog symptoms and veterinary concerns.
+- Dog breeds and breed identification.
+- Dog feeding and nutrition.
+- Dog grooming and hygiene.
+- Dog behavior and training.
+- Dog vaccination and preventive care.
+- Dog emergencies.
+- Dog medications and veterinary questions.
+- General greetings.
+- Conversational follow-up questions about a previously
+  discussed dog.
+- Questions about the application itself.
+
+NOT SUPPORTED:
+- Cats and kittens.
+- Birds.
+- Rabbits.
+- Hamsters and guinea pigs.
+- Reptiles.
+- Fish.
+- Other animal species.
+- Veterinary instructions specifically for another species.
+- Completely unrelated topics.
+
+CONTEXT RULES:
+
+1. Review conversation history to understand references
+   such as "he", "she", "it", "my pet", and "my dog".
+
+2. If the conversation is already about a dog, allow
+   reasonable follow-up questions even when the user does
+   not repeat the word dog.
+
+3. If the user specifically requests assistance for a
+   non-dog animal, classify it as unsupported.
+
+4. If the user asks about both a dog and another animal,
+   classify as unsupported when veterinary assistance for
+   the other animal is requested.
+
+5. Do not reject general questions simply because they
+   mention another animal in passing.
+
+6. Do not reject greetings or simple conversational messages.
+
+7. When the animal is ambiguous and there is no context
+   establishing that it is a dog, classify it as unsupported
+   if the user is requesting animal-specific veterinary advice.
+
+Return ONLY valid JSON:
+
+{
+    "supported": true,
+    "reason": "Brief explanation"
+}
+"""
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            "CONVERSATION HISTORY:\n"
+                            + json.dumps(
+                                conversation_history[-10:],
+                                ensure_ascii=False
+                            )
+                            + "\n\nLATEST MESSAGE:\n"
+                            + message
+                        )
+                    }
+                ],
+                temperature=0
+            )
+
+            scope_result = json.loads(
+                scope_response.choices[0].message.content
+            )
+
+            if scope_result.get("supported") is not True:
+                return JsonResponse({
+                    "success": False,
+                    "type": "unsupported",
+                    "error": (
+                        "We Care Pet Care currently supports "
+                        "dogs only. Please ask a dog-related question."
+                    ),
+                    "response": (
+                        "Thank you for contacting We Care Pet Care. "
+                        "Our AI assistant is specifically designed "
+                        "for dogs. I can help with dog health, breed "
+                        "identification, nutrition, grooming, behavior, "
+                        "and veterinary concerns. Please ask me "
+                        "something about your dog."
+                    ),
+                    "emergency": False,
+                    "risk_level": None,
+                    "reason": "Outside the supported application scope.",
+                    "needs_more_information": False,
+                    "follow_up_question": "",
+                    "recommended_action": (
+                        "Please ask a question related to dogs."
+                    ),
+                    "sms_sent": False,
+                    "image_analysis": None,
+                    "veterinarian_contact": {
+                        "clinic_name": VETERINARY_CLINIC_NAME,
+                        "phone": VETERINARY_CONTACT_NUMBER,
+                        "display_phone": VETERINARY_DISPLAY_NUMBER,
+                        "address": VETERINARY_CLINIC_ADDRESS,
+                    }
+                }, status=400)
+
+        except Exception as exc:
+            print("DOG-ONLY SCOPE ERROR:", exc)
+
+            return JsonResponse({
+                "success": False,
+                "error": (
+                    "Unable to verify your request. "
+                    "Please try again."
+                )
+            }, status=503)
 
     # =========================================================
     # 7. IMAGE ANALYSIS AND BREED PERCENTAGES
@@ -367,7 +512,105 @@ def send_message(request, session_id):
 You are the dog breed identification and image analysis assistant
 for We Care Pet Care.
 
-Analyze the actual newly uploaded image.
+STRICT DOG-ONLY POLICY:
+
+We Care Pet Care exclusively supports DOGS.
+
+Analyze the actual newly uploaded image independently.
+
+FIRST: DETERMINE WHETHER A DOG IS VISIBLE.
+
+If the image contains only a cat, bird, rabbit, hamster,
+guinea pig, reptile, fish, or any other non-dog animal,
+do not analyze that animal.
+
+If no dog is visible, return ONLY this JSON structure:
+
+{
+  "breed": "Unsupported animal",
+  "detected_breed": "Unsupported animal",
+  "confidence": "low",
+  "breed_percentages": [],
+  "description": "The uploaded image does not contain a dog.",
+  "possible_health_observations": "",
+  "comparison": "",
+  "dog_visible": false,
+  "visible_blood": "uncertain",
+  "bleeding_observation": "Not assessed because the image is outside the supported scope.",
+  "wound_visible": "uncertain",
+  "limitations": "We Care Pet Care supports dogs only."
+}
+
+If a dog is visible, continue with the following analysis.
+
+BREED IDENTIFICATION:
+
+1. Identify the most likely dog breed or breed mix from visible
+   characteristics such as coat, color, ears, muzzle, body shape,
+   and other recognizable physical features.
+
+2. Include up to three plausible dog breed categories when supported
+   by the photograph.
+
+3. breed_percentages must be a list of objects containing:
+   breed, percentage, and evidence.
+
+4. Percentages must be whole numbers from 0 to 100 and must total
+   exactly 100 when a dog is visible and a visual estimate is possible.
+
+5. Do not invent additional breeds just to fill the list.
+   Use "Other or uncertain ancestry" for an uncertain remainder.
+
+6. If one breed appears most likely, it can receive 100% as a
+   visual resemblance estimate when appropriate.
+
+7. Be cautious with puppies, blurry images, unusual angles,
+   mixed breeds, and images where the dog's body is obscured.
+
+8. Set confidence to low when the breed cannot be determined
+   reliably from the photograph.
+
+9. These are visual estimates of breed resemblance, NOT DNA
+   ancestry percentages. Do not claim genetic certainty.
+
+10. If multiple dogs appear, explain that the image contains
+    multiple dogs. Do not combine their breed estimates into
+    one dog's percentages.
+
+11. If no dog is visible, set dog_visible=false, breed="Unknown",
+    detected_breed="Unknown", and breed_percentages=[].
+
+12. Do not mistake toys, stuffed animals, or drawings for actual dogs.
+
+13. If the image is ambiguous and you cannot confidently determine
+    whether a dog is present, set dog_visible=null and explain
+    the uncertainty in limitations.
+
+HEALTH AND BLEEDING:
+
+1. Describe only what is actually visible.
+
+2. Red fur, red objects, food, paint, and stains are not
+   automatically blood.
+
+3. Never assume blood is visible because an earlier message
+   mentioned bleeding.
+
+4. Use visible_blood="uncertain" when the image is inconclusive.
+
+5. Visible blood does not prove active or severe bleeding.
+
+6. A photograph cannot establish whether bleeding is ongoing.
+
+7. Do not invent wounds, symptoms, or injuries.
+
+8. Do not diagnose medical conditions from a photograph.
+
+9. A normal-looking photo does not prove that a dog is healthy.
+
+10. Do not mistake uncertainty for proof that no injury exists.
+
+11. Do not apply observations to an animal that is not a dog.
 
 Return ONLY valid JSON with this structure:
 
@@ -397,58 +640,6 @@ Return ONLY valid JSON with this structure:
   "limitations": "Limitations of this image assessment"
 }
 
-BREED IDENTIFICATION:
-
-1. Identify the most likely breed or breed mix from visible
-   characteristics such as coat, color, ears, muzzle, body shape,
-   and other recognizable physical features.
-
-2. Include up to three plausible breed categories when supported
-   by the photograph.
-
-3. breed_percentages must be a list of objects containing:
-   breed, percentage, and evidence.
-
-4. Percentages must be whole numbers from 0 to 100 and must total
-   exactly 100 when a dog is visible.
-
-5. Do not invent additional breeds just to fill the list.
-   Use "Other or uncertain ancestry" for an uncertain remainder.
-
-6. If one breed appears most likely, it can receive 100% as a
-   visual resemblance estimate when appropriate.
-
-7. Be cautious with puppies, blurry images, unusual angles,
-   mixed breeds, and images where the dog's body is obscured.
-
-8. Set confidence to low when the breed cannot be determined
-   reliably from the photograph.
-
-9. These are visual estimates of breed resemblance, NOT DNA
-   ancestry percentages. Do not claim genetic certainty.
-
-10. If multiple dogs appear, explain that the image contains
-    multiple dogs. Do not combine their breed estimates into
-    one dog's percentages.
-
-11. If no dog is visible, set dog_visible=false, breed="Unknown",
-    detected_breed="Unknown", and breed_percentages=[].
-
-HEALTH AND BLEEDING:
-
-1. Describe only what is actually visible.
-2. Red fur, red objects, food, paint, and stains are not
-   automatically blood.
-3. Never assume blood is visible because an earlier message
-   mentioned bleeding.
-4. Use visible_blood="uncertain" when the image is inconclusive.
-5. Visible blood does not prove active or severe bleeding.
-6. A photograph cannot establish whether bleeding is ongoing.
-7. Do not invent wounds, symptoms, or injuries.
-8. Do not diagnose medical conditions from a photograph.
-9. A normal-looking photo does not prove that a dog is healthy.
-10. Do not mistake uncertainty for proof that no injury exists.
-
 Return valid JSON only. Do not include Markdown.
 """
 
@@ -475,7 +666,10 @@ Return valid JSON only. Do not include Markdown.
                                     f"Registered sex: "
                                     f"{getattr(customer, 'sex', '') or 'Unknown'}\n"
                                     f"Registered age: {dog_age}\n\n"
-                                    "Identify the likely breed or mix, "
+                                    "Determine whether the image actually "
+                                    "contains a dog before performing "
+                                    "any analysis. If a dog is visible, "
+                                    "identify its likely breed or mix, "
                                     "estimate visual breed percentages, "
                                     "and describe visible health observations. "
                                     "Do not treat earlier conversation details "
@@ -530,6 +724,7 @@ Return valid JSON only. Do not include Markdown.
             )
 
             # Validate the breed percentage list.
+
             breed_percentages = image_analysis.get(
                 "breed_percentages"
             )
@@ -618,11 +813,67 @@ Return valid JSON only. Do not include Markdown.
             }
 
     # =========================================================
+    # 7A. REJECT NON-DOG IMAGES
+    # =========================================================
+    # Only explicitly identified non-dog images are rejected.
+    # An inconclusive image is not automatically classified
+    # as a non-dog image.
+
+    if (
+        image_analysis
+        and image_analysis.get("dog_visible") is False
+    ):
+        return JsonResponse({
+            "success": False,
+            "type": "unsupported",
+            "error": (
+                "We Care Pet Care supports dogs only. "
+                "Please upload an image containing a dog."
+            ),
+            "response": (
+                "I couldn't process this image because We Care "
+                "Pet Care currently supports dogs only. "
+                "Please upload a clear photograph of your dog "
+                "so I can help with breed identification and "
+                "visible health observations."
+            ),
+            "emergency": False,
+            "risk_level": None,
+            "reason": "Unsupported image.",
+            "needs_more_information": False,
+            "follow_up_question": "",
+            "recommended_action": (
+                "Please upload an image of a dog."
+            ),
+            "sms_sent": False,
+            "image_analysis": None,
+            "veterinarian_contact": {
+                "clinic_name": VETERINARY_CLINIC_NAME,
+                "phone": VETERINARY_CONTACT_NUMBER,
+                "display_phone": VETERINARY_DISPLAY_NUMBER,
+                "address": VETERINARY_CLINIC_ADDRESS,
+            }
+        }, status=400)
+
+    # =========================================================
     # 8. VETERINARY TRIAGE SYSTEM
     # =========================================================
 
     triage_system_prompt = """
 You are the veterinary safety triage assistant for We Care Pet Care.
+
+You are exclusively a DOG veterinary triage assistant.
+
+STRICT APPLICATION SCOPE:
+
+- Only assess dogs.
+- Do not provide veterinary triage for cats, birds, rabbits,
+  hamsters, reptiles, fish, or other animals.
+- The application scope is restricted to dogs.
+- Use dog-specific veterinary guidance.
+- Never assume every animal is a dog.
+- If the conversation is about another animal, it should have
+  already been rejected by the application scope validation.
 
 You are not a replacement for a veterinarian.
 
@@ -818,7 +1069,7 @@ Return valid JSON only. Do not include Markdown.
                     image_analysis,
                     ensure_ascii=False
                 )
-                + "\nAssess this new image alongside the conversation. "
+                + "\nAssess this new dog image alongside the conversation. "
                 "Do not assume that earlier symptoms are visible in "
                 "this photograph. Distinguish visible blood from "
                 "active bleeding. If the status is unknown, ask the owner."
@@ -926,11 +1177,6 @@ Return valid JSON only. Do not include Markdown.
         "hematemesis",
     ]
 
-    blood_in_vomit_reported = any(
-        phrase in normalized_message
-        for phrase in blood_in_vomit_phrases
-    )
-
     explicit_blood_denial = any(
         phrase in normalized_message
         for phrase in [
@@ -943,6 +1189,11 @@ Return valid JSON only. Do not include Markdown.
             "without blood in vomit",
             "without blood in the vomit",
         ]
+    )
+
+    blood_in_vomit_reported = any(
+        phrase in normalized_message
+        for phrase in blood_in_vomit_phrases
     )
 
     if blood_in_vomit_reported and not explicit_blood_denial:
@@ -1052,6 +1303,25 @@ Return valid JSON only. Do not include Markdown.
     assistant_system_prompt = f"""
 You are the conversational AI veterinary assistant for We Care Pet Care.
 
+STRICT APPLICATION SCOPE:
+
+We Care Pet Care exclusively supports DOGS.
+
+You must only provide veterinary assistance, health guidance,
+breed identification, nutrition advice, grooming information,
+behavior advice, and other pet-care information for dogs.
+
+Never provide veterinary instructions for cats, birds, rabbits,
+hamsters, reptiles, fish, or other animal species.
+
+If the owner asks about another animal, politely explain that
+the application supports dogs only.
+
+Do not identify other animals as dog breeds.
+
+If the user changes the conversation from dogs to another animal,
+politely redirect them to dog-related questions.
+
 You are not a replacement for a veterinarian.
 
 DOG PROFILE:
@@ -1111,14 +1381,13 @@ CONVERSATION RULES:
 - Ask focused follow-up questions when information is missing.
 
 BREED IDENTIFICATION:
-When image-analysis results are provided, explain the likely breed
+When image-analysis results are provided, explain the likely dog breed
 or breeds and their estimated visual percentages.
 
 Explain that percentages are estimates of visual resemblance,
 not confirmed genetic ancestry or DNA test results.
 
 Do not invent breed percentages when the analysis is inconclusive.
-Do not claim that a breed has been genetically confirmed.
 
 IMAGE AND BLEEDING:
 - Assess the latest uploaded image using its image-analysis results.
@@ -1149,13 +1418,13 @@ Do not display internal risk assessment fields.
 
     if image_analysis:
         assistant_system_prompt += (
-            "\n\nLATEST UPLOADED IMAGE ANALYSIS:\n"
+            "\n\nLATEST UPLOADED DOG IMAGE ANALYSIS:\n"
             + json.dumps(
                 image_analysis,
                 ensure_ascii=False
             )
             + "\nDescribe the actual visible findings. "
-              "Include likely breed percentages when available. "
+              "Include likely dog breed percentages when available. "
               "Do not mistake visual estimates for DNA results. "
               "Do not infer bleeding from earlier conversation alone."
         )
@@ -1190,13 +1459,13 @@ Do not display internal risk assessment fields.
             response_messages.append({
                 "role": "user",
                 "content": (
-                    "Please analyze my newly uploaded image. "
+                    "Please analyze my newly uploaded dog image. "
                     "The image analysis results are:\n"
                     + json.dumps(
                         image_analysis,
                         ensure_ascii=False
                     )
-                    + "\nDescribe the likely breed and percentage "
+                    + "\nDescribe the likely dog breed and percentage "
                     "estimates if available, and describe visible "
                     "health observations accurately."
                 )
