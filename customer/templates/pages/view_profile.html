@@ -173,6 +173,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
 
+                    <!-- Full Name -->
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
                             Full Name
@@ -182,6 +183,7 @@
                         </p>
                     </div>
 
+                    <!-- Contact Number -->
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
                             Contact Number
@@ -191,6 +193,7 @@
                         </p>
                     </div>
 
+                    <!-- Address -->
                     <div class="md:col-span-2">
                         <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
                             Address
@@ -200,21 +203,13 @@
                         </p>
                     </div>
 
+                    <!-- Username -->
                     <div>
                         <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
                             Username
                         </p>
                         <p class="font-semibold text-gray-800 break-words">
                             {{ request.user.username }}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
-                            Email Address
-                        </p>
-                        <p class="font-semibold text-gray-800 break-words">
-                            {{ request.user.email|default:"Not provided" }}
                         </p>
                     </div>
 

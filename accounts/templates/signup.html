@@ -218,164 +218,146 @@
             </div>
 
             <!-- Signup Form -->
-            <form
-                method="POST"
-                id="signupForm"
-                class="space-y-5"
+
+<!-- Signup Form -->
+<form
+    method="POST"
+    id="signupForm"
+    class="space-y-5"
+>
+    {% csrf_token %}
+
+    <!-- Django Error -->
+    {% if error %}
+        <div
+            role="alert"
+            class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- Username -->
+    <div>
+        <label
+            for="username"
+            class="block text-sm font-semibold text-slate-700 mb-1.5"
+        >
+            Username
+        </label>
+
+        <input
+            type="text"
+            id="username"
+            name="username"
+            value="{{ form_data.username|default:'' }}"
+            autocomplete="username"
+            minlength="3"
+            required
+            class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all text-sm"
+            placeholder="Choose a username"
+        >
+    </div>
+
+    <!-- Password -->
+    <div>
+        <label
+            for="password"
+            class="block text-sm font-semibold text-slate-700 mb-1.5"
+        >
+            Password
+        </label>
+
+        <div class="relative">
+            <input
+                type="password"
+                id="password"
+                name="password"
+                autocomplete="new-password"
+                minlength="8"
+                required
+                class="w-full pl-4 pr-12 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all text-sm"
+                placeholder="Create a password"
             >
-                {% csrf_token %}
 
-                <!-- Django Error -->
-                {% if error %}
-                    <div
-                        role="alert"
-                        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                    >
-                        {{ error }}
-                    </div>
-                {% endif %}
-
-                <!-- Username -->
-                <div>
-                    <label
-                        for="username"
-                        class="block text-sm font-semibold text-slate-700 mb-1.5"
-                    >
-                        Username
-                    </label>
-
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        value="{{ form_data.username|default:'' }}"
-                        autocomplete="username"
-                        minlength="3"
-                        required
-                        class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all text-sm"
-                        placeholder="Choose a username"
-                    >
-                </div>
-
-                <!-- Email Address -->
-                <div>
-                    <label
-                        for="email"
-                        class="block text-sm font-semibold text-slate-700 mb-1.5"
-                    >
-                        Email Address
-                    </label>
-
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value="{{ form_data.email|default:'' }}"
-                        autocomplete="email"
-                        required
-                        class="w-full px-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all text-sm"
-                        placeholder="you@example.com"
-                    >
-                </div>
-
-                <!-- Password -->
-                <div>
-                    <label
-                        for="password"
-                        class="block text-sm font-semibold text-slate-700 mb-1.5"
-                    >
-                        Password
-                    </label>
-
-                    <div class="relative">
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            autocomplete="new-password"
-                            minlength="8"
-                            required
-                            class="w-full pl-4 pr-12 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 transition-all text-sm"
-                            placeholder="Create a password"
-                        >
-
-                        <!-- Password Toggle -->
-                        <button
-                            type="button"
-                            id="password-toggle"
-                            class="password-toggle absolute inset-y-0 right-0 flex items-center justify-center px-4"
-                            aria-label="Show password"
-                            aria-pressed="false"
-                            aria-controls="password"
-                            title="Show password"
-                        >
-                            <svg
-                                id="eye-open"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="w-5 h-5"
-                                aria-hidden="true"
-                            >
-                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-
-                            <svg
-                                id="eye-closed"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="w-5 h-5 hidden"
-                                aria-hidden="true"
-                            >
-                                <path d="M3 3l18 18"/>
-                                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
-                                <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15.5 15.5 0 0 1-4 4.7"/>
-                                <path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.2 0 2.3-.2 3.3-.6"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <p class="text-xs text-slate-400 mt-1.5">
-                        Use at least 8 characters for your password.
-                    </p>
-                </div>
-
-                <!-- Submit -->
-                <button
-                    type="submit"
-                    id="createAccountButton"
-                    class="w-full flex items-center justify-center gap-2 bg-amber-600 text-white font-semibold text-sm py-3 px-4 rounded-xl hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all shadow-md shadow-amber-200/50"
+            <!-- Password Toggle -->
+            <button
+                type="button"
+                id="password-toggle"
+                class="password-toggle absolute inset-y-0 right-0 flex items-center justify-center px-4"
+                aria-label="Show password"
+                aria-pressed="false"
+                aria-controls="password"
+                title="Show password"
+            >
+                <svg
+                    id="eye-open"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="w-5 h-5"
+                    aria-hidden="true"
                 >
-                    <span
-                        id="createAccountSpinner"
-                        class="loading-spinner hidden"
-                        aria-hidden="true"
-                    ></span>
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
 
-                    <span id="createAccountButtonText">
-                        Create Account
-                    </span>
-                </button>
-
-                <p
-                    id="signupLoadingMessage"
-                    class="hidden text-center text-sm text-amber-700"
-                    role="status"
-                    aria-live="polite"
+                <svg
+                    id="eye-closed"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="w-5 h-5 hidden"
+                    aria-hidden="true"
                 >
-                    Creating your account. Please wait...
-                </p>
-            </form>
+                    <path d="M3 3l18 18"/>
+                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
+                    <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15.5 15.5 0 0 1-4 4.7"/>
+                    <path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.2 0 2.3-.2 3.3-.6"/>
+                </svg>
+            </button>
+        </div>
+
+        <p class="text-xs text-slate-400 mt-1.5">
+            Use at least 8 characters for your password.
+        </p>
+    </div>
+
+    <!-- Submit -->
+    <button
+        type="submit"
+        id="createAccountButton"
+        class="w-full flex items-center justify-center gap-2 bg-amber-600 text-white font-semibold text-sm py-3 px-4 rounded-xl hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all shadow-md shadow-amber-200/50"
+    >
+        <span
+            id="createAccountSpinner"
+            class="loading-spinner hidden"
+            aria-hidden="true"
+        ></span>
+
+        <span id="createAccountButtonText">
+            Create Account
+        </span>
+    </button>
+
+    <p
+        id="signupLoadingMessage"
+        class="hidden text-center text-sm text-amber-700"
+        role="status"
+        aria-live="polite"
+    >
+        Creating your account. Please wait...
+    </p>
+</form>
+
 
             <!-- Footer -->
             <div class="text-center mt-6 pt-5 border-t border-slate-100">

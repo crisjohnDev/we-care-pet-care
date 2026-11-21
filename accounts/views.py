@@ -60,16 +60,14 @@ def login_view(request):
 def signup_view(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
-        email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
 
         form_data = {
             "username": username,
-            "email": email,
         }
 
         # Validate required fields
-        if not username or not email or not password:
+        if not username or not password:
             return render(request, "signup.html", {
                 "error": "Please complete all required fields.",
                 "form_data": form_data,
@@ -79,13 +77,6 @@ def signup_view(request):
         if User.objects.filter(username__iexact=username).exists():
             return render(request, "signup.html", {
                 "error": "Username already exists. Please choose another.",
-                "form_data": form_data,
-            })
-
-        # Check duplicate email
-        if User.objects.filter(email__iexact=email).exists():
-            return render(request, "signup.html", {
-                "error": "Email already exists. Please use another email.",
                 "form_data": form_data,
             })
 
@@ -99,7 +90,6 @@ def signup_view(request):
         # Create the account
         user = User.objects.create_user(
             username=username,
-            email=email,
             password=password,
         )
 
