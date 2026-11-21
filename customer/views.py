@@ -13,6 +13,7 @@ from datetime import date
 from .sms import notify_vet
 from django.contrib.auth import logout
 from django.contrib import messages
+import re
 client = OpenAI()
 
 @login_required
@@ -347,7 +348,52 @@ def send_message(request, session_id):
     # Greetings and conversational follow-ups are allowed.
     # Questions about other animal species are rejected.
 
-    if message:
+    # A short answer to the assistant's previous question is not a new
+    # standalone topic. Preserve the active dog-care conversation when the
+    # user replies with phrases such as "has stopped", "still bleeding",
+    # "yes", or "no". This prevents the dog-only scope classifier from
+    # rejecting a valid contextual answer.
+    previous_history = conversation_history[:-1] if message else conversation_history
+    previous_user_text = " ".join(
+        item.get("content", "")
+        for item in previous_history
+        if item.get("role") == "user"
+    ).lower()
+    previous_assistant_text = " ".join(
+        item.get("content", "")
+        for item in previous_history[-4:]
+        if item.get("role") == "assistant"
+    ).lower()
+
+    dog_context_exists = bool(
+        re.search(r"\b(dog|puppy|my pet|my dog's|my dogs)\b", previous_user_text)
+        or re.search(
+            r"\b(bleed|bleeding|blood|wound|wounded|injury|injured|"
+            r"limping|swelling|swollen|vomit|vomiting|seizure|breathing)\b",
+            previous_user_text
+        )
+    )
+    assistant_was_asking_follow_up = (
+        "?" in previous_assistant_text
+        and bool(re.search(
+            r"\b(bleed|bleeding|stopped|continuous|where|how|is it|does|"
+            r"your dog|your dog's|wound|pain|swelling|vomit)\b",
+            previous_assistant_text
+        ))
+    )
+    is_contextual_follow_up = bool(
+        message
+        and len(message) <= 120
+        and dog_context_exists
+        and assistant_was_asking_follow_up
+        and not re.search(
+            r"\b(cat|kitten|bird|rabbit|hamster|guinea pig|"
+            r"reptile|snake|lizard|fish)\b",
+            message.lower()
+        )
+    )
+
+    if message and not is_contextual_follow_up:
         try:
             scope_response = client.chat.completions.create(
                 model="gpt-4.1-mini",
@@ -2015,9 +2061,6 @@ numbered steps over dense paragraphs.
             "address": VETERINARY_CLINIC_ADDRESS,
         }
     })
-
-
-
 
 
 @login_required
