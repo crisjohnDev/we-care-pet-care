@@ -182,6 +182,7 @@ VETERINARY_CLINIC_ADDRESS = (
 def contact_us(request):
     return render(request, "pages/contact_us.html")
 
+
 @login_required
 @require_POST
 def send_message(request, session_id):
@@ -278,10 +279,10 @@ def send_message(request, session_id):
     # =========================================================
     # 5. DO NOT SAVE USER MESSAGE TO DATABASE
     # =========================================================
+
     # User messages are stored in browser localStorage.
     # Django only processes the message and generates a response.
     # Do not create ChatMessage records here.
-    #
     # Do not update session.title using the user's message.
 
     # =========================================================
@@ -305,6 +306,7 @@ def send_message(request, session_id):
     conversation_history = []
 
     for item in submitted_history[-19:]:
+
         if not isinstance(item, dict):
             continue
 
@@ -333,6 +335,7 @@ def send_message(request, session_id):
             "role": "user",
             "content": message[:8000]
         })
+
     elif image:
         conversation_history.append({
             "role": "user",
@@ -344,195 +347,849 @@ def send_message(request, session_id):
     # =========================================================
     # 6A. DOG-ONLY TEXT RESTRICTION
     # =========================================================
-    # Only dog-related questions are supported.
-    # Greetings and conversational follow-ups are allowed.
-    # Questions about other animal species are rejected.
 
-    # A short answer to the assistant's previous question is not a new
-    # standalone topic. Preserve the active dog-care conversation when the
-    # user replies with phrases such as "has stopped", "still bleeding",
-    # "yes", or "no". This prevents the dog-only scope classifier from
-    # rejecting a valid contextual answer.
-    previous_history = conversation_history[:-1] if message else conversation_history
+    # IMPORTANT:
+    # Follow-up detection must happen BEFORE the scope classifier.
+    # Do not put this detection inside:
+    #
+    # if message and not is_contextual_follow_up:
+    #
+    # The scope classifier should run only after this section.
+
+    latest_message_lower = message.strip().lower()
+
+    # ---------------------------------------------------------
+    # Get previous conversation without the current message
+    # ---------------------------------------------------------
+
+    previous_history = (
+        conversation_history[:-1]
+        if message
+        else conversation_history
+    )
+
     previous_user_text = " ".join(
         item.get("content", "")
         for item in previous_history
         if item.get("role") == "user"
     ).lower()
+
+    # Use recent assistant messages to detect what the assistant
+    # was asking the user.
     previous_assistant_text = " ".join(
         item.get("content", "")
-        for item in previous_history[-4:]
+        for item in previous_history[-6:]
         if item.get("role") == "assistant"
     ).lower()
 
+    previous_conversation_text = (
+        previous_user_text + " " + previous_assistant_text
+    )
+
+    # ---------------------------------------------------------
+    # A. Confirm that the previous conversation involved a dog
+    # ---------------------------------------------------------
+
     dog_context_exists = bool(
-        re.search(r"\b(dog|puppy|my pet|my dog's|my dogs)\b", previous_user_text)
-        or re.search(
-            r"\b(bleed|bleeding|blood|wound|wounded|injury|injured|"
-            r"limping|swelling|swollen|vomit|vomiting|seizure|breathing)\b",
-            previous_user_text
+        re.search(
+            r"\b(dog|dogs|puppy|puppies)\b",
+            previous_conversation_text,
+            re.IGNORECASE
         )
     )
-    assistant_was_asking_follow_up = (
-        "?" in previous_assistant_text
-        and bool(re.search(
-            r"\b(bleed|bleeding|stopped|continuous|where|how|is it|does|"
-            r"your dog|your dog's|wound|pain|swelling|vomit)\b",
-            previous_assistant_text
-        ))
+
+    # ---------------------------------------------------------
+    # B. Confirm that the previous conversation involved care
+    #    or a symptom, rather than an unrelated dog discussion.
+    # ---------------------------------------------------------
+
+    dog_symptom_context = bool(
+        re.search(
+            r"\b("
+            r"bleed|bleeding|blood|"
+            r"wound|wounds|wounded|"
+            r"injury|injured|"
+            r"limping|limp|"
+            r"swelling|swollen|"
+            r"vomit|vomiting|"
+            r"diarrhea|diarrhoea|"
+            r"seizure|seizures|"
+            r"breathing|breath|"
+            r"pain|painful|hurt|hurting|"
+            r"itching|itchy|"
+            r"cough|coughing|"
+            r"weak|weakness|"
+            r"not eating|"
+            r"loss of appetite"
+            r")\b",
+            previous_conversation_text,
+            re.IGNORECASE
+        )
     )
+
+    dog_care_context_exists = (
+        dog_context_exists
+        and dog_symptom_context
+    )
+
+    # ---------------------------------------------------------
+    # C. Detect whether the assistant previously asked a
+    #    relevant follow-up question.
+    #
+    # Do not require a literal question mark. Some responses
+    # may contain HTML or formatted text.
+    # ---------------------------------------------------------
+
+    assistant_was_asking_follow_up = bool(
+        re.search(
+            r"\b("
+            r"where|"
+            r"which part|"
+            r"what part|"
+            r"what area|"
+            r"which area|"
+            r"exactly where|"
+            r"how long|"
+            r"has it stopped|"
+            r"is it still|"
+            r"is your dog|"
+            r"does your dog|"
+            r"can you tell me|"
+            r"could you tell me|"
+            r"how severe|"
+            r"when did"
+            r")\b",
+            previous_assistant_text,
+            re.IGNORECASE
+        )
+    )
+
+    # ---------------------------------------------------------
+    # D. Detect explicit mentions of another animal
+    # ---------------------------------------------------------
+
+    explicit_other_animal = bool(
+        re.search(
+            r"\b("
+            r"cat|cats|kitten|kittens|"
+            r"bird|birds|"
+            r"rabbit|rabbits|"
+            r"hamster|hamsters|"
+            r"guinea pig|guinea pigs|"
+            r"reptile|reptiles|"
+            r"snake|snakes|"
+            r"lizard|lizards|"
+            r"fish|"
+            r"turtle|turtles"
+            r")\b",
+            latest_message_lower,
+            re.IGNORECASE
+        )
+    )
+
+    # ---------------------------------------------------------
+    # E. Detect body-part descriptions
+    # ---------------------------------------------------------
+
+    body_part_pattern = re.compile(
+        r"\b("
+        r"leg|legs|"
+        r"paw|paws|"
+        r"foot|feet|"
+        r"toe|toes|"
+        r"tail|"
+        r"stomach|belly|abdomen|"
+        r"chest|"
+        r"back|"
+        r"neck|"
+        r"head|"
+        r"ear|ears|"
+        r"eye|eyes|"
+        r"nose|"
+        r"mouth|"
+        r"gum|gums|"
+        r"throat|"
+        r"skin|"
+        r"body|"
+        r"shoulder|shoulders|"
+        r"hip|hips|"
+        r"thigh|thighs|"
+        r"knee|knees|"
+        r"elbow|elbows|"
+        r"wrist|wrists|"
+        r"ankle|ankles"
+        r")\b",
+        re.IGNORECASE
+    )
+
+    has_body_part = bool(
+        body_part_pattern.search(latest_message_lower)
+    )
+
+    # Examples:
+    # right upper legs
+    # upper right of legs
+    # left front leg
+    # both back legs
+    # near his paw
+
+    dog_location_answer = bool(
+        has_body_part
+        and len(latest_message_lower) <= 200
+    )
+
+    # ---------------------------------------------------------
+    # F. Detect short symptom answers
+    # ---------------------------------------------------------
+
+    short_symptom_answer = bool(
+        re.fullmatch(
+            r"\s*("
+            r"yes|no|"
+            r"yes it has|no it has not|"
+            r"yes it stopped|"
+            r"it stopped|"
+            r"has stopped|"
+            r"it has stopped|"
+            r"stopped|"
+            r"still bleeding|"
+            r"it's still bleeding|"
+            r"it is still bleeding|"
+            r"not anymore|"
+            r"a little|"
+            r"a lot|"
+            r"just started|"
+            r"getting worse|"
+            r"getting better|"
+            r"since yesterday|"
+            r"since this morning|"
+            r"for a few minutes|"
+            r"for an hour|"
+            r"for hours"
+            r")[.!]?\s*",
+            latest_message_lower,
+            re.IGNORECASE
+        )
+    )
+
+    # ---------------------------------------------------------
+    # G. Final contextual follow-up decision
+    # ---------------------------------------------------------
+
     is_contextual_follow_up = bool(
         message
-        and len(message) <= 120
-        and dog_context_exists
+        and len(latest_message_lower) <= 200
+        and dog_care_context_exists
         and assistant_was_asking_follow_up
-        and not re.search(
-            r"\b(cat|kitten|bird|rabbit|hamster|guinea pig|"
-            r"reptile|snake|lizard|fish)\b",
-            message.lower()
+        and not explicit_other_animal
+        and (
+            dog_location_answer
+            or short_symptom_answer
         )
     )
 
+    # ---------------------------------------------------------
+    # H. Debug information
+    # ---------------------------------------------------------
+
+    print("\n========== DOG FOLLOW-UP DEBUG ==========")
+    print("CURRENT MESSAGE:", latest_message_lower)
+    print("PREVIOUS USER TEXT:", previous_user_text)
+    print("PREVIOUS ASSISTANT TEXT:", previous_assistant_text)
+    print("DOG CONTEXT:", dog_context_exists)
+    print("SYMPTOM CONTEXT:", dog_symptom_context)
+    print("DOG CARE CONTEXT:", dog_care_context_exists)
+    print("ASSISTANT FOLLOW-UP:", assistant_was_asking_follow_up)
+    print("BODY PART DETECTED:", has_body_part)
+    print("LOCATION ANSWER:", dog_location_answer)
+    print("SHORT SYMPTOM ANSWER:", short_symptom_answer)
+    print("OTHER ANIMAL:", explicit_other_animal)
+    print("CONTEXTUAL FOLLOW-UP:", is_contextual_follow_up)
+    print("========================================\n")
+
+    # =========================================================
+    # 6B. RUN DOG-ONLY SCOPE CLASSIFIER
+    # =========================================================
+
+    # Keep your existing AI scope-classifier code here.
+    #
+    # IMPORTANT:
+    # Run it only when:
+    #
+    # if message and not is_contextual_follow_up:
+    #
+    # Do not put the follow-up detection code inside this condition.
+    #
+    # Your existing scope-classifier prompt, JSON parsing,
+    # unsupported-topic response, and exception handling
+    # should remain unchanged.
+
+
+
     if message and not is_contextual_follow_up:
-        try:
-            scope_response = client.chat.completions.create(
-                model="gpt-4.1-mini",
-                response_format={"type": "json_object"},
-                messages=[
-                    {
-                        "role": "system",
-                        "content": """
-You are the request scope classifier for We Care Pet Care.
 
-STRICT POLICY:
-This application exclusively supports DOGS.
+        # =========================================================
+        # ADDITION: BETTER CONTEXTUAL DOG-CARE FOLLOW-UP DETECTION
+        # =========================================================
+        # Allows short answers to questions about bleeding, wounds,
+        # injuries, pain, and other dog symptoms.
+        #
+        # Examples:
+        # "has stopped"
+        # "it's still bleeding"
+        # "upper legs"
+        # "upper part of leg"
+        # "from the upper legs"
+        # "left front leg"
+        # "both back legs"
+        # "near his paw"
+        # "yes", "no", "not anymore"
 
-Determine whether the latest user message is within the
-supported dog-only scope.
 
-SUPPORTED:
-- Dog health and wellness.
-- Dog symptoms and veterinary concerns.
-- Dog breeds and breed identification.
-- Dog feeding and nutrition.
-- Dog grooming and hygiene.
-- Dog behavior and training.
-- Dog vaccination and preventive care.
-- Dog emergencies.
-- Dog medications and veterinary questions.
-- General greetings.
-- Conversational follow-up questions about a previously
-  discussed dog.
-- Questions about the application itself.
+        # =========================================================
+        # DOG-ONLY SCOPE CHECK
+        # IMPROVED CONTEXTUAL DOG-CARE FOLLOW-UP DETECTION
+        # =========================================================
 
-NOT SUPPORTED:
-- Cats and kittens.
-- Birds.
-- Rabbits.
-- Hamsters and guinea pigs.
-- Reptiles.
-- Fish.
-- Other animal species.
-- Veterinary instructions specifically for another species.
-- Completely unrelated topics.
+        latest_message_lower = (message or "").strip().lower()
 
-CONTEXT RULES:
 
-1. Review conversation history to understand references
-   such as "he", "she", "it", "my pet", and "my dog".
+        # ---------------------------------------------------------
+        # 1. SAFELY READ CONVERSATION HISTORY
+        # ---------------------------------------------------------
 
-2. If the conversation is already about a dog, allow
-   reasonable follow-up questions even when the user does
-   not repeat the word dog.
+        history_for_context = (
+            conversation_history
+            if isinstance(conversation_history, list)
+            else []
+        )
 
-3. If the user specifically requests assistance for a
-   non-dog animal, classify it as unsupported.
 
-4. If the user asks about both a dog and another animal,
-   classify as unsupported when veterinary assistance for
-   the other animal is requested.
+        def get_history_content(item):
 
-5. Do not reject general questions simply because they
-   mention another animal in passing.
+            if not isinstance(item, dict):
+                return ""
 
-6. Do not reject greetings or simple conversational messages.
+            content = item.get("content", "")
 
-7. When the animal is ambiguous and there is no context
-   establishing that it is a dog, classify it as unsupported
-   if the user is requesting animal-specific veterinary advice.
+            if isinstance(content, str):
+                return content
 
-Return ONLY valid JSON:
+            if isinstance(content, list):
 
-{
-    "supported": true,
-    "reason": "Brief explanation"
-}
-"""
+                parts = []
+
+                for part in content:
+
+                    if isinstance(part, dict):
+                        parts.append(str(part.get("text", "")))
+                    else:
+                        parts.append(str(part))
+
+                return " ".join(parts)
+
+            return str(content or "")
+
+
+        # Avoid reading the current user message as previous context
+        previous_history = history_for_context.copy()
+
+        if previous_history:
+
+            last_item = previous_history[-1]
+
+            if (
+                isinstance(last_item, dict)
+                and last_item.get("role") == "user"
+                and get_history_content(last_item).strip().lower()
+                == latest_message_lower
+            ):
+
+                previous_history = previous_history[:-1]
+
+
+        # ---------------------------------------------------------
+        # 2. EXTRACT PREVIOUS USER AND ASSISTANT MESSAGES
+        # ---------------------------------------------------------
+
+        previous_user_text = " ".join(
+            get_history_content(item)
+            for item in previous_history
+            if isinstance(item, dict)
+            and item.get("role") == "user"
+        ).lower()
+
+
+        previous_assistant_text = " ".join(
+            get_history_content(item)
+            for item in previous_history
+            if isinstance(item, dict)
+            and item.get("role") == "assistant"
+        ).lower()
+
+
+        previous_conversation_text = (
+            previous_user_text + " " + previous_assistant_text
+        )
+
+
+        # ---------------------------------------------------------
+        # 3. DETECT EXPLICIT OTHER ANIMALS
+        # ---------------------------------------------------------
+
+        explicit_other_animal = bool(re.search(
+            r"\b("
+            r"cat|cats|kitten|kittens|"
+            r"bird|birds|parrot|parrots|"
+            r"rabbit|rabbits|bunny|bunnies|"
+            r"hamster|hamsters|"
+            r"guinea pig|guinea pigs|"
+            r"reptile|reptiles|snake|snakes|"
+            r"lizard|lizards|fish|"
+            r"horse|horses|cow|cows|"
+            r"goat|goats|sheep|"
+            r"chicken|chickens|duck|ducks"
+            r")\b",
+            latest_message_lower,
+            re.IGNORECASE
+        ))
+
+
+        # ---------------------------------------------------------
+        # 4. DETECT PREVIOUS DOG-CARE CONTEXT
+        # ---------------------------------------------------------
+
+        dog_context_exists = bool(re.search(
+            r"\b(dog|dogs|puppy|puppies)\b",
+            previous_conversation_text,
+            re.IGNORECASE
+        ))
+
+
+        dog_symptom_context_exists = bool(re.search(
+            r"\b("
+            r"bleed|bleeding|blood|"
+            r"wound|wounded|injury|injuries|injured|"
+            r"cut|cuts|pain|painful|"
+            r"swelling|swollen|"
+            r"limping|limp|"
+            r"vomit|vomiting|diarrhea|diarrhoea|"
+            r"seizure|seizing|breathing|"
+            r"itching|scratching|rash|"
+            r"fever|sick|sickness|"
+            r"cough|coughing|"
+            r"weak|weakness|"
+            r"not eating"
+            r")\b",
+            previous_conversation_text,
+            re.IGNORECASE
+        ))
+
+
+        dog_care_context_exists = bool(
+            dog_context_exists and dog_symptom_context_exists
+        )
+
+
+        # ---------------------------------------------------------
+        # 5. DETECT PREVIOUS ASSISTANT FOLLOW-UP QUESTION
+        # ---------------------------------------------------------
+
+        assistant_follow_up_context = bool(re.search(
+            r"\b("
+            r"where|which part|what part|"
+            r"exactly where|exact location|"
+            r"location|body part|body area|"
+            r"how long|how much|"
+            r"has it stopped|is it still|"
+            r"does your dog|is your dog|"
+            r"can you describe|"
+            r"please tell me|"
+            r"let me know|"
+            r"where is the bleeding|"
+            r"where is it bleeding"
+            r")\b",
+            previous_assistant_text,
+            re.IGNORECASE
+        ))
+
+
+        # ---------------------------------------------------------
+        # 6. DETECT DOG BODY PARTS
+        # ---------------------------------------------------------
+
+        body_part_pattern = re.compile(
+            r"\b("
+            r"leg|legs|"
+            r"paw|paws|"
+            r"foot|feet|"
+            r"toe|toes|"
+            r"thigh|thighs|"
+            r"hip|hips|"
+            r"ear|ears|"
+            r"eye|eyes|"
+            r"neck|"
+            r"chest|"
+            r"belly|"
+            r"stomach|"
+            r"abdomen|"
+            r"tail|"
+            r"head|"
+            r"face|"
+            r"mouth|"
+            r"nose|"
+            r"skin|"
+            r"shoulder|shoulders|"
+            r"knee|knees|"
+            r"elbow|elbows|"
+            r"back|"
+            r"spine|"
+            r"throat"
+            r")\b",
+            re.IGNORECASE
+        )
+
+
+        has_body_part = bool(
+            body_part_pattern.search(latest_message_lower)
+        )
+
+
+        # ---------------------------------------------------------
+        # 7. DETECT LOCATION DESCRIPTIONS
+        # ---------------------------------------------------------
+
+        direction_pattern = re.compile(
+            r"\b("
+            r"left|right|both|one|"
+            r"upper|lower|"
+            r"front|back|rear|hind|"
+            r"near|around|"
+            r"inside|outside|"
+            r"above|below|"
+            r"behind|between|"
+            r"top|bottom|middle"
+            r")\b",
+            re.IGNORECASE
+        )
+
+
+        has_location_description = bool(
+            direction_pattern.search(latest_message_lower)
+        )
+
+
+        # Examples:
+        # right upper legs
+        # upper right leg
+        # both back legs
+        # left front leg
+        # upper part of leg
+        # near his paw
+
+        dog_location_answer = bool(
+            has_body_part
+            and len(latest_message_lower) <= 200
+        )
+
+
+        short_location_answer = bool(
+            has_location_description
+            and len(latest_message_lower.split()) <= 8
+            and len(latest_message_lower) <= 100
+        )
+
+
+        # ---------------------------------------------------------
+        # 8. DETECT SHORT SYMPTOM ANSWERS
+        # ---------------------------------------------------------
+
+        short_symptom_answer = bool(re.fullmatch(
+            r"\s*("
+            r"yes|no|yeah|yep|nope|maybe|"
+            r"has stopped|stopped|"
+            r"not anymore|"
+            r"it stopped|"
+            r"still bleeding|"
+            r"not yet|"
+            r"a little|a lot|"
+            r"getting better|getting worse|"
+            r"it's stopped|its stopped|"
+            r"it has stopped|"
+            r"it hasn't stopped|"
+            r"it has not stopped|"
+            r"its still bleeding|"
+            r"it's still bleeding|"
+            r"it is still bleeding|"
+            r"still hurts|"
+            r"not bleeding anymore|"
+            r"no longer bleeding"
+            r")\s*[.!?]?\s*",
+            latest_message_lower,
+            re.IGNORECASE
+        ))
+
+
+        # ---------------------------------------------------------
+        # 9. DETECT SHORT LOCATION ANSWERS
+        # ---------------------------------------------------------
+
+        short_location_answer = bool(
+            short_location_answer
+            or re.fullmatch(
+                r"\s*("
+                r"upper|lower|front|back|rear|hind|"
+                r"left|right|both|one|"
+                r"upper part|lower part|"
+                r"front part|back part|"
+                r"upper portion|lower portion"
+                r")\s*[.!?]?\s*",
+                latest_message_lower,
+                re.IGNORECASE
+            )
+        )
+
+
+        # ---------------------------------------------------------
+        # 10. FINAL CONTEXTUAL FOLLOW-UP DECISION
+        # ---------------------------------------------------------
+
+        is_contextual_follow_up = bool(
+            latest_message_lower
+            and len(latest_message_lower) <= 200
+            and dog_care_context_exists
+            and assistant_follow_up_context
+            and not explicit_other_animal
+            and (
+                dog_location_answer
+                or short_symptom_answer
+                or short_location_answer
+            )
+        )
+
+
+        # ---------------------------------------------------------
+        # 11. DEBUGGING
+        # ---------------------------------------------------------
+
+        print("\n========== DOG FOLLOW-UP DEBUG ==========")
+
+        print("LATEST MESSAGE:", latest_message_lower)
+        print("PREVIOUS USER TEXT:", previous_user_text)
+        print("PREVIOUS ASSISTANT TEXT:", previous_assistant_text)
+
+        print("DOG CONTEXT:", dog_context_exists)
+        print("DOG SYMPTOM CONTEXT:", dog_symptom_context_exists)
+        print("DOG CARE CONTEXT:", dog_care_context_exists)
+
+        print("ASSISTANT FOLLOW-UP:", assistant_follow_up_context)
+
+        print("BODY PART DETECTED:", has_body_part)
+        print("LOCATION DESCRIPTION:", has_location_description)
+
+        print("SYMPTOM ANSWER:", short_symptom_answer)
+        print("SHORT LOCATION ANSWER:", short_location_answer)
+
+        print("OTHER ANIMAL:", explicit_other_animal)
+        print("CONTEXTUAL FOLLOW-UP:", is_contextual_follow_up)
+
+        print("=========================================\n")
+
+
+        # =========================================================
+        # 12. AI SCOPE CLASSIFIER
+        # ONLY RUN WHEN NOT A CONTEXTUAL FOLLOW-UP
+        # =========================================================
+
+        if message and not is_contextual_follow_up:
+
+            try:
+
+                scope_response = client.chat.completions.create(
+
+                    model="gpt-4.1-mini",
+
+                    response_format={
+                        "type": "json_object"
                     },
-                    {
-                        "role": "user",
-                        "content": (
-                            "CONVERSATION HISTORY:\n"
-                            + json.dumps(
-                                conversation_history[-10:],
-                                ensure_ascii=False
+
+                    messages=[
+
+                        {
+                            "role": "system",
+
+                            "content": """
+        You are the request scope classifier for We Care Pet Care.
+
+        STRICT POLICY:
+        This application exclusively supports DOGS.
+
+        Determine whether the latest user message is within the
+        supported dog-only scope.
+
+        SUPPORTED:
+        - Dog health and wellness.
+        - Dog symptoms and veterinary concerns.
+        - Dog breeds and breed identification.
+        - Dog feeding and nutrition.
+        - Dog grooming and hygiene.
+        - Dog behavior and training.
+        - Dog vaccination and preventive care.
+        - Dog emergencies.
+        - Dog medications and veterinary questions.
+        - General greetings.
+        - Conversational follow-up questions about a previously
+        discussed dog.
+        - Questions about the application itself.
+
+        NOT SUPPORTED:
+        - Cats and kittens.
+        - Birds.
+        - Rabbits.
+        - Hamsters and guinea pigs.
+        - Reptiles.
+        - Fish.
+        - Other animal species.
+        - Veterinary instructions specifically for another species.
+        - Completely unrelated topics.
+
+        CONTEXT RULES:
+
+        1. Review conversation history to understand references
+        such as "he", "she", "it", "my pet", and "my dog".
+
+        2. If the conversation is already about a dog, allow
+        reasonable follow-up questions even when the user
+        does not repeat the word dog.
+
+        3. If the user specifically requests assistance for a
+        non-dog animal, classify it as unsupported.
+
+        4. If the user asks about both a dog and another animal,
+        classify as unsupported when veterinary assistance for
+        the other animal is requested.
+
+        5. Do not reject general questions simply because they
+        mention another animal in passing.
+
+        6. Do not reject greetings or simple conversational messages.
+
+        7. When the animal is ambiguous and there is no context
+        establishing that it is a dog, classify it as unsupported
+        if the user is requesting animal-specific veterinary advice.
+
+        Return ONLY valid JSON:
+
+        {
+            "supported": true,
+            "reason": "Brief explanation"
+        }
+        """
+                        },
+
+                        {
+                            "role": "user",
+
+                            "content": (
+                                "CONVERSATION HISTORY:\n"
+
+                                + json.dumps(
+                                    previous_history[-10:],
+                                    ensure_ascii=False
+                                )
+
+                                + "\n\nLATEST MESSAGE:\n"
+
+                                + message
                             )
-                            + "\n\nLATEST MESSAGE:\n"
-                            + message
-                        )
-                    }
-                ],
-                temperature=0
-            )
+                        }
 
-            scope_result = json.loads(
-                scope_response.choices[0].message.content
-            )
+                    ],
 
-            if scope_result.get("supported") is not True:
-                return JsonResponse({
-                    "success": False,
-                    "type": "unsupported",
-                    "error": (
-                        "We Care Pet Care currently supports "
-                        "dogs only. Please ask a dog-related question."
-                    ),
-                    "response": (
-                        "Thank you for contacting We Care Pet Care. "
-                        "Our AI assistant is specifically designed "
-                        "for dogs. I can help with dog health, breed "
-                        "identification, nutrition, grooming, behavior, "
-                        "and veterinary concerns. Please ask me "
-                        "something about your dog."
-                    ),
-                    "emergency": False,
-                    "risk_level": None,
-                    "reason": "Outside the supported application scope.",
-                    "needs_more_information": False,
-                    "follow_up_question": "",
-                    "recommended_action": (
-                        "Please ask a question related to dogs."
-                    ),
-                    "sms_sent": False,
-                    "image_analysis": None,
-                    "veterinarian_contact": {
-                        "clinic_name": VETERINARY_CLINIC_NAME,
-                        "phone": VETERINARY_CONTACT_NUMBER,
-                        "display_phone": VETERINARY_DISPLAY_NUMBER,
-                        "address": VETERINARY_CLINIC_ADDRESS,
-                    }
-                }, status=400)
+                    temperature=0
 
-        except Exception as exc:
-            print("DOG-ONLY SCOPE ERROR:", exc)
-
-            return JsonResponse({
-                "success": False,
-                "error": (
-                    "Unable to verify your request. "
-                    "Please try again."
                 )
-            }, status=503)
+
+
+                # -------------------------------------------------
+                # PROCESS SCOPE CLASSIFIER RESPONSE
+                # -------------------------------------------------
+
+                scope_result = json.loads(
+                    scope_response.choices[0].message.content
+                )
+
+
+                if scope_result.get("supported") is not True:
+
+                    return JsonResponse({
+
+                        "success": False,
+
+                        "type": "unsupported",
+
+                        "error": (
+                            "We Care Pet Care currently supports "
+                            "dogs only. Please ask a dog-related question."
+                        ),
+
+                        "response": (
+                            "Thank you for contacting We Care Pet Care. "
+                            "Our AI assistant is specifically designed "
+                            "for dogs. I can help with dog health, breed "
+                            "identification, nutrition, grooming, behavior, "
+                            "and veterinary concerns. Please ask me "
+                            "something about your dog."
+                        ),
+
+                        "emergency": False,
+
+                        "risk_level": None,
+
+                        "reason": "Outside the supported application scope.",
+
+                        "needs_more_information": False,
+
+                        "follow_up_question": "",
+
+                        "recommended_action": (
+                            "Please ask a question related to dogs."
+                        ),
+
+                        "sms_sent": False,
+
+                        "image_analysis": None,
+
+                        "veterinarian_contact": {
+
+                            "clinic_name": VETERINARY_CLINIC_NAME,
+
+                            "phone": VETERINARY_CONTACT_NUMBER,
+
+                            "display_phone": VETERINARY_DISPLAY_NUMBER,
+
+                            "address": VETERINARY_CLINIC_ADDRESS,
+
+                        }
+
+                    }, status=400)
+
+
+            except Exception as exc:
+
+                print("DOG-ONLY SCOPE ERROR:", exc)
+
+                return JsonResponse({
+
+                    "success": False,
+
+                    "error": (
+                        "Unable to verify your request. "
+                        "Please try again."
+                    )
+
+                }, status=503)
+
 
     # =========================================================
     # 7. IMAGE ANALYSIS AND BREED PERCENTAGES

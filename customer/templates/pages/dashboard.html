@@ -1389,6 +1389,7 @@ function restoreLocalChat() {
 */
 
 
+
 async function handleSend(event) {
     event.preventDefault();
 
@@ -1421,10 +1422,75 @@ async function handleSend(event) {
     }
 
     /*
-     * Build FormData before clearing the form.
-     * The original image file is retained for Django.
-     */
+    |--------------------------------------------------------------------------
+    | 1. GET PREVIOUS CONVERSATION BEFORE SAVING CURRENT MESSAGE
+    |--------------------------------------------------------------------------
+    |
+    | Your localStorage structure uses:
+    | {
+    |     role: "user" or "assistant",
+    |     message: "message text"
+    | }
+    |
+    | Django expects:
+    | {
+    |     role: "user" or "assistant",
+    |     content: "message text"
+    | }
+    |
+    */
+
+    const previousMessages = getLocalMessages();
+
+    const conversationHistory = previousMessages
+        .filter(item =>
+            item &&
+            (item.role === "user" || item.role === "assistant") &&
+            typeof item.message === "string" &&
+            item.message.trim() !== ""
+        )
+        .slice(-19)
+        .map(item => ({
+            role: item.role,
+            content: item.message.trim()
+        }));
+
+    console.log(
+        "CONVERSATION HISTORY BEING SENT:",
+        conversationHistory
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | 2. BUILD FORMDATA
+    |--------------------------------------------------------------------------
+    */
+
     const formData = new FormData(form);
+
+    /*
+     * THIS IS THE MISSING PART.
+     * Send previous messages to Django.
+     *
+     * Do not include the current message here.
+     * Django already appends the current message itself.
+     */
+
+    formData.set(
+        "conversation_history",
+        JSON.stringify(conversationHistory)
+    );
+
+    console.log(
+        "FORMDATA CONVERSATION HISTORY:",
+        formData.get("conversation_history")
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | 3. START SENDING
+    |--------------------------------------------------------------------------
+    */
 
     chatIsSending = true;
 
@@ -1435,16 +1501,27 @@ async function handleSend(event) {
     let localImage = null;
 
     try {
+
         /*
-         * Compress and store image locally.
-         */
+        |--------------------------------------------------------------------------
+        | 4. COMPRESS IMAGE FOR LOCAL STORAGE
+        |--------------------------------------------------------------------------
+        */
+
         if (selectedFile) {
             localImage = await compressImage(selectedFile);
         }
 
         /*
-         * Save user message and image in localStorage.
-         */
+        |--------------------------------------------------------------------------
+        | 5. SAVE CURRENT USER MESSAGE LOCALLY
+        |--------------------------------------------------------------------------
+        |
+        | The conversationHistory above was captured before this step.
+        | Therefore, the current message will not be duplicated.
+        |
+        */
+
         saveLocalMessage({
             role: "user",
             message: message,
@@ -1452,30 +1529,40 @@ async function handleSend(event) {
         });
 
         /*
-         * Clear composer.
-         */
+        |--------------------------------------------------------------------------
+        | 6. CLEAR COMPOSER
+        |--------------------------------------------------------------------------
+        */
+
         input.value = "";
         adjustHeight(input);
 
         /*
-         * Display submitted user message.
-         */
+        |--------------------------------------------------------------------------
+        | 7. DISPLAY USER MESSAGE
+        |--------------------------------------------------------------------------
+        */
+
         appendMessage("user", message, localImage);
 
-        /*
-         * Clear image preview.
-         */
         clearImage();
 
         /*
-         * Display thinking indicator.
-         */
+        |--------------------------------------------------------------------------
+        | 8. THINKING INDICATOR
+        |--------------------------------------------------------------------------
+        */
+
         const thinkingRow = appendThinkingIndicator();
 
         try {
+
             /*
-             * Send request to Django.
-             */
+            |--------------------------------------------------------------------------
+            | 9. SEND REQUEST TO DJANGO
+            |--------------------------------------------------------------------------
+            */
+
             const response = await fetch(sendUrl, {
                 method: "POST",
                 body: formData,
@@ -1487,8 +1574,11 @@ async function handleSend(event) {
             });
 
             /*
-             * Validate response content type.
-             */
+            |--------------------------------------------------------------------------
+            | 10. VALIDATE RESPONSE
+            |--------------------------------------------------------------------------
+            */
+
             const contentType =
                 response.headers.get("content-type") || "";
 
@@ -1500,9 +1590,6 @@ async function handleSend(event) {
 
             const data = await response.json();
 
-            /*
-             * Check Django response.
-             */
             if (!response.ok || !data.success) {
                 throw new Error(
                     data.error ||
@@ -1512,42 +1599,37 @@ async function handleSend(event) {
             }
 
             /*
-             * Remove thinking indicator.
-             */
+            |--------------------------------------------------------------------------
+            | 11. REMOVE THINKING INDICATOR
+            |--------------------------------------------------------------------------
+            */
+
             if (thinkingRow) {
                 thinkingRow.remove();
             }
 
             /*
-             * Get assistant response.
-             */
+            |--------------------------------------------------------------------------
+            | 12. GET ASSISTANT RESPONSE
+            |--------------------------------------------------------------------------
+            */
+
             const assistantMessage =
                 data.response || "No response was returned.";
 
-            /*
-             * Get structured image analysis from Django.
-             */
             const imageAnalysis =
                 data.image_analysis || null;
 
             /*
-             * Extract breed percentages.
-             *
-             * Backend format:
-             * {
-             *   breed_percentages: [
-             *     { breed: "Shiba Inu", percentage: 95 },
-             *     { breed: "Other or uncertain ancestry", percentage: 5 }
-             *   ]
-             * }
-             */
+            |--------------------------------------------------------------------------
+            | 13. PROCESS BREED ANALYSIS
+            |--------------------------------------------------------------------------
+            */
+
             const breedData = imageAnalysis
                 ? validateBreedData(imageAnalysis)
                 : null;
 
-            /*
-             * Debugging information.
-             */
             console.log(
                 "IMAGE ANALYSIS FROM DJANGO:",
                 imageAnalysis
@@ -1559,8 +1641,11 @@ async function handleSend(event) {
             );
 
             /*
-             * Save assistant response and breed data locally.
-             */
+            |--------------------------------------------------------------------------
+            | 14. SAVE ASSISTANT RESPONSE LOCALLY
+            |--------------------------------------------------------------------------
+            */
+
             saveLocalMessage({
                 role: "assistant",
                 message: assistantMessage,
@@ -1569,10 +1654,11 @@ async function handleSend(event) {
             });
 
             /*
-             * Render assistant response and breed analysis.
-             *
-             * appendMessage must support its fourth parameter.
-             */
+            |--------------------------------------------------------------------------
+            | 15. DISPLAY ASSISTANT RESPONSE
+            |--------------------------------------------------------------------------
+            */
+
             appendMessage(
                 "assistant",
                 assistantMessage,
@@ -1581,6 +1667,7 @@ async function handleSend(event) {
             );
 
         } catch (error) {
+
             console.error("Chat request error:", error);
 
             if (thinkingRow) {
@@ -1591,9 +1678,6 @@ async function handleSend(event) {
                 "Sorry, something went wrong. " +
                 (error.message || "Please try again.");
 
-            /*
-             * Save error locally.
-             */
             saveLocalMessage({
                 role: "assistant",
                 message: errorMessage,
@@ -1604,6 +1688,7 @@ async function handleSend(event) {
         }
 
     } catch (error) {
+
         console.error("Chat processing error:", error);
 
         alert(
@@ -1612,9 +1697,13 @@ async function handleSend(event) {
         );
 
     } finally {
+
         /*
-         * Restore send button.
-         */
+        |--------------------------------------------------------------------------
+        | 16. RESTORE SEND BUTTON
+        |--------------------------------------------------------------------------
+        */
+
         chatIsSending = false;
 
         sendButton.disabled = false;
@@ -1631,6 +1720,7 @@ async function handleSend(event) {
         scrollChatToBottom();
     }
 }
+
 
 /*
 |--------------------------------------------------------------------------
