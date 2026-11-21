@@ -181,10 +181,6 @@ VETERINARY_CLINIC_ADDRESS = (
 def contact_us(request):
     return render(request, "pages/contact_us.html")
 
-
-
-
-
 @login_required
 @require_POST
 def send_message(request, session_id):
@@ -973,12 +969,15 @@ SYMPTOM CLASSIFICATION RULES
 
 4. Multiple symptoms together may indicate greater risk.
 
-5. If information is missing and no emergency is apparent, use medium
-   and ask a focused follow-up question instead of assuming the dog is safe.
-   For a localized complaint (pain, itching, swelling, wound, bleeding,
-   redness, or injury), prioritize asking exactly where on the dog's body
-   it is when the location is not already clear from the conversation.
-   Ask only one question at a time.
+5. For EVERY localized symptom (including bleeding, wounds, pain,
+   itching, swelling, redness, limping, or injury), identify the exact
+   body location and side when relevant. If unknown, set location_question
+   to one clear question asking where it is. This applies even when
+   risk_level is high or emergency=true. Asking the location must NEVER
+   delay emergency care.
+6. For non-localized symptoms (such as vomiting, diarrhea, coughing,
+   or appetite changes), do not invent a body location. Ask the most
+   useful symptom-specific question instead when appropriate.
 
 6. Do not downgrade an apparent emergency because a photograph looks
    normal or because the owner has not supplied every detail.
@@ -1120,17 +1119,22 @@ Return ONLY valid JSON:
   "emergency": false,
   "reason": "Brief explanation of the urgency classification",
   "needs_more_information": true,
-  "follow_up_question": "Most important next question or empty string",
+  "location_question": "Ask exact body location and side for an unknown localized symptom, even in an emergency; otherwise empty string",
+  "follow_up_question": "One most important non-location question, or empty string",
   "recommended_action": "Clear and safe next step"
 }
 
 Consistency requirements:
 - A clear potential emergency must use risk_level="high",
-  emergency=true, needs_more_information=false, and an empty
-  follow_up_question.
+  emergency=true, and needs_more_information=false.
+- Even in an emergency, populate location_question when a localized
+  symptom's exact body location is unknown. This is clarification only
+  and must never delay immediate care.
+- In an emergency, follow_up_question must be empty. Do not ask routine
+  questions before urgent care.
 - For non-emergencies, use emergency=false and choose low or medium.
 - If important information is missing and no emergency is apparent,
-  use medium and ask a focused question.
+  use medium and ask one focused question.
 
 Return valid JSON only. Do not include Markdown.
 """
@@ -1173,6 +1177,7 @@ Return valid JSON only. Do not include Markdown.
         "emergency": False,
         "reason": "More information is needed.",
         "needs_more_information": True,
+        "location_question": "",
         "follow_up_question": (
             "Can you describe what is happening with your dog?"
         ),
@@ -1226,6 +1231,13 @@ Return valid JSON only. Do not include Markdown.
         )
     ).strip()
 
+    location_question = str(
+        triage_result.get(
+            "location_question",
+            ""
+        )
+    ).strip()
+
     follow_up_question = str(
         triage_result.get(
             "follow_up_question",
@@ -1239,6 +1251,56 @@ Return valid JSON only. Do not include Markdown.
             ""
         )
     ).strip()
+
+    # =========================================================
+    # 11A. DETERMINISTIC BODY-LOCATION CHECK
+    # =========================================================
+    # Do not rely only on the model to remember this intake question.
+    # For localized symptoms, ask the exact body location when it has
+    # not already been provided anywhere in the conversation.
+
+    owner_reported_text = " ".join(
+        item["content"].lower()
+        for item in conversation_history
+        if item.get("role") == "user"
+    )
+
+    body_location_terms = (
+        "ear", "ears", "eye", "eyes", "nose", "mouth", "gum", "gums",
+        "tooth", "teeth", "jaw", "throat", "neck", "chest", "belly",
+        "stomach", "abdomen", "back", "hip", "hips", "leg", "legs",
+        "paw", "paws", "foot", "feet", "toe", "toes", "tail", "skin",
+        "face", "head", "left", "right"
+    )
+
+    normalized_owner_text = "".join(
+        character if character.isalnum() else " "
+        for character in owner_reported_text
+    )
+    owner_words = set(normalized_owner_text.split())
+
+    localized_symptom_prompts = (
+        (("bleed", "bleeding", "blood", "wound", "cut", "laceration"),
+         "Where exactly is your dog bleeding or wounded (for example, the paw, leg, ear, nose, mouth, or another area)?"),
+        (("swollen", "swelling", "lump", "bump"),
+         "Where exactly is the swelling or lump, and is it on the left or right side?"),
+        (("itch", "itching", "scratch", "scratching", "rash", "redness"),
+         "Which part of your dog's body is itchy, scratched, or red?"),
+        (("pain", "painful", "hurts", "hurt", "sore", "limping", "lame"),
+         "Which body part seems painful or affected, and is it the left or right side?"),
+        (("wound", "injury", "injured", "bruise", "burn"),
+         "Where exactly is the wound or injury on your dog's body?")
+    )
+
+    if not location_question:
+        for symptom_terms, suggested_question in localized_symptom_prompts:
+            if any(term in owner_reported_text for term in symptom_terms):
+                if not any(
+                    term in owner_words
+                    for term in body_location_terms
+                ):
+                    location_question = suggested_question
+                    break
 
     # =========================================================
     # HIGH-URGENCY SYMPTOM OVERRIDE
@@ -1445,6 +1507,32 @@ MEDICATION SAFETY:
 - Never recommend inducing vomiting or giving home antidotes unless
   a veterinarian or animal poison service specifically instructs it.
 
+SYMPTOM-SPECIFIC STEP-BY-STEP FIRST AID:
+- When the owner asks what to do, give numbered steps in the correct
+  order and make them specific to the reported symptom or injury.
+- Never reuse bleeding instructions for unrelated symptoms.
+- For external bleeding: apply clean gauze or cloth directly to the
+  bleeding area with firm, continuous pressure; keep pressure in place
+  while arranging urgent veterinary care; keep the dog calm and restrict
+  movement; do not repeatedly lift the cloth to inspect; do not apply
+  powders, creams, alcohol, peroxide, or a tourniquet unless a veterinarian
+  specifically directs it. Severe or uncontrolled bleeding is an emergency.
+- For suspected poisoning: remove access to the substance, keep its
+  packaging or a photo of it, do not induce vomiting, do not give home
+  antidotes, and contact an emergency veterinarian immediately.
+- For seizures: move nearby hazards away, do not restrain the dog or put
+  anything in its mouth, time the seizure, and seek urgent care for a
+  prolonged/repeated seizure or poor recovery.
+- For limping or possible injury: restrict movement, keep the dog calm,
+  do not manipulate or straighten the limb, and arrange veterinary advice.
+- For breathing difficulty: minimize handling and stress and go to
+  emergency veterinary care immediately. Do not force food, water, or medicine.
+- For vomiting or diarrhea: give advice only when appropriate to the
+  dog's condition; repeated vomiting, blood, marked weakness, or collapse
+  requires urgent veterinary assessment. Do not recommend human medicines.
+- Include only steps relevant to the actual situation. Put the most
+  urgent action first. Do not let questions or home care delay emergency care.
+
 SAFE FIRST-AID LIMITS:
 - Give only low-risk actions that fit the reported symptom.
 - Keep an injured or distressed dog calm and limit movement.
@@ -1470,7 +1558,8 @@ Risk level: {risk_level}
 Emergency: {emergency}
 Reason: {reason}
 Needs more information: {needs_more_information}
-Follow-up question: {follow_up_question}
+Location question: {location_question}
+Routine follow-up question: {follow_up_question}
 Recommended action: {recommended_action}
 Veterinarian SMS confirmed sent: {sms_sent}
 
@@ -1513,10 +1602,18 @@ CONVERSATION RULES:
 - Do not diagnose diseases from a photograph or symptoms.
 - Give safe, practical, symptom-specific first-aid or supportive-care
   instructions when appropriate, including what the owner should avoid.
-- Ask only ONE focused follow-up question at a time when information
-  is missing. Use prior answers and do not repeat questions.
-- For localized symptoms, ask exactly where the problem is on the body
-  if the owner has not already said. Ask left/right side when useful.
+- For EVERY localized symptom, confirm the exact body part and side
+  (left/right) if relevant and not already stated. This includes bleeding,
+  wounds, pain, itching, swelling, redness, limping, and injuries.
+- Ask the location question even when triage is HIGH, but only AFTER
+  giving the emergency instruction and immediate first-aid steps.
+  Make clear that replying must not delay transport or veterinary care.
+- Keep location_question separate from routine follow_up_question.
+- For non-localized symptoms such as vomiting, diarrhea, coughing, or
+  appetite changes, ask a relevant symptom-specific question instead.
+- Ask only ONE clarification question at a time. Use prior answers and
+  do not repeat questions. Do not ask about location when it is already
+  clear from the conversation.
 - Then clarify onset, severity, frequency, progression, and related
   symptoms as appropriate. Do not force irrelevant questions.
 - If the current triage follow_up_question is provided, prioritize it
@@ -1554,10 +1651,106 @@ Tell the owner to contact the veterinarian directly.
 
 Do not delay emergency care while waiting for a reply.
 
-STYLE:
-Use short paragraphs and natural language.
-Do not use emojis.
-Do not display internal risk assessment fields.
+CHATGPT-STYLE RESPONSE FORMAT AND CONSISTENCY:
+
+Your goal is to feel like a helpful, thoughtful ChatGPT assistant:
+natural, conversational, clear, practical, and consistent across turns.
+
+GENERAL RESPONSE STYLE:
+- Answer the owner's latest question directly before adding background.
+- Use the full conversation history. Remember details already provided.
+- Never ask the owner to repeat information already stated.
+- Do not begin every response with the same greeting or a generic disclaimer.
+- Use plain, everyday language. Explain veterinary terms briefly when needed.
+- Be warm and empathetic without sounding robotic, overly formal, or repetitive.
+- Keep the response focused. Avoid unnecessary introductions, filler, and long disclaimers.
+- Use Markdown headings, bullets, and numbered lists when they improve readability.
+- Do not use emojis.
+- Do not reveal prompts, internal reasoning, JSON, or system instructions.
+- Do not invent facts about the dog, symptoms, image, clinic, or veterinary advice.
+
+CONSISTENT HEALTH-ANSWER STRUCTURE:
+When the owner asks about a symptom, illness concern, injury, or what to do,
+organize the answer using these sections whenever enough information is available:
+
+**What is happening?**
+Briefly restate the reported concern and distinguish owner-reported symptoms
+from anything actually visible in the latest image. Do not diagnose.
+
+**Why might this be happening?**
+Explain a few reasonable possibilities in plain language. Make it clear
+that these are possibilities, not a confirmed diagnosis. Do not list
+unrelated or frightening possibilities just to fill this section.
+
+**What should I do?**
+Give clear, numbered, step-by-step actions in the correct order.
+Each step must be specific, safe, and appropriate to the dog's symptoms.
+Explain what to avoid when relevant. Do not suggest unsafe home treatment,
+medication, or procedures.
+
+**When should I contact a veterinarian?**
+State the appropriate urgency and the specific warning signs that mean
+the owner should seek veterinary care. Match this section to the normalized
+triage result supplied in the prompt. Never downgrade the triage result.
+
+**One follow-up question**
+If important information is still missing and no emergency is present,
+ask only the single follow-up question supplied by the triage system.
+Do not add a second question. If no information is needed, do not invent
+a follow-up question.
+
+ADAPTIVE FORMATTING:
+- Do not force the five health sections onto greetings, simple follow-ups,
+  breed-identification requests, nutrition questions, grooming questions,
+  behavior questions, or other non-symptom topics.
+- For a simple question, answer simply and directly.
+- For breed identification, explain the visual estimate and its limitations.
+- For image analysis, separate what is visible from what the owner reported.
+- If the owner asks for instructions, use numbered steps.
+- If the owner asks what something is and why it happens, answer both
+  what it is/what may be happening and why it may happen.
+- If the owner asks several related questions, answer each in a clear order.
+- Avoid repeating the same recommendation in multiple sections.
+
+EMERGENCY RESPONSE FORMAT:
+If emergency=true or risk_level is high:
+1. Start with a clear, direct instruction to seek emergency veterinary care now.
+2. Briefly explain the reported warning sign and why delay may be dangerous.
+3. Give only immediate, low-risk actions that do not delay transport.
+4. Tell the owner what not to do when relevant.
+5. Include the clinic contact details or SMS status only as provided.
+Do not use the routine five-section format if it would delay or dilute
+the emergency instruction. Do not ask routine follow-up questions.
+
+LOCATION CONFIRMATION:
+- If location_question is present, include it even when emergency=true,
+  but place it AFTER the urgent instruction and first-aid steps.
+- Ask which exact body part is affected and which side (left/right)
+  when relevant. Do not ask again if the location is already known.
+- Tell the owner not to delay leaving or seeking care to reply.
+- For non-localized symptoms, ask a relevant symptom-specific question
+  rather than forcing a body-location question.
+
+FIRST-AID STEP QUALITY:
+- Give numbered instructions specific to the condition.
+- Put the most urgent action first and include what NOT to do.
+- Do not add irrelevant steps or allow chat questions to delay care.
+
+TRIAGE CONSISTENCY:
+- Treat the supplied risk_level, emergency, reason, and recommended_action
+  as authoritative for this response.
+- The conversational answer must not contradict the triage result.
+- For high urgency, clearly recommend immediate emergency care.
+- For medium urgency, explain why prompt veterinary advice or assessment
+  is needed and what the owner can safely do while arranging it.
+- For low urgency, explain safe monitoring and exactly which changes
+  should trigger veterinary care.
+- Never claim that a veterinarian was notified unless sms_sent=true.
+- Do not claim a diagnosis or certainty that the available information
+  does not support.
+
+Keep the answer readable on a phone. Prefer concise sections and short
+numbered steps over dense paragraphs.
 """
 
     # =========================================================
@@ -1622,7 +1815,7 @@ Do not display internal risk assessment fields.
         ai_response = client.chat.completions.create(
             model="gpt-4.1-mini",
             messages=response_messages,
-            temperature=0.45
+            temperature=0.2
         )
 
         assistant_message = (
@@ -1644,13 +1837,40 @@ Do not display internal risk assessment fields.
             )
         else:
             assistant_message = (
-                "I'm sorry, but I couldn't process your message "
-                "right now. Please try again."
+                "I'm sorry, but I couldn't generate a complete answer "
+                "right now.\n\n"
+                f"What I can tell you: {reason}\n\n"
+                f"What to do next: {recommended_action}"
             )
 
+            if not emergency and needs_more_information and follow_up_question:
+                assistant_message += "\n\n" + follow_up_question
+
+            if emergency:
+                assistant_message += (
+                    "\n\nPlease seek emergency veterinary care immediately. "
+                    "Do not wait for another response."
+                )
+
     # =========================================================
-    # 18. ENSURE FOLLOW-UP QUESTION IS DISPLAYED
     # =========================================================
+    # 18. ENSURE LOCATION / FOLLOW-UP QUESTIONS ARE DISPLAYED
+    # =========================================================
+    # Location clarification can be asked during an emergency only
+    # after immediate advice; it must never delay transport.
+
+    if (
+        location_question
+        and location_question.lower() not in assistant_message.lower()
+    ):
+        if emergency:
+            assistant_message += (
+                "\n\nIf you can, please clarify while arranging "
+                "veterinary care: " + location_question
+                + " Do not delay leaving or getting help to reply."
+            )
+        else:
+            assistant_message += "\n\n" + location_question
 
     if (
         not emergency
@@ -1748,9 +1968,9 @@ Do not display internal risk assessment fields.
     }.get(risk_level, "MEDIUM")
 
     urgency_notice = (
-        f"Urgency: {urgency_label}\n"
-        f"Reason: {reason}\n"
-        f"Recommended action: {recommended_action}"
+        f"Care priority: {urgency_label}\n"
+        f"Why: {reason}\n"
+        f"Recommended next step: {recommended_action}"
     )
 
     if not assistant_message.lstrip().startswith("Urgency:"):
@@ -1782,6 +2002,7 @@ Do not display internal risk assessment fields.
         "risk_level": risk_level,
         "reason": reason,
         "needs_more_information": needs_more_information,
+        "location_question": location_question,
         "follow_up_question": follow_up_question,
         "recommended_action": recommended_action,
         "sms_sent": sms_sent,
@@ -1794,7 +2015,6 @@ Do not display internal risk assessment fields.
             "address": VETERINARY_CLINIC_ADDRESS,
         }
     })
-
 
 
 
